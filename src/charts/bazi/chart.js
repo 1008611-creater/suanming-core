@@ -1,38 +1,65 @@
 import { civilToUTC } from '../../time/timezone.js';
 import { shichenOfCivil } from '../../time/shichen.js';
+import { julianDayFromGregorian } from '../../time/julian.js';
 import { createManifest } from '../../manifest.js';
-import { yearPillar, monthPillar, dayPillar, hourPillar } from './pillars.js';
+import { yearPillar, monthPillar, dayPillar, hourPillar, pillarDetail, luckDirection } from './pillars.js';
 import { buildLuck } from './luck.js';
-import { factGraph, fact } from '../../derive/facts.js';
+import { factGraph, factFromRule } from '../../derive/facts.js';
 import { currentMonthBoundary, nextMonthBoundary, solarTermInstant } from '../../astro/solar-terms.js';
+import { getRuleSet, DEFAULT_BAZI_RULE_SET } from '../../../rules/index.js';
 
-export function castBazi(input) {
+/**
+ * 排盘：输入经时间层与天文层，落到四柱与事实图。
+ *
+ * 关键边界（都对应规则集中的 ruleId）：
+ *   - 年柱：立春（黄经 315°）瞬间换年。
+ *   - 月柱：出生瞬间之前最近的「节」。
+ *   - 日柱：**出生地民用日**零点换日。绝不能用 UTC 儒略日的日序——
+ *           东八区凌晨出生时 UTC 仍是前一天，用 UTC 日序会把日柱整体算错一天。
+ *   - 时柱：真太阳时两小时一时辰，配五鼠遁取天干。
+ */
+export function castBazi(input, options = {}) {
+  const ruleSet = options.ruleSet ?? getRuleSet(options.ruleSetId ?? DEFAULT_BAZI_RULE_SET);
   const zone = input.timezone ?? 'Asia/Shanghai';
   const utc = civilToUTC(input, zone);
   const longitude = input.longitude ?? 120;
   const shi = shichenOfCivil(input, longitude, { timePrecision: input.timePrecision ?? 'exact' });
-  const day = dayPillar(utc.jdUTC);
+
+  // 日柱：按出生地民用日的日期序号，而不是 UTC 时刻的日序。
+  const civilDayNumber = julianDayFromGregorian(input.year, input.month, input.day);
+  const day = dayPillar(civilDayNumber, ruleSet);
+
   const lichun = solarTermInstant(input.year, 315).utc;
-  const year = yearPillar(input.year, input.month, input.day, { yearBoundary: 'calendar', forcePrevious: utc.jdUTC < lichun });
+  const year = yearPillar(input.year, input.month, input.day, {
+    yearBoundary: 'calendar', forcePrevious: utc.jdUTC < lichun, ruleSet
+  });
   const boundary = currentMonthBoundary(utc.jdUTC);
-  const month = monthPillar(year[0], boundary?.degree ?? 315);
-  const hour = hourPillar(day[0], shi.index);
-  const forward = ((input.gender === 'male') === ('甲乙丙丁戊己庚辛壬癸'.indexOf(year[0]) % 2 === 0));
-  const adjacent = forward ? nextMonthBoundary(utc.jdUTC) : boundary;
+  const month = monthPillar(year[0], boundary?.degree ?? 315, { ruleSet });
+  const hour = hourPillar(day[0], shi.index, ruleSet);
+
+  const direction = input.gender ? luckDirection(year[0], input.gender, ruleSet) : null;
+  const adjacent = direction === 1 ? nextMonthBoundary(utc.jdUTC) : boundary;
   const daysToBoundary = adjacent ? (adjacent.utc - utc.jdUTC) : 0;
-  const luck = input.gender ? buildLuck({ monthPillar: month, yearStem: year[0], gender: input.gender, daysToBoundary, options:{ direction:forward ? 1 : -1 } }) : null;
-  const manifest = createManifest({ timezone: zone, longitude });
+  const luck = input.gender
+    ? buildLuck({ monthPillar: month, yearStem: year[0], gender: input.gender, daysToBoundary, options: { direction, ruleSet } })
+    : null;
+
+  const manifest = createManifest({ timezone: zone, longitude, ruleSetId: ruleSet.id, ruleSetVersion: ruleSet.version });
+  const pillars = { year, month, day, hour };
   const facts = factGraph([
-    fact({ id:'pillar.year', value:year, ruleId:'bazi.year.solar-term-boundary', source:['solar-term:315'] }),
-    fact({ id:'pillar.month', value:month, ruleId:'bazi.month.current-jie', source:['solar-terms'] }),
-    fact({ id:'pillar.day', value:day, ruleId:'bazi.day.julian-day', source:['julian-day'] }),
-    fact({ id:'pillar.hour', value:hour, ruleId:'bazi.hour.true-solar-time', source:['true-solar-time'] })
+    factFromRule(ruleSet.conventions.yearBoundary.ruleId, { id: 'pillar.year', value: year, ruleSet }),
+    factFromRule(ruleSet.conventions.monthBoundary.ruleId, { id: 'pillar.month', value: month, ruleSet }),
+    factFromRule(ruleSet.tables.dayPillarRule.ruleId, { id: 'pillar.day', value: day, ruleSet }),
+    factFromRule(ruleSet.conventions.hourBoundary.ruleId, { id: 'pillar.hour', value: hour, ruleSet }),
+    factFromRule(ruleSet.tables.hiddenStemsRule.ruleId, { id: 'pillars.detail', value: pillarDetail(pillars, ruleSet), ruleSet }),
+    ...(luck ? [factFromRule(ruleSet.conventions.luckStart.ruleId, { id: 'luck.start-age', value: luck.startAgeYears, ruleSet })] : [])
   ], manifest);
+
   return {
     schemaVersion: '1.0.0',
     input: { ...input, timezone: zone },
-    pillars: { year, month, day, hour },
-    time: { ...utc, shichen: shi },
+    pillars,
+    time: { ...utc, civilDayNumber, shichen: shi },
     luck,
     facts,
     manifest

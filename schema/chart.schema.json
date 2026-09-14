@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/1008611-creater/suanming-core/schema/chart.schema.json",
+  "title": "Suanming Chart",
+  "description": "命盘计算结果。所有结论都必须能通过 fact.rule_id 回溯到规则集。",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "input",
+    "pillars",
+    "time",
+    "facts",
+    "manifest"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0.0"
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "year",
+        "month",
+        "day",
+        "timezone"
+      ],
+      "properties": {
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31
+        },
+        "hour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 23
+        },
+        "minute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 59
+        },
+        "second": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 60
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA 时区名，如 Asia/Shanghai"
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "gender": {
+          "enum": [
+            "male",
+            "female"
+          ]
+        },
+        "timePrecision": {
+          "enum": [
+            "exact",
+            "hour",
+            "day",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "pillars": {
+      "type": "object",
+      "required": [
+        "year",
+        "month",
+        "day",
+        "hour"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "year": {
+          "$ref": "#/$defs/ganzhi"
+        },
+        "month": {
+          "$ref": "#/$defs/ganzhi"
+        },
+        "day": {
+          "$ref": "#/$defs/ganzhi"
+        },
+        "hour": {
+          "$ref": "#/$defs/ganzhi"
+        }
+      }
+    },
+    "time": {
+      "type": "object",
+      "description": "时间层结果：UTC 儒略日与真太阳时时辰。",
+      "properties": {
+        "jdUTC": {
+          "type": "number"
+        },
+        "shichen": {
+          "type": "object",
+          "required": [
+            "name",
+            "index"
+          ],
+          "properties": {
+            "name": {
+              "enum": [
+                "子",
+                "丑",
+                "寅",
+                "卯",
+                "辰",
+                "巳",
+                "午",
+                "未",
+                "申",
+                "酉",
+                "戌",
+                "亥"
+              ]
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 11
+            },
+            "trueSolarMinutes": {
+              "type": "number"
+            },
+            "timePrecision": {
+              "enum": [
+                "exact",
+                "hour",
+                "day",
+                "unknown"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "luck": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "大运。方向与起运算法必须随结果一并保留，不能脱离参数解释。",
+      "required": [
+        "direction",
+        "startAgeYears",
+        "pillars",
+        "method",
+        "ruleId"
+      ],
+      "properties": {
+        "direction": {
+          "enum": [
+            1,
+            -1
+          ]
+        },
+        "startAgeYears": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pillars": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ganzhi"
+          }
+        },
+        "method": {
+          "const": "days-to-boundary-divided-by-3"
+        },
+        "ruleId": {
+          "type": "string"
+        },
+        "directionRuleId": {
+          "type": "string"
+        },
+        "ruleSet": {
+          "type": "string"
+        }
+      }
+    },
+    "facts": {
+      "$ref": "#/$defs/factGraph"
+    },
+    "manifest": {
+      "$ref": "#/$defs/manifest"
+    }
+  },
+  "$defs": {
+    "ganzhi": {
+      "type": "string",
+      "pattern": "^[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]$"
+    },
+    "fact": {
+      "type": "object",
+      "required": [
+        "fact_id",
+        "rule_id",
+        "confidence",
+        "source"
+      ],
+      "properties": {
+        "fact_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)*$"
+        },
+        "value": {},
+        "rule_id": {
+          "type": "string",
+          "description": "必须指向规则集中已登记的 ruleId"
+        },
+        "school": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "不得超过对应规则的置信度"
+        },
+        "source": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "evidence": {
+          "enum": [
+            "astronomical",
+            "convention",
+            "traditional",
+            "calibration"
+          ]
+        },
+        "rule_label": {
+          "type": "string"
+        }
+      }
+    },
+    "factGraph": {
+      "type": "object",
+      "required": [
+        "version",
+        "facts",
+        "manifest"
+      ],
+      "properties": {
+        "version": {
+          "const": "1.0.0"
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fact"
+          }
+        },
+        "manifest": {
+          "$ref": "#/$defs/manifest"
+        }
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "required": [
+        "engineVersion",
+        "ephemerisModel",
+        "schemaVersion",
+        "ruleSet",
+        "ruleSetVersion"
+      ],
+      "properties": {
+        "engineVersion": {
+          "type": "string"
+        },
+        "ephemerisModel": {
+          "type": "string"
+        },
+        "schemaVersion": {
+          "const": "1.0.0"
+        },
+        "ruleSet": {
+          "type": "string"
+        },
+        "ruleSetVersion": {
+          "type": "string"
+        },
+        "ruleSetHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "inputHash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "longitude": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}
