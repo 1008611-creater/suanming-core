@@ -6,3 +6,4 @@ export * from './derive/facts.js';
 export * from './interpret/explain.js';
 export * from './charts/bazi/index.js';
 export * from './manifest.js';
+export * from './calendar/lunar.js';
