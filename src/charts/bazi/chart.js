@@ -2,7 +2,7 @@ import { civilToUTC } from '../../time/timezone.js';
 import { shichenOfCivil } from '../../time/shichen.js';
 import { createManifest } from '../../manifest.js';
 import { yearPillar, monthPillar, dayPillar, hourPillar } from './pillars.js';
-import { nearestMonthBoundary } from '../../astro/solar-terms.js';
+import { currentMonthBoundary } from '../../astro/solar-terms.js';
 
 export function castBazi(input) {
   const zone = input.timezone ?? 'Asia/Shanghai';
@@ -11,7 +11,7 @@ export function castBazi(input) {
   const shi = shichenOfCivil(input, longitude, { timePrecision: input.timePrecision ?? 'exact' });
   const day = dayPillar(utc.jdUTC);
   const year = yearPillar(input.year, input.month, input.day, { yearBoundary: input.yearBoundary ?? 'lichun' });
-  const boundary = nearestMonthBoundary(utc.jdUTC);
+  const boundary = currentMonthBoundary(utc.jdUTC);
   const month = monthPillar(input.year, boundary?.degree ?? 315);
   const hour = hourPillar(day[0], shi.index);
   return {
