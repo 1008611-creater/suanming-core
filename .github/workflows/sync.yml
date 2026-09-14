@@ -1,0 +1,40 @@
+name: sync
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'payload.b64'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Materialize payload
+        run: |
+          node -e '
+          const fs=require("fs"),path=require("path"),zlib=require("zlib");
+          const data=JSON.parse(zlib.gunzipSync(Buffer.from(fs.readFileSync("payload.b64","utf8").trim(),"base64")).toString("utf8"));
+          let n=0;
+          for(const [rel,content] of Object.entries(data)){
+            if(rel.startsWith(".github/workflows/")) continue;
+            const t=path.resolve(process.cwd(),rel);
+            fs.mkdirSync(path.dirname(t),{recursive:true});
+            fs.writeFileSync(t,content); n++;
+          }
+          console.log("wrote "+n+" files");
+          '
+      - name: Commit and push
+        run: |
+          git config user.name "sync-bot"
+          git config user.email "sync-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: suanming-core v0.2.0 规则集独立成层、农历与四柱修复、21 项测试"
+          git push
