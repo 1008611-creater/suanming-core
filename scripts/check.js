@@ -6,4 +6,5 @@ await import('../tests/chart-smoke.js');
 await import('../tests/term-boundary-smoke.js');
 await import('../tests/lichun-boundary-smoke.js');
 await import('../tests/luck-smoke.js');
+await import('../tests/facts-smoke.js');
 console.log('suanming-core check passed');
