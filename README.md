@@ -24,3 +24,5 @@ const hour = shichenOfCivil({hour:8,minute:58}, 118.18);
 每份结果都应携带 `createManifest()` 生成的版本清单，记录计算引擎、星历模型和规则集版本。
 
 仓库的 GitHub Actions 会在 push 和 pull request 时自动运行 `npm test`。
+
+版本变更见 [CHANGELOG.md](CHANGELOG.md)。
