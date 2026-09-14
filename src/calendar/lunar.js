@@ -1,5 +1,6 @@
 import { moonPhaseJDE } from '../astro/moon.js';
 import { julianDayFromGregorian } from '../time/julian.js';
+import { solarTermsOfYear } from '../astro/solar-terms.js';
 
 // 以朔望月和中气反推；返回天文层事实，复杂农历显示由上层格式化。
 export function lunarMonthAnchors(year) {
@@ -12,3 +13,9 @@ export function lunarMonthAnchors(year) {
   return out.sort((a,b)=>a.jd-b.jd);
 }
 export function lunarDayFromNewMoon(jd, anchorJd) { return Math.floor(jd-anchorJd)+1; }
+
+export function monthHasZhongqi(startJd, endJd) {
+  const y = new Date((startJd - 2440587.5) * 86400000).getUTCFullYear();
+  const terms = [...solarTermsOfYear(y-1), ...solarTermsOfYear(y), ...solarTermsOfYear(y+1)];
+  return terms.some(t => t.utc >= startJd && t.utc < endJd && t.degree % 30 === 0);
+}
