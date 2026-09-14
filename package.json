@@ -1,0 +1,40 @@
+{
+  "name": "suanming-core",
+  "version": "0.1.0",
+  "description": "Deterministic Chinese metaphysics calculation core: astronomical time, calendar, chart casting, rule engine. Interpretation is downstream and never computes.",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./astro": "./src/astro/index.js"
+    ,"./bazi": "./src/charts/bazi/index.js"
+  },
+    "files": [
+    "src",
+    "examples",
+    "docs",
+    "rules",
+    "schema",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node scripts/check.js",
+    "test:golden": "node tests/term-boundary-smoke.js",
+    "test:property": "node tests/chart-smoke.js",
+    "test:coverage": "node scripts/check.js",
+    "check": "node scripts/check.js"
+  },
+  "keywords": [
+    "bazi",
+    "ziwei",
+    "astrology",
+    "ephemeris",
+    "vsop87",
+    "chinese-calendar",
+    "solar-terms"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

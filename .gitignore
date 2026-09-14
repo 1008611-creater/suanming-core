@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+*.log
+.DS_Store
+Thumbs.db
+tmp/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+
+# Optional ephemeris binary data; use Git LFS if explicitly approved.
+data/ephe/*.se1
+data/ephe/*.bsp
+
+# Private birth records and client data must never enter version control.
+private/
+cases/private/
+*.private.json
+*.bundle
