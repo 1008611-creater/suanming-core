@@ -40,13 +40,18 @@ const all = listRuleSets();
 const baziOnly = listRuleSets({ system: 'bazi' });
 const ziweiOnly = listRuleSets({ system: 'ziwei' });
 assert.equal(all.length, baziOnly.length + ziweiOnly.length, '盘系分组必须覆盖全部规则集');
-assert.equal(ziweiOnly.length, 1);
-assert.equal(ziweiOnly[0].id, DEFAULT_ZIWEI_RULE_SET);
+// 紫微已有 0.1.0（主星辅星）与 0.2.0（杂曜十二神）两套：旧版保留是为了证明
+// 「换规则集对引擎透明」，新版是默认参照集，故此处按集合比较而不是写死单元素。
+const ZIWEI_IDS = ruleSetIdsOf('ziwei');
+assert.equal(ziweiOnly.length, ZIWEI_IDS.length, '盘系分组数量与 id 清单一致');
+assert.equal(ziweiOnly.length, 2, '紫微当前应有 0.1.0 与 0.2.0 两套规则集');
+assert.ok(ZIWEI_IDS.includes(DEFAULT_ZIWEI_RULE_SET), '默认规则集必须在紫微 id 清单内');
+assert.ok(ZIWEI_IDS.includes('ziwei-core-0.1.0'), '旧版规则集应保留');
 assert.equal(systemOf(getRuleSet(DEFAULT_ZIWEI_RULE_SET)), 'ziwei');
-assert.deepEqual(ruleSetIdsOf('ziwei'), [DEFAULT_ZIWEI_RULE_SET]);
+assert.ok(ziweiOnly.every((r) => r.id === 'ziwei-core-0.1.0' || r.id === DEFAULT_ZIWEI_RULE_SET));
 
 // 紫微规则集的分歧清单必须为空（它是自己盘系的参照集），不能把四柱规则报成分歧。
-assert.deepEqual(ziweiOnly[0].divergences, [], '紫微规则集不得与四柱比较');
+assert.ok(ziweiOnly.every((r) => r.divergences.length === 0), '紫微规则集不得与四柱比较');
 assert.ok(baziOnly.find((r) => r.id === 'bazi-zichu-0.1.0').divergences.length > 0, '四柱内部仍应报出真实分歧');
 
 // 多流派并列只覆盖同盘系：紫微不得出现在四柱并列结果里。

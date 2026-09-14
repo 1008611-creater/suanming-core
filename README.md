@@ -41,11 +41,17 @@ const ziwei = castZiwei({
   longitude: 118.18, timezone: 'Asia/Shanghai', gender: 'male'
 });
 
-ziwei.palaces;       // 十二宫：宫干、宫支、宫名、星曜、四化、大限、小限
-ziwei.soul;          // 命宫
-ziwei.fiveElements;  // 五行局
-ziwei.mutagens;      // 生年四化
-ziwei.manifest;      // 版本清单
+ziwei.palaces;                    // 十二宫：宫干、宫支、宫名、三层星曜、四化、四组十二神、大限、小限
+ziwei.palaces[0].majorStars;      // 本宫主星（14 主星层）
+ziwei.palaces[0].auxiliaryStars;  // 本宫辅星（14 辅星层）
+ziwei.palaces[0].minorStars;      // 本宫杂曜（38 杂曜层）
+ziwei.stars;                      // 全盘 66 颗星，各带 tier / group / 落宫
+ziwei.masters;                    // 命主与身主
+ziwei.twelveGods;                 // 长生 / 博士 / 将前 / 岁前四组十二神
+ziwei.soul;                       // 命宫
+ziwei.fiveElements;               // 五行局
+ziwei.mutagens;                   // 生年四化
+ziwei.manifest;                   // 版本清单
 
 validateZiweiChart(ziwei).valid;
 ```
@@ -73,7 +79,7 @@ listRuleSets();        // 已登记的规则集及其内容指纹与可枚举分
 auditRuleSet(getRuleSet()).ok;   // 规则是否都有出处、置信度与证据类别
 ```
 
-已登记三套规则集，分属两个盘系。四柱两套在四处真实分歧上取值不同：
+已登记四套规则集，分属两个盘系。四柱两套在四处真实分歧上取值不同：
 
 | 规则集 | 流派 | 换日 | 大运顺逆 | 五行力量 |
 | --- | --- | --- | --- | --- |
@@ -92,8 +98,9 @@ result.agreement;    // 两派取值相同的字段
 // 没有 result.answer —— 本工程不判定哪个流派更对
 ```
 
-第三套 `ziwei-core-0.1.0` 属紫微盘系，与四柱规则集并列而不互比——
-分歧只在同盘系内定义，`listRuleSets({ system: 'bazi' })` 可只取四柱流派。
+紫微盘系有两套：`ziwei-core-0.2.0`（默认，含 38 杂曜与四组十二神）与 `ziwei-core-0.1.0`（仅主星辅星骨架）。
+旧版保留是为了证明「换规则集对引擎透明」——引擎不判断哪个版本有杂曜，缺表就整组跳过。
+两套紫微规则集与四柱规则集并列而不互比：分歧只在同盘系内定义，`listRuleSets({ system: 'bazi' })` 可只取四柱流派。
 
 详见 [docs/rule-sets.md](docs/rule-sets.md)、[docs/ziwei-model.md](docs/ziwei-model.md) 与
 [ADR-0004](docs/decisions/ADR-0004-multi-school-parallel.md)、[ADR-0005](docs/decisions/ADR-0005-ziwei-as-second-chart-system.md)。
@@ -125,11 +132,12 @@ npm run example   # 运行示例
 当前完成 L0 时间、L1 天文基础、L2 农历天文事实、L3 并列盘系（四柱与大运、紫微斗数十二宫与限运）、
 L4 事实图与溯源审计（含同盘系多流派并列）、L5 解读骨架、L6 API 与自检。
 
-已登记三套规则集：四柱两套（通用派、子初派）在换日基准、大运顺逆、起运取整与五行力量计法上取值不同；
-紫微一套（通行派）覆盖命身宫、五行局、十四主星、十四辅星、生年四化、大限与小限。
+已登记四套规则集：四柱两套（通用派、子初派）在换日基准、大运顺逆、起运取整与五行力量计法上取值不同；
+紫微两套（通行派 0.2.0 为默认、0.1.0 为骨架版）覆盖命身宫、五行局、十四主星、十四辅星、
+**三十八颗杂曜**、**命主身主**、**长生/博士/将前/岁前四组十二神**、生年四化、大限与小限，全盘 66 颗星。
 四柱与紫微共用时间层与农历层，但年界与日界各按自己的口径，**并列展示而不合并**。
 
-**尚未完成**：紫微的杂曜（年、月、日、时系二十余颗）、长生/博士/将前/岁前十二神、流年流月流日流时四化、
-四柱神煞与格局、完整解释语料；农历历书显示仍只到月份编号层。这些不会被伪装成已完成的能力。
+**尚未完成**：紫微的斗君、流年流月流日流时四化与流曜、四柱神煞与格局、完整解释语料；
+农历历书显示仍只到月份编号层。这些不会被伪装成已完成的能力。
 
 版本变更见 [CHANGELOG.md](CHANGELOG.md)。

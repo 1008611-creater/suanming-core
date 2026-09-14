@@ -32,7 +32,13 @@ for (const fact of a.facts.facts) {
 }
 
 // 事实图必须覆盖全部关键结论，否则解读层会「无据可引」。
-const requiredFacts = ['ziwei.year', 'ziwei.time-index', 'ziwei.month-index', 'ziwei.soul-body', 'ziwei.five-elements', 'ziwei.palace-names', 'ziwei.ziwei-position', 'ziwei.major-stars', 'ziwei.mutagen', 'ziwei.decadal-direction'];
+// 0.5.0 起杂曜、命主身主、四组十二神也必须有事实：解读层引用了却查不到出处，就是无据可引。
+const requiredFacts = [
+  'ziwei.year', 'ziwei.time-index', 'ziwei.month-index', 'ziwei.soul-body', 'ziwei.five-elements',
+  'ziwei.palace-names', 'ziwei.ziwei-position', 'ziwei.major-stars', 'ziwei.mutagen', 'ziwei.decadal-direction',
+  'ziwei.yearMinorRule', 'ziwei.monthMinorRule', 'ziwei.dayMinorRule', 'ziwei.hourMinorRule', 'ziwei.hongluanTianxiRule',
+  'ziwei.soul-body-master', 'ziwei.changsheng12', 'ziwei.boshi12', 'ziwei.jiangqian12', 'ziwei.suiqian12'
+];
 for (const id of requiredFacts) assert.ok(a.facts.facts.some((f) => f.fact_id === id), 'missing fact: ' + id);
 
 // 篡改事实必须被溯源校验抓到。

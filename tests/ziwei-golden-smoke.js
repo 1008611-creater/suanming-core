@@ -53,21 +53,22 @@ chart.palaces.forEach((palace, i) => {
   assert.equal(palace.branch, expected.branch, 'palace ' + i + ' branch');
   assert.equal(palace.stem + palace.branch, expected.gz, 'palace ' + i + ' 干支');
   assert.equal(palace.name, expected.name, 'palace ' + i + ' 宫名');
-  const major = palace.stars.filter((s) => s.series).map((s) => s.name).sort();
+  // 必须按 tier 过滤：0.5.0 起杂曜也进 chart.stars，用 series 判层会把杂曜误当辅星。
+  const major = palace.stars.filter((s) => s.tier === 'major').map((s) => s.name).sort();
   assert.deepEqual(major, [...expected.major].sort(), 'palace ' + i + ' 主星');
-  const minor = palace.stars.filter((s) => !s.series).map((s) => s.name).sort();
+  const minor = palace.stars.filter((s) => s.tier === 'auxiliary').map((s) => s.name).sort();
   assert.deepEqual(minor, [...expected.minor].sort(), 'palace ' + i + ' 辅星');
   assert.deepEqual([...palace.mutagens].sort(), [...expected.mutagen].sort(), 'palace ' + i + ' 四化');
 });
 
 // 十四主星必须恰好各出现一次：多一颗或少一颗都说明星系表与宫位算法不匹配。
 const MAJOR_NAMES = ['紫微', '天机', '太阳', '武曲', '天同', '廉贞', '天府', '太阴', '贪狼', '巨门', '天相', '天梁', '七杀', '破军'];
-const majorStars = chart.stars.filter((s) => s.series).map((s) => s.name);
+const majorStars = chart.stars.filter((s) => s.tier === 'major').map((s) => s.name);
 assert.deepEqual([...majorStars].sort(), [...MAJOR_NAMES].sort(), '十四主星各安一次');
 
 // 十四辅星：六吉 + 六煞 + 禄存天马。
 const MINOR_NAMES = ['左辅', '右弼', '文昌', '文曲', '天魁', '天钺', '擎羊', '陀罗', '火星', '铃星', '地空', '地劫', '禄存', '天马'];
-const minorStars = chart.stars.filter((s) => !s.series).map((s) => s.name);
+const minorStars = chart.stars.filter((s) => s.tier === 'auxiliary').map((s) => s.name);
 assert.deepEqual([...minorStars].sort(), [...MINOR_NAMES].sort(), '十四辅星各安一次');
 
 // 生年四化：乙干天机禄、天梁权、紫微科、太阴忌。

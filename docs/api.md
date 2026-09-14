@@ -34,7 +34,8 @@ const ziwei = castZiwei({
   year: 2005, month: 7, day: 13, hour: 8, minute: 58,
   longitude: 118.18, timezone: 'Asia/Shanghai', gender: 'male'
 });
-// 第二参数可指定规则集：castZiwei(input, { ruleSetId: 'ziwei-core-0.1.0' })
+// 第二参数可指定规则集：castZiwei(input, { ruleSetId: 'ziwei-core-0.1.0' })（仅主星辅星骨架）
+// 默认 ziwei-core-0.2.0：含 38 杂曜与长生/博士/将前/岁前四组十二神
 ```
 
 返回字段：
@@ -46,14 +47,21 @@ const ziwei = castZiwei({
 | `lunar` | 农历年干支（正月初一换年）、月序、闰月、日数、月长、起宫用月索引 |
 | `soul` / `body` | 命宫与身宫（`palaceIndex` / `branch` / `stem`） |
 | `fiveElements` | 五行局：`name` / `element` / `value`（局数） |
-| `palaces` | 十二宫（寅基）：宫干、宫支、宫名、星曜、四化、大限、小限 |
-| `stars` | 全盘星曜，各带 `palaceIndex` / `branch` / `palaceName` |
+| `palaces` | 十二宫（寅基）：宫干、宫支、宫名、三层星曜、四化、四组十二神、大限、小限 |
+| `stars` | 全盘 66 颗星，各带 `tier`（`major` / `auxiliary` / `minor`）/ `group` / `palaceIndex` / `branch` / `palaceName` |
+| `masters` | 命主与身主：`soulMaster`（按命宫地支）/ `bodyMaster`（按生年地支） |
+| `twelveGods` | 四组十二神：`changsheng` / `boshi` / `jiangqian` / `suiqian`，各带 `gods` / 起宫 / 方向 |
 | `mutagens` | 生年四化（星名 + 禄权科忌） |
 | `decadal` | 大限顺逆与十二限；**未传 `gender` 时为 `null`** |
 | `xiaoxian` | 小限起宫与方向；**未传 `gender` 时为 `null`** |
 | `facts` / `manifest` | 与四柱同一套事实图与版本清单 |
 
 `validateZiweiChart(ziwei)` 校验十二宫齐全、干支与宫名合法、主星不重不漏。
+
+宫位级字段：`majorStars` / `auxiliaryStars` / `minorStars` 是三层星名的扁平数组，
+`changsheng12` / `boshi12` / `jiangqian12` / `suiqian12` 是该宫的四组十二神取值。
+**取层请用 `tier` 字段**，不要用「有无某字段」来判层——加新星曜时会静默出错。
+未传 `gender` 时，`changsheng12` 与 `boshi12` 为 `null`（方向依赖性别），将前与岁前照常生成。
 
 宫名别名（通行派「交友」= 古法「奴仆」= 参照实现「仆役」）用 `palaceNameAliases('交友')` 取，
 跨实现比对时先对齐名称再逐宫比较，避免把名称差异当成星曜差异。
@@ -135,7 +143,7 @@ auditFactGraph(ziwei.facts);        // 紫微事实图同样可审计，无需�
 ```js
 import { ENGINE_VERSION, parseVersion, compareVersions, satisfiesRange } from 'suanming-core';
 
-satisfiesRange('>=0.4.0 <0.5.0', ENGINE_VERSION);   // 规则集的引擎版本区间是否覆盖当前引擎
+satisfiesRange('>=0.5.0 <0.6.0', ENGINE_VERSION);   // 规则集的引擎版本区间是否覆盖当前引擎
 parseVersion('0.4.0');                              // { major, minor, patch, pre }
 ```
 

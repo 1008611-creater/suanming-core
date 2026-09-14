@@ -7,9 +7,13 @@
  *
  * 计算顺序不可交换（每一步都是下一步的输入）：
  *   农历 → 时辰索引 → 年干支 → 命身宫 → 五行局 → 十二宫天干 → 十二宫名
- *        → 紫微天府 → 十四主星 → 十四辅星 → 生年四化 → 大限小限
- * 其中「五行局」被起紫微星与大限起运共用，因此只算一次往下传，
- * 两处各算一次必然漂移，会让星盘与限运对不上。
+ *        → 紫微天府 → 十四主星 → 十四辅星 → 生年四化
+ *        → 三十八杂曜 → 命主身主 → 四组十二神 → 大限小限
+ * 其中三处依赖必须显式传参而不是各算一次：
+ *   「五行局」被起紫微星、大限起运与长生十二神共用；
+ *   「禄存宫位」被博士十二神直接取用；
+ *   「左辅右弼文昌文曲宫位」被日系杂曜直接取用。
+ * 两处各算一次必然漂移，会让星盘、限运与十二神互相对不上。
  */
 import { civilToUTC } from '../../time/timezone.js';
 import { shichenOfCivil } from '../../time/shichen.js';
@@ -22,6 +26,11 @@ import {
   palaceStems, fiveElementsClass, palaceNames, decadalLimits, xiaoxian, palaceBranch
 } from './palace.js';
 import { ziweiTianfuIndex, majorStars, auxiliaryStars, mutagen, starsByPalace } from './stars.js';
+import { minorStars, soulBodyMaster } from './minor-stars.js';
+import { twelveGods } from './twelve-gods.js';
+
+/** 三十八杂曜的 ruleId 清单：用于逐组生成事实，避免把「哪颗星属于哪条规则」写死在事实层。 */
+const MINOR_RULE_KEYS = ['yearMinorRule', 'monthMinorRule', 'dayMinorRule', 'hourMinorRule', 'hongluanTianxiRule'];
 
 /**
  * 排紫微斗数盘。
@@ -58,6 +67,7 @@ export function castZiwei(input, options = {}) {
   const branches = Array.from({ length: 12 }, (_, i) => palaceBranch(i, ruleSet));
   const soulStem = stems[soulIndex];
   const soulBranch = branches[soulIndex];
+  const bodyBranch = branches[bodyIndex];
   const fiveElements = fiveElementsClass({ stem: soulStem, branch: soulBranch, ruleSet });
   const names = palaceNames({ soulIndex, ruleSet });
 
@@ -70,10 +80,25 @@ export function castZiwei(input, options = {}) {
   });
 
   const majors = majorStars({ ziweiIndex, tianfuIndex, ruleSet });
-  const minors = auxiliaryStars({ yearStem: lunarYear.stem, yearBranch: lunarYear.branch, monthIndex, timeIndex, ruleSet });
-  const stars = [...majors, ...minors];
+  const auxiliaries = auxiliaryStars({ yearStem: lunarYear.stem, yearBranch: lunarYear.branch, monthIndex, timeIndex, ruleSet });
+  // 杂曜依赖辅星的实际落宫（日系星自左辅右弼文昌文曲起算），因此必须排在辅星之后。
+  const skeletal = [...majors, ...auxiliaries];
+  const minors = minorStars({
+    yearStem: lunarYear.stem, yearBranch: lunarYear.branch, monthIndex, timeIndex,
+    lunarDay: lunar.day, soulIndex, bodyIndex, stars: skeletal, ruleSet
+  });
+  const stars = [...skeletal, ...minors];
   const mutagens = mutagen({ yearStem: lunarYear.stem, stars, ruleSet });
   const grouped = starsByPalace(stars, ruleSet);
+
+  // 命主按命宫地支取，身主按生年地支取 —— 两者口径不同，见 minor-stars.js 注释。
+  const masters = soulBodyMaster({ soulBranch, yearBranch: lunarYear.branch, ruleSet });
+
+  // 十二神：将前与岁前只随年支，长生与博士随性别与年支阴阳，缺性别时后两组留空。
+  const gods = twelveGods({
+    fiveElementsValue: fiveElements.value, yearBranch: lunarYear.branch,
+    gender: input.gender, stars, ruleSet
+  });
 
   // 限运需要性别；未提供时留空而不是编造默认值 —— 编造会让「男顺女逆」静默变成男命结果。
   const limits = input.gender
@@ -93,7 +118,14 @@ export function castZiwei(input, options = {}) {
     isBodyPalace: i === bodyIndex,
     stars: Object.freeze(p.stars.map((s) => Object.freeze({ ...s }))),
     starNames: Object.freeze(p.stars.map((s) => s.name)),
+    majorStars: Object.freeze(p.stars.filter((s) => s.tier === 'major').map((s) => s.name)),
+    auxiliaryStars: Object.freeze(p.stars.filter((s) => s.tier === 'auxiliary').map((s) => s.name)),
+    minorStars: Object.freeze(p.stars.filter((s) => s.tier === 'minor').map((s) => s.name)),
     mutagens: Object.freeze(mutagens.filter((m) => m.palaceIndex === i).map((m) => m.mutagen)),
+    changsheng12: gods.changsheng ? gods.changsheng.gods[i] : null,
+    boshi12: gods.boshi ? gods.boshi.gods[i] : null,
+    jiangqian12: gods.jiangqian ? gods.jiangqian.gods[i] : null,
+    suiqian12: gods.suiqian ? gods.suiqian.gods[i] : null,
     decadal: limits ? limits.limits.find((l) => l.palaceIndex === i) ?? null : null,
     xiaoxianAges: xiaoxianResult ? xiaoxianResult.ages[i] : null
   }));
@@ -111,7 +143,7 @@ export function castZiwei(input, options = {}) {
       extra: { lunarMonth: lunar.monthNumber, leap: lunar.leap, lunarDay: lunar.day } }),
     factFromRule(ruleSet.conventions.lateZiDay.ruleId, { id: 'ziwei.late-zi-day', value: timeIndex === 12 ? lunar.day + 1 : lunar.day, ruleSet,
       extra: { lunarDay: lunar.day, monthDays: lunar.days } }),
-    factFromRule(ruleSet.conventions.soulBody.ruleId, { id: 'ziwei.soul-body', value: { soul: soulBranch, body: branches[bodyIndex] }, ruleSet,
+    factFromRule(ruleSet.conventions.soulBody.ruleId, { id: 'ziwei.soul-body', value: { soul: soulBranch, body: bodyBranch }, ruleSet,
       extra: { soulIndex, bodyIndex } }),
     factFromRule(ruleSet.tables.tigerRule.ruleId, { id: 'ziwei.palace-stems', value: stems, ruleSet,
       extra: { tigerStem: ruleSet.tables.tigerRule.table[lunarYear.stem] } }),
@@ -122,8 +154,36 @@ export function castZiwei(input, options = {}) {
       extra: { ziweiIndex, tianfuIndex } }),
     factFromRule(ruleSet.tables.majorStarRule.ruleId, { id: 'ziwei.major-stars', value: majors.map((s) => s.name), ruleSet }),
     ...['lucunRule', 'tianmaRule', 'kuiyueRule', 'zuoyouRule', 'wenchangWenquRule', 'dikongDijieRule', 'huolingRule']
-      .map((key) => factFromRule(ruleSet.tables[key].ruleId, { id: 'ziwei.' + key, value: minors.filter((s) => s.ruleId === ruleSet.tables[key].ruleId).map((s) => s.name), ruleSet })),
+      .map((key) => factFromRule(ruleSet.tables[key].ruleId, { id: 'ziwei.' + key, value: auxiliaries.filter((s) => s.ruleId === ruleSet.tables[key].ruleId).map((s) => s.name), ruleSet })),
     factFromRule(ruleSet.tables.mutagenRule.ruleId, { id: 'ziwei.mutagen', value: mutagens.map((m) => m.name + m.mutagen), ruleSet }),
+    // 杂曜按「年/月/日/时/红鸾天喜」五组分别成事实，一组算错只影响一条事实，
+    // 不会让整张杂曜表看起来都对。
+    ...MINOR_RULE_KEYS.filter((key) => ruleSet.tables[key]).map((key) => factFromRule(ruleSet.tables[key].ruleId, {
+      id: 'ziwei.' + key,
+      value: minors.filter((s) => s.ruleId === ruleSet.tables[key].ruleId).map((s) => s.name + '@' + branches[s.palaceIndex]),
+      ruleSet
+    })),
+    ...(masters ? [factFromRule(ruleSet.tables.soulBodyMasterRule.ruleId, {
+      id: 'ziwei.soul-body-master', value: { soul: masters.soulMaster, body: masters.bodyMaster }, ruleSet,
+      extra: { soulBranch, yearBranch: lunarYear.branch }
+    })] : []),
+    // 十二神：长生与博士的顺逆随性别，未给性别时这两条事实不生成（宁缺勿造）。
+    ...(gods.changsheng ? [factFromRule(ruleSet.tables.changshengRule.ruleId, {
+      id: 'ziwei.changsheng12', value: gods.changsheng.gods, ruleSet,
+      extra: { startBranch: gods.changsheng.startBranch, direction: gods.changsheng.direction }
+    })] : []),
+    ...(gods.boshi ? [factFromRule(ruleSet.tables.boshiRule.ruleId, {
+      id: 'ziwei.boshi12', value: gods.boshi.gods, ruleSet,
+      extra: { startFrom: gods.boshi.startFrom, direction: gods.boshi.direction }
+    })] : []),
+    ...(gods.jiangqian ? [factFromRule(ruleSet.tables.jiangqianRule.ruleId, {
+      id: 'ziwei.jiangqian12', value: gods.jiangqian.gods, ruleSet,
+      extra: { startBranch: gods.jiangqian.startBranch, direction: gods.jiangqian.direction }
+    })] : []),
+    ...(gods.suiqian ? [factFromRule(ruleSet.tables.suiqianRule.ruleId, {
+      id: 'ziwei.suiqian12', value: gods.suiqian.gods, ruleSet,
+      extra: { startBranch: gods.suiqian.startBranch, direction: gods.suiqian.direction }
+    })] : []),
     ...(limits ? [
       factFromRule(ruleSet.conventions.decadalDirection.ruleId, { id: 'ziwei.decadal-direction', value: limits.direction, ruleSet,
         extra: { branchPolarity: limits.branchPolarity, genderPolarity: limits.genderPolarity } }),
@@ -143,10 +203,12 @@ export function castZiwei(input, options = {}) {
       monthNumber: lunar.monthNumber, leap: lunar.leap, day: lunar.day, days: lunar.days, monthIndex
     }),
     soul: Object.freeze({ palaceIndex: soulIndex, branch: soulBranch, stem: soulStem }),
-    body: Object.freeze({ palaceIndex: bodyIndex, branch: branches[bodyIndex] }),
+    body: Object.freeze({ palaceIndex: bodyIndex, branch: bodyBranch }),
     fiveElements,
+    masters,
     palaces: Object.freeze(palaces),
     stars: Object.freeze(stars.map((s) => Object.freeze({ ...s, branch: branches[s.palaceIndex], palaceName: names[s.palaceIndex] }))),
+    twelveGods: gods,
     mutagens: Object.freeze(mutagens),
     decadal: limits,
     xiaoxian: xiaoxianResult,

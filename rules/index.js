@@ -7,6 +7,7 @@
 import baziCore from './bazi-core-0.1.0/ruleset.js';
 import baziZichu from './bazi-zichu-0.1.0/ruleset.js';
 import ziweiCore from './ziwei-core-0.1.0/ruleset.js';
+import ziweiCoreV2 from './ziwei-core-0.2.0/ruleset.js';
 import { stableStringify, fnv1a64 } from '../src/derive/hash.js';
 import { ENGINE_VERSION, satisfiesRange } from '../src/version.js';
 
@@ -18,18 +19,19 @@ function withHash(ruleSet) {
 export const RULE_SETS = Object.freeze({
   'bazi-core-0.1.0': withHash(baziCore),
   'bazi-zichu-0.1.0': withHash(baziZichu),
-  'ziwei-core-0.1.0': withHash(ziweiCore)
+  'ziwei-core-0.1.0': withHash(ziweiCore),
+  'ziwei-core-0.2.0': withHash(ziweiCoreV2)
 });
 
 /** 默认四柱规则集 */
 export const DEFAULT_BAZI_RULE_SET = 'bazi-core-0.1.0';
 /** 默认紫微规则集 */
-export const DEFAULT_ZIWEI_RULE_SET = 'ziwei-core-0.1.0';
+export const DEFAULT_ZIWEI_RULE_SET = 'ziwei-core-0.2.0';
 
 /** 各盘系的参照规则集：分歧只与**同盘系**的参照集比较。 */
 const REFERENCE_BY_SYSTEM = Object.freeze({
   bazi: 'bazi-core-0.1.0',
-  ziwei: 'ziwei-core-0.1.0'
+  ziwei: 'ziwei-core-0.2.0'
 });
 
 /** 规则集的盘系；未声明时按四柱处理（早期规则集没有该字段）。 */

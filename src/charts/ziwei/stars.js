@@ -2,7 +2,7 @@
  * 紫微斗数安星层（L3 盘系层）
  * ---------------------------------------------------------------------------
  * 安十四主星、十四辅星与生年四化。所有起宫口诀、偏移量与对照表均来自
- * rules/ziwei-core-0.1.0，本文件只做算术，不内嵌任何流派字面量。
+ * rules/ziwei-core-0.2.0（默认）或 0.1.0，本文件只做算术，不内嵌任何流派字面量。
  *
  * 十四辅星的构成（与规则集 sources 的声明一致，不多不少）：
  *   六吉 —— 左辅、右弼、文昌、文曲、天魁、天钺
@@ -66,11 +66,11 @@ export function majorStars({ ziweiIndex, tianfuIndex, ruleSet = RULE_SET() }) {
   const out = [];
   rule.ziweiSeries.forEach((name, i) => {
     if (!name) return;
-    out.push({ name, palaceIndex: fixIndex(ziweiIndex + rule.ziweiDirection * i), series: 'ziwei', order: i });
+    out.push({ name, palaceIndex: fixIndex(ziweiIndex + rule.ziweiDirection * i), tier: 'major', series: 'ziwei', order: i });
   });
   rule.tianfuSeries.forEach((name, i) => {
     if (!name) return;
-    out.push({ name, palaceIndex: fixIndex(tianfuIndex + rule.tianfuDirection * i), series: 'tianfu', order: i });
+    out.push({ name, palaceIndex: fixIndex(tianfuIndex + rule.tianfuDirection * i), tier: 'major', series: 'tianfu', order: i });
   });
   return out;
 }
@@ -85,7 +85,7 @@ export function auxiliaryStars({
 }) {
   const t = ruleSet.tables;
   const out = [];
-  const push = (name, palaceIndex, group, ruleId) => out.push({ name, palaceIndex: fixIndex(palaceIndex), group, ruleId });
+  const push = (name, palaceIndex, group, ruleId) => out.push({ name, palaceIndex: fixIndex(palaceIndex), tier: 'auxiliary', group, ruleId });
 
   // 禄存 + 擎羊 + 陀罗：同一「禄位」派生的三颗星，禄前一位擎羊、禄后一位陀罗。
   const lucunBranch = t.lucunRule.table[yearStem];

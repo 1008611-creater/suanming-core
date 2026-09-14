@@ -74,12 +74,19 @@ console.log('  结构校验     ', validateZiweiChart(ziwei));
 console.log('  溯源审计     ', auditFactGraph(ziwei.facts));
 console.log('  事实图指纹   ', hashFacts(ziwei.facts));
 console.log('  宫名别名     ', palaceNameAliases('交友').join(' / '));
+console.log('  命主 / 身主  ', ziwei.masters.soulMaster + ' / ' + ziwei.masters.bodyMaster,
+  '（命主按命宫' + ziwei.masters.soulBranch + '取，身主按生年支' + ziwei.masters.yearBranch + '取）');
+console.log('  全盘星数     ', ziwei.stars.length, '（主星 14 + 辅星 14 + 杂曜 38）');
 console.log('  十二宫：');
 for (const palace of ziwei.palaces) {
   const label = palace.name + (palace.isSoulPalace ? '·命' : '') + (palace.isBodyPalace ? '·身' : '');
   console.log('    ' + (palace.stem + palace.branch).padEnd(4), label.padEnd(6),
-    (palace.starNames.join(' ') || '—').padEnd(30),
-    palace.mutagens.length ? '四化 ' + palace.mutagens.join('') : '',
+    ('主[' + (palace.majorStars.join('') || '—') + '] 辅[' + (palace.auxiliaryStars.join('') || '—') + ']').padEnd(28),
+    ('杂[' + (palace.minorStars.join('') || '—') + ']').padEnd(34),
+    palace.mutagens.length ? '四化 ' + palace.mutagens.join('') : '');
+  console.log('      ' + ' '.repeat(6),
+    '长生十二神=' + palace.changsheng12, '博士十二神=' + palace.boshi12,
+    '将前十二神=' + palace.jiangqian12, '岁前十二神=' + palace.suiqian12,
     palace.decadal ? '大限 ' + palace.decadal.startAge + '-' + palace.decadal.endAge : '');
 }
 

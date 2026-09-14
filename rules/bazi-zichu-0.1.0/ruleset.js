@@ -22,7 +22,7 @@ export default {
   school: 'zichu',
   locale: 'zh-Hans',
   system: 'bazi',
-  engineCompatibility: '>=0.3.0 <0.5.0',
+  engineCompatibility: '>=0.3.0 <0.6.0',
 
   conventions: {
     yearBoundary: {
