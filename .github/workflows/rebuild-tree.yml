@@ -19,8 +19,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mkdir -p .github/workflows docs docs/decisions examples scripts src src/astro src/calendar src/charts/bazi src/derive src/interpret src/schema src/time tests
-          git mv "ci.yml" ".github/workflows/ci.yml"
+          mkdir -p docs docs/decisions examples scripts src src/astro src/calendar src/charts/bazi src/derive src/interpret src/schema src/time tests
           git mv "api.md" "docs/api.md"
           git mv "architecture.md" "docs/architecture.md"
           git mv "astro-model.md" "docs/astro-model.md"
@@ -63,6 +62,7 @@ jobs:
           git mv "term-boundary-smoke.js" "tests/term-boundary-smoke.js"
           git mv "zhongqi-smoke.js" "tests/zhongqi-smoke.js"
           git rm -q "index.js"
+          git rm -q "ci.yml"
           cat > src/index.js <<'EOF'
           export * from './astro/index.js';
           export * from './time/julian.js';
@@ -74,19 +74,18 @@ jobs:
           export * from './manifest.js';
           export * from './calendar/lunar.js';
           export * from './schema/validate.js';
-          
           EOF
           cat > src/astro/index.js <<'EOF'
-          export * from './sun.js'; export * from './solar-terms.js'; export * from './moon.js'; export * from './delta-t.js';
-          
+          export * from './sun.js';
+          export * from './solar-terms.js';
+          export * from './moon.js';
+          export * from './delta-t.js';
           EOF
           cat > src/charts/bazi/index.js <<'EOF'
           export * from './pillars.js';
           export * from './chart.js';
           export * from './luck.js';
-          
           EOF
-          git rm -q .github/workflows/rebuild-tree.yml
           git add -A
           git status --short
           git commit -m "chore: 重建目录结构，修复网页上传导致的路径摊平"
