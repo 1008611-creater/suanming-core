@@ -15,7 +15,7 @@ export function castBazi(input) {
   const lichun = solarTermInstant(input.year, 315).utc;
   const year = yearPillar(input.year, input.month, input.day, { yearBoundary: 'calendar', forcePrevious: utc.jdUTC < lichun });
   const boundary = currentMonthBoundary(utc.jdUTC);
-  const month = monthPillar(input.year, boundary?.degree ?? 315);
+  const month = monthPillar(year[0], boundary?.degree ?? 315);
   const hour = hourPillar(day[0], shi.index);
   const forward = ((input.gender === 'male') === ('甲乙丙丁戊己庚辛壬癸'.indexOf(year[0]) % 2 === 0));
   const adjacent = forward ? nextMonthBoundary(utc.jdUTC) : boundary;
