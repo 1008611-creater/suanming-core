@@ -1,0 +1,48 @@
+name: sync-payload
+
+on:
+  push:
+    paths:
+      - 'payload.b64'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Apply payload
+        run: |
+          cat > /tmp/apply.cjs <<'APPLY_EOF'
+          const fs = require('fs');
+          const path = require('path');
+          const zlib = require('zlib');
+          const data = JSON.parse(zlib.gunzipSync(Buffer.from(fs.readFileSync('payload.b64', 'utf8').trim(), 'base64')).toString('utf8'));
+          let count = 0;
+          for (const [rel, content] of Object.entries(data)) {
+            if (rel.startsWith('.github/workflows/')) continue;
+            const target = path.resolve(process.cwd(), rel);
+            fs.mkdirSync(path.dirname(target), { recursive: true });
+            fs.writeFileSync(target, content);
+            count += 1;
+          }
+          console.log('wrote ' + count + ' files');
+          APPLY_EOF
+          node /tmp/apply.cjs
+      - name: Verify
+        run: npm test
+      - name: Commit
+        run: |
+          git config user.name "sync-bot"
+          git config user.email "sync-bot@users.noreply.github.com"
+          git rm --cached -q payload.b64
+          rm -f payload.b64
+          git add -A
+          git commit -m "feat: 多流派并列与规则集 0.3.0" || echo "nothing to commit"
+          git push
