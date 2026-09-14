@@ -12,4 +12,5 @@ await import('../tests/lunar-smoke.js');
 await import('../tests/zhongqi-smoke.js');
 await import('../tests/lunar-months-smoke.js');
 await import('../tests/lunar-number-smoke.js');
+await import('../tests/schema-smoke.js');
 console.log('suanming-core check passed');

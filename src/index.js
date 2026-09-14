@@ -7,3 +7,4 @@ export * from './interpret/explain.js';
 export * from './charts/bazi/index.js';
 export * from './manifest.js';
 export * from './calendar/lunar.js';
+export * from './schema/validate.js';
