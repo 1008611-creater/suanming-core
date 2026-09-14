@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+*.log
+.DS_Store
+Thumbs.db
+tmp/
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+
+# 星历与二进制数据（如需入库请用 Git LFS，见 docs/data-provenance.md）
+data/ephe/*.se1
+data/ephe/*.bsp
+
+# 个人命例与客户数据：永不入库
+private/
+cases/private/
+*.private.json

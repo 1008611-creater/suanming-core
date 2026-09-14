@@ -1,0 +1,7 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://example.invalid/suanming/chart.schema.json",
+  "title":"Suanming Chart","type":"object","required":["schemaVersion","input","pillars","manifest"],
+  "properties":{"schemaVersion":{"const":"1.0.0"},"input":{"type":"object"},"pillars":{"type":"object"},"facts":{"type":"array"},"manifest":{"type":"object","required":["engineVersion","ruleSet"]}}
+}
+
