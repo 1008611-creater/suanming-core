@@ -148,6 +148,17 @@ export function currentMonthBoundary(jdUTC) {
   return best;
 }
 
+export function nextMonthBoundary(jdUTC) {
+  const yearGuess = new Date((jdUTC - 2440587.5) * 86400000).getUTCFullYear();
+  let best = null;
+  for (const y of [yearGuess - 1, yearGuess, yearGuess + 1]) for (const t of SOLAR_TERMS) {
+    if (!isJie(t.degree)) continue;
+    const inst = solarTermInstant(y, t.degree);
+    if (inst.utc > jdUTC && (best === null || inst.utc < best.utc)) best = { key:t.key, name:t.name, degree:t.degree, utc:inst.utc, tt:inst.tt };
+  }
+  return best;
+}
+
 /**
  * 节气边界告警：给定时刻距最近节气边界多少秒。
  * 排盘层用它决定「月柱是否稳定」。

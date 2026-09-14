@@ -4,7 +4,7 @@ import { createManifest } from '../../manifest.js';
 import { yearPillar, monthPillar, dayPillar, hourPillar } from './pillars.js';
 import { buildLuck } from './luck.js';
 import { factGraph, fact } from '../../derive/facts.js';
-import { currentMonthBoundary, solarTermInstant } from '../../astro/solar-terms.js';
+import { currentMonthBoundary, nextMonthBoundary, solarTermInstant } from '../../astro/solar-terms.js';
 
 export function castBazi(input) {
   const zone = input.timezone ?? 'Asia/Shanghai';
@@ -17,7 +17,10 @@ export function castBazi(input) {
   const boundary = currentMonthBoundary(utc.jdUTC);
   const month = monthPillar(input.year, boundary?.degree ?? 315);
   const hour = hourPillar(day[0], shi.index);
-  const luck = input.gender ? buildLuck({ monthPillar: month, yearStem: year[0], gender: input.gender, daysToBoundary: 0 }) : null;
+  const forward = ((input.gender === 'male') === ('甲乙丙丁戊己庚辛壬癸'.indexOf(year[0]) % 2 === 0));
+  const adjacent = forward ? nextMonthBoundary(utc.jdUTC) : boundary;
+  const daysToBoundary = adjacent ? (adjacent.utc - utc.jdUTC) : 0;
+  const luck = input.gender ? buildLuck({ monthPillar: month, yearStem: year[0], gender: input.gender, daysToBoundary, options:{ direction:forward ? 1 : -1 } }) : null;
   const manifest = createManifest({ timezone: zone, longitude });
   const facts = factGraph([
     fact({ id:'pillar.year', value:year, ruleId:'bazi.year.solar-term-boundary', source:['solar-term:315'] }),
