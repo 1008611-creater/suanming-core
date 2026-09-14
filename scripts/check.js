@@ -22,6 +22,10 @@ const required = [
   'src/derive/hash.js',
   'rules/index.js',
   'rules/bazi-core-0.1.0/ruleset.js',
+  'rules/bazi-zichu-0.1.0/ruleset.js',
+  'src/version.js',
+  'src/derive/wuxing.js',
+  'src/compare/schools.js',
   'schema/chart.schema.json',
   'src/schema/chart.schema.json'
 ];

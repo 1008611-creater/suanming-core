@@ -10,7 +10,12 @@ export function startLuckAge(daysToBoundary, options = {}) {
   const ruleSet = options.ruleSet ?? getRuleSet();
   const divisor = options.daysPerYear ?? ruleSet.parameters.luckDaysPerYear;
   if (!(divisor > 0)) throw new Error('daysPerYear must be positive');
-  return Math.abs(daysToBoundary) / divisor;
+  const exact = Math.abs(daysToBoundary) / divisor;
+  // 取整口径同样是流派分歧：精确分数 vs 取整到整年。
+  const rounding = options.rounding ?? ruleSet.parameters.luckStartRounding ?? 'exact';
+  if (rounding === 'exact') return exact;
+  if (rounding === 'whole-year') return Math.round(exact);
+  throw new Error('unknown luckStartRounding: ' + rounding);
 }
 
 export function luckPillars(monthPillar, direction, count = 10, options = {}) {
@@ -31,7 +36,9 @@ export function buildLuck({ monthPillar, yearStem, gender, daysToBoundary, optio
     direction,
     startAgeYears: startLuckAge(daysToBoundary, { ...options, ruleSet }),
     pillars: luckPillars(monthPillar, direction, options.count ?? 10, { ruleSet }),
-    method: 'days-to-boundary-divided-by-3',
+    method: ruleSet.parameters.luckStartRounding === 'whole-year'
+      ? 'days-to-boundary-divided-by-3-rounded'
+      : 'days-to-boundary-divided-by-3',
     ruleId: ruleSet.conventions.luckStart.ruleId,
     directionRuleId: ruleSet.conventions.luckDirection.ruleId,
     ruleSet: ruleSet.id,

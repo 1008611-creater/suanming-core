@@ -29,6 +29,26 @@ export function sexagenaryDay(jd, ruleSet = DEFAULT) {
   return ganzhi(Math.floor(jd + 0.5) + ruleSet.parameters.dayPillarJdnOffset, ruleSet);
 }
 
+/**
+ * 日柱换日基准的判定：规则集通过 parameters.dayBoundaryMode 选择流派。
+ *   civil-midnight      —— 出生地民用日零点换日（子正换日）
+ *   zi-chu-true-solar   —— 真太阳时 23:00 换日（子初换日）
+ * 判定的依据必须是「真太阳时」，不是钟表时：子初是一个太阳位置，不是一个时区读数。
+ * @param {number} civilDayNumber 出生地民用日的日期序号
+ * @param {{trueSolarMinutes:number}} shichen 时间层给出的真太阳时结果
+ * @param {object} ruleSet
+ */
+export function dayNumberForBoundary(civilDayNumber, shichen, ruleSet = DEFAULT) {
+  const mode = ruleSet.parameters.dayBoundaryMode ?? 'civil-midnight';
+  if (mode === 'civil-midnight') return civilDayNumber;
+  if (mode === 'zi-chu-true-solar') {
+    const start = ruleSet.parameters.ziChuStartTrueSolarMinutes ?? 1380;
+    const minutes = ((shichen?.trueSolarMinutes ?? 0) % 1440 + 1440) % 1440;
+    return minutes >= start ? civilDayNumber + 1 : civilDayNumber;
+  }
+  throw new Error('unknown dayBoundaryMode: ' + mode);
+}
+
 export function yearPillar(y, m, d, o = {}) {
   const ruleSet = o.ruleSet ?? DEFAULT;
   const v = o.forcePrevious ? y - 1
@@ -70,8 +90,16 @@ export function tenGod(dayStem, otherStem, ruleSet = DEFAULT) {
   return names[(stems.indexOf(otherStem) - stems.indexOf(dayStem) + 10) % 10];
 }
 
-/** 大运顺逆：阳年干男命、阴年干女命顺行。 */
+/**
+ * 大运顺逆。规则集通过 parameters.luckDirectionMode 选择流派：
+ *   year-stem-polarity —— 阳年干男命、阴年干女命顺行，其余逆行
+ *   gender-only        —— 男命一律顺行、女命一律逆行
+ */
 export function luckDirection(yearStem, gender, ruleSet = DEFAULT) {
+  const mode = ruleSet.parameters.luckDirectionMode ?? 'year-stem-polarity';
+  if (gender !== 'male' && gender !== 'female') throw new Error('unknown gender: ' + gender);
+  if (mode === 'gender-only') return gender === 'male' ? 1 : -1;
+  if (mode !== 'year-stem-polarity') throw new Error('unknown luckDirectionMode: ' + mode);
   const stems = stemsOf(ruleSet);
   return ((stems.indexOf(yearStem) % 2 === 0) === (gender === 'male')) ? 1 : -1;
 }

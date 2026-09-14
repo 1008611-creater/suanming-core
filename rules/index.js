@@ -5,7 +5,9 @@
  * 新增流派 = 新增一个版本化规则集目录 + 在 RULE_SETS 登记，不改计算代码。
  */
 import baziCore from './bazi-core-0.1.0/ruleset.js';
+import baziZichu from './bazi-zichu-0.1.0/ruleset.js';
 import { stableStringify, fnv1a64 } from '../src/derive/hash.js';
+import { ENGINE_VERSION, satisfiesRange } from '../src/version.js';
 
 /** 规则集内容指纹：规则一旦改动，指纹随之变化，结果可被外部复算比对。 */
 function withHash(ruleSet) {
@@ -13,7 +15,8 @@ function withHash(ruleSet) {
 }
 
 export const RULE_SETS = Object.freeze({
-  'bazi-core-0.1.0': withHash(baziCore)
+  'bazi-core-0.1.0': withHash(baziCore),
+  'bazi-zichu-0.1.0': withHash(baziZichu)
 });
 
 /** 默认四柱规则集 */
@@ -30,8 +33,28 @@ export function getRuleSet(id = DEFAULT_BAZI_RULE_SET) {
 export function listRuleSets() {
   return Object.entries(RULE_SETS).map(([id, r]) => ({
     id, version: r.version, title: r.title, school: r.school,
-    engineCompatibility: r.engineCompatibility, hash: r.hash, ruleCount: ruleEntries(r).length
+    engineCompatibility: r.engineCompatibility, hash: r.hash, ruleCount: ruleEntries(r).length,
+    divergences: divergenceKeys(r)
   }));
+}
+
+/**
+ * 规则集的可枚举分歧点：凡是与「参照规则集」取值不同的规则条目，都登记为分歧。
+ * 用途是让上层可以问「这两套流派到底哪里不一样」，而不是只能凭肉眼比对两份结果。
+ */
+const REFERENCE_RULE_SET = 'bazi-core-0.1.0';
+
+export function divergenceKeys(ruleSet) {
+  const reference = RULE_SETS[REFERENCE_RULE_SET];
+  if (!reference || ruleSet.id === REFERENCE_RULE_SET) return [];
+  const ref = new Map(ruleEntries(reference).map(e => [e.ruleId, e]));
+  const out = [];
+  for (const entry of ruleEntries(ruleSet)) {
+    const base = ref.get(entry.ruleId);
+    if (!base) { out.push(entry.ruleId); continue; }
+    if (base.value !== entry.value) out.push(entry.ruleId);
+  }
+  return out;
 }
 
 /** 取出规则集内所有带 ruleId 的条目，供审计与事实溯源使用。 */
@@ -71,6 +94,12 @@ export function auditRuleSet(ruleSet = getRuleSet()) {
   if (!ruleSet.id) errors.push('ruleSet.id is required');
   if (!ruleSet.version) errors.push('ruleSet.version is required');
   if (!ruleSet.sources || typeof ruleSet.sources !== 'object') errors.push('ruleSet.sources is required');
+  if (!ruleSet.engineCompatibility) {
+    errors.push('ruleSet.engineCompatibility is required');
+  } else if (!satisfiesRange(ruleSet.engineCompatibility, ENGINE_VERSION)) {
+    errors.push('ruleSet.engineCompatibility "' + ruleSet.engineCompatibility +
+      '" does not include current engine version ' + ENGINE_VERSION);
+  }
 
   const sources = ruleSet.sources ?? {};
   const entries = ruleEntries(ruleSet);

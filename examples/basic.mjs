@@ -5,7 +5,8 @@
 import {
   castBazi, explain, validateChart, validateTraceability,
   auditRuleSet, auditFactGraph, listRuleSets,
-  hashInput, hashFacts, numberedLunarMonths
+  hashInput, hashFacts, numberedLunarMonths,
+  compareSchools, elementStrength
 } from '../src/index.js';
 
 const input = {
@@ -37,6 +38,29 @@ for (const claim of explain(chart.facts, [
   { text: '没有事实来源的结论', factIds: ['missing'] }
 ])) {
   console.log('  ' + claim.text, '← ' + claim.evidence.join(', '), '置信度 ' + claim.confidence);
+}
+
+console.log('\n多流派并列（不判定孰是孰非，也不合并）：');
+const compared = compareSchools(input);
+for (const school of compared.schools) {
+  console.log('  ' + school.ruleSetId.padEnd(20), JSON.stringify(school.chart.pillars),
+    '方向 ' + (school.chart.luck.direction === 1 ? '顺' : '逆'),
+    '起运 ' + school.chart.luck.startAgeYears.toFixed(2) + ' 岁',
+    '主导五行 ' + school.wuxing.dominant,
+    '指纹 ' + school.ruleSetHash);
+}
+console.log('  分歧字段：');
+for (const d of compared.divergences) {
+  console.log('    ' + d.path);
+  for (const v of d.values) console.log('      ' + v.ruleSetId.padEnd(20), JSON.stringify(v.value));
+}
+console.log('  一致字段：', compared.agreement.join(', '));
+console.log('  ' + compared.disclaimer);
+
+console.log('\n五行力量（权重来自规则集，换流派就换结果）：');
+for (const school of compared.schools) {
+  console.log('  ' + school.ruleSetId.padEnd(20), '权重 ' + JSON.stringify(school.wuxing.weights),
+    JSON.stringify(school.wuxing.totals), '主导 ' + school.wuxing.dominant);
 }
 
 console.log('\n2024 年农历月份编号：');

@@ -2,7 +2,7 @@ import { civilToUTC } from '../../time/timezone.js';
 import { shichenOfCivil } from '../../time/shichen.js';
 import { julianDayFromGregorian } from '../../time/julian.js';
 import { createManifest } from '../../manifest.js';
-import { yearPillar, monthPillar, dayPillar, hourPillar, pillarDetail, luckDirection } from './pillars.js';
+import { yearPillar, monthPillar, dayPillar, hourPillar, pillarDetail, luckDirection, dayNumberForBoundary } from './pillars.js';
 import { buildLuck } from './luck.js';
 import { factGraph, factFromRule } from '../../derive/facts.js';
 import { currentMonthBoundary, nextMonthBoundary, solarTermInstant } from '../../astro/solar-terms.js';
@@ -14,9 +14,11 @@ import { getRuleSet, DEFAULT_BAZI_RULE_SET } from '../../../rules/index.js';
  * 关键边界（都对应规则集中的 ruleId）：
  *   - 年柱：立春（黄经 315°）瞬间换年。
  *   - 月柱：出生瞬间之前最近的「节」。
- *   - 日柱：**出生地民用日**零点换日。绝不能用 UTC 儒略日的日序——
- *           东八区凌晨出生时 UTC 仍是前一天，用 UTC 日序会把日柱整体算错一天。
- *   - 时柱：真太阳时两小时一时辰，配五鼠遁取天干。
+ *   - 日柱：换日基准由规则集参数 dayBoundaryMode 决定（子正换日 / 子初换日）。
+ *           **绝不能用 UTC 儒略日的日序**——东八区凌晨出生时 UTC 仍是前一天，
+ *           用 UTC 日序会把日柱整体算错一天。子初换日则再按真太阳时 23:00 判定是否进次日。
+ *   - 时柱：真太阳时两小时一时辰，配五鼠遁取天干。日柱换日基准同样作用于时干：
+ *           子初换日后 23:00—24:00 的时干必须用次日日干，否则日柱与时干会自相矛盾。
  */
 export function castBazi(input, options = {}) {
   const ruleSet = options.ruleSet ?? getRuleSet(options.ruleSetId ?? DEFAULT_BAZI_RULE_SET);
@@ -25,9 +27,10 @@ export function castBazi(input, options = {}) {
   const longitude = input.longitude ?? 120;
   const shi = shichenOfCivil(input, longitude, { timePrecision: input.timePrecision ?? 'exact' });
 
-  // 日柱：按出生地民用日的日期序号，而不是 UTC 时刻的日序。
+  // 日柱：先取出生地民用日的日期序号（不是 UTC 时刻的日序），再按流派换日基准判定。
   const civilDayNumber = julianDayFromGregorian(input.year, input.month, input.day);
-  const day = dayPillar(civilDayNumber, ruleSet);
+  const dayNumber = dayNumberForBoundary(civilDayNumber, shi, ruleSet);
+  const day = dayPillar(dayNumber, ruleSet);
 
   const lichun = solarTermInstant(input.year, 315).utc;
   const year = yearPillar(input.year, input.month, input.day, {
@@ -59,7 +62,7 @@ export function castBazi(input, options = {}) {
     schemaVersion: '1.0.0',
     input: { ...input, timezone: zone },
     pillars,
-    time: { ...utc, civilDayNumber, shichen: shi },
+    time: { ...utc, civilDayNumber, dayNumber, dayBoundaryMode: ruleSet.parameters.dayBoundaryMode ?? 'civil-midnight', shichen: shi },
     luck,
     facts,
     manifest

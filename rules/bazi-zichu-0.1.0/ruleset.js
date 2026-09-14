@@ -1,23 +1,25 @@
 /**
- * bazi-core-0.1.0 —— 四柱核心规则集（通用派）
+ * bazi-zichu-0.1.0 —— 四柱子初派规则集
  * ---------------------------------------------------------------------------
- * 本文件是「规则即数据」的落点：所有会随流派变化的取值、表格与阈值都写在这里，
- * 并逐条标注 ruleId、出处与置信度。计算代码只读取本文件，不再内嵌字面量。
+ * 存在的意义不是「更准」，而是证明工程能在同一份输入上并列两套真实分歧的规则，
+ * 且两份结果各自可溯源、可复算、不合并成单一答案。
  *
- * 约定：
- *   - ruleId 一旦发布不得改变含义；语义变化必须发布新的规则集版本。
- *   - evidence 区分「天文可验证」(astronomical) 与「传统约定」(traditional/convention)，
- *     二者不可混用同一个置信度口径。
- *   - source 数组引用本文件 sources 中的键，不得引用未登记的出处。
+ * 与 bazi-core-0.1.0（通用派）的实质分歧：
+ *   1. 换日：子初换日（真太阳时 23:00 即进次日） vs 子正换日（民用日零点）。
+ *   2. 大运顺逆：只按性别（男顺女逆） vs 阳年干男／阴年干女顺行。
+ *   3. 五行力量：藏干本气／中气／余气加权 [1, 0.5, 0.3] vs 只计本气 [1, 0, 0]。
+ *   4. 起运：取整到整年 vs 保留精确分数。
+ *
+ * 这些分歧没有「谁对」的判定，只有各自的出处。把它们并列，比假装统一更诚实。
  */
 
-export const RULE_SET_ID = 'bazi-core-0.1.0';
+export const RULE_SET_ID = 'bazi-zichu-0.1.0';
 
 export default {
   id: RULE_SET_ID,
   version: '0.1.0',
-  title: '四柱核心规则集（通用派）',
-  school: 'common',
+  title: '四柱规则集（子初换日派）',
+  school: 'zichu',
   locale: 'zh-Hans',
   engineCompatibility: '>=0.3.0 <0.4.0',
 
@@ -39,12 +41,12 @@ export default {
       confidence: 0.95
     },
     dayBoundary: {
-      ruleId: 'bazi.day.local-midnight',
-      value: 'local-midnight',
-      label: '日柱以出生地民用日零点换日（子正换日）',
-      evidence: 'convention',
-      source: ['jdn-anchor'],
-      confidence: 0.9
+      ruleId: 'bazi.day.zi-chu-true-solar',
+      value: 'zi-chu-true-solar',
+      label: '日柱以真太阳时 23:00（子初）换日，23:00 后即属次日日柱',
+      evidence: 'traditional',
+      source: ['san-ming-tong-hui', 'zi-chu-commentary'],
+      confidence: 0.72
     },
     hourBoundary: {
       ruleId: 'bazi.hour.true-solar-time',
@@ -55,12 +57,12 @@ export default {
       confidence: 0.88
     },
     luckDirection: {
-      ruleId: 'bazi.luck.year-stem-polarity',
-      value: 'yang-male-yin-female-forward',
-      label: '阳年干男命、阴年干女命顺行，其余逆行',
+      ruleId: 'bazi.luck.gender-only',
+      value: 'male-forward-female-backward',
+      label: '大运一律男命顺行、女命逆行，不看年干阴阳',
       evidence: 'traditional',
-      source: ['yuan-hai-zi-ping'],
-      confidence: 0.85
+      source: ['zi-ping-she-yi'],
+      confidence: 0.6
     },
     lunarMonthNumbering: {
       ruleId: 'lunar.month.winter-solstice-anchor',
@@ -87,12 +89,12 @@ export default {
       confidence: 0.92
     },
     luckStart: {
-      ruleId: 'bazi.luck.days-to-boundary-over-3',
-      value: 'exact-fraction',
-      label: '起运年龄 = 出生到顺／逆方向相邻「节」的天数 ÷ 3',
+      ruleId: 'bazi.luck.days-to-boundary-rounded-year',
+      value: 'round-to-whole-year',
+      label: '起运年龄按出生到顺／逆方向相邻「节」的天数 ÷ 3 后取整到整年',
       evidence: 'traditional',
-      source: ['yuan-hai-zi-ping'],
-      confidence: 0.8
+      source: ['zi-ping-she-yi'],
+      confidence: 0.65
     }
   },
 
@@ -139,11 +141,11 @@ export default {
       confidence: 0.8
     },
     elementCountRule: {
-      ruleId: 'bazi.wuxing.element-count',
-      label: '五行力量按四柱天干与地支本气各计一次（藏干权重 [1, 0, 0]）',
+      ruleId: 'bazi.wuxing.element-weighted',
+      label: '五行力量按藏干本气／中气／余气加权 [1, 0.5, 0.3]，天干各计一次',
       evidence: 'traditional',
-      source: ['san-ming-tong-hui'],
-      confidence: 0.7
+      source: ['di-tian-sui'],
+      confidence: 0.62
     },
     dayPillarRule: {
       ruleId: 'bazi.day.sexagenary-jdn',
@@ -158,9 +160,11 @@ export default {
     monthBoundaryStepDegrees: 30,
     monthBoundaryOffsetDegrees: 15,
     dayPillarJdnOffset: 49,
-    dayBoundaryMode: 'civil-midnight',
+    dayBoundaryMode: 'zi-chu-true-solar',
     ziChuStartTrueSolarMinutes: 1380,
-    hiddenStemWeights: [1, 0, 0],
+    hiddenStemWeights: [1, 0.5, 0.3],
+    luckDirectionMode: 'gender-only',
+    luckStartRounding: 'whole-year',
     luckDaysPerYear: 3,
     luckDaysPerMonth: 0.25,
     sexagenaryCycleLength: 60
@@ -183,16 +187,24 @@ export default {
       citation: '真太阳时 = 平太阳时 + (经度 − 120°)×4 分钟 + 均时差',
       kind: 'astronomical-reference'
     },
-    'yuan-hai-zi-ping': {
-      citation: '《渊海子平》子平法：四柱、大运顺逆与起运',
-      kind: 'traditional-text'
-    },
     'chinese-calendar-rule': {
       citation: '农历编排规则：朔日为月首、冬至所在月为十一月、无中气之月为闰月（与 ADR-0003 配套）',
       kind: 'calendar-convention'
     },
     'san-ming-tong-hui': {
       citation: '《三命通会》：十神与地支藏干体系',
+      kind: 'traditional-text'
+    },
+    'zi-chu-commentary': {
+      citation: '子初换日说：以真太阳时子时初（23:00）为日界，与子正换日说并列为传统分歧',
+      kind: 'traditional-text'
+    },
+    'zi-ping-she-yi': {
+      citation: '子平撮要类文献中「男顺女逆，不问年干阴阳」的排运口径',
+      kind: 'traditional-text'
+    },
+    'di-tian-sui': {
+      citation: '《滴天髓》体系中的藏干轻重权衡思路：本气重于中气，中气重于余气',
       kind: 'traditional-text'
     }
   }

@@ -110,6 +110,17 @@
         "jdUTC": {
           "type": "number"
         },
+        "dayNumber": {
+          "type": "number",
+          "description": "按流派换日基准判定后的日柱日期序号（子初换日时可能为次日）"
+        },
+        "dayBoundaryMode": {
+          "enum": [
+            "civil-midnight",
+            "zi-chu-true-solar"
+          ],
+          "description": "日柱换日基准：子正换日 / 子初换日"
+        },
         "shichen": {
           "type": "object",
           "required": [

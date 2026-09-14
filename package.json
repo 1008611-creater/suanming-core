@@ -1,7 +1,7 @@
 {
   "name": "suanming-core",
-  "version": "0.2.0",
-  "description": "Deterministic Chinese metaphysics calculation core: astronomical time, calendar, chart casting, rule engine. Interpretation is downstream and never computes.",
+  "version": "0.3.0",
+  "description": "Deterministic Chinese metaphysics calculation core: astronomical time, calendar, chart casting, multi-school rule engine. Interpretation is downstream and never computes.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.js",
@@ -39,7 +39,10 @@
     "vsop87",
     "chinese-calendar",
     "solar-terms",
-    "rule-engine"
+    "rule-engine",
+    "multi-school",
+    "rule-set",
+    "traceability"
   ],
   "engines": {
     "node": ">=20"

@@ -2,12 +2,15 @@
 
 ## 四柱
 
-| 柱 | 边界 | 规则 |
-| --- | --- | --- |
-| 年柱 | 立春（太阳视黄经 315°）瞬间 | `bazi.year.solar-term-boundary` |
-| 月柱 | 出生瞬间之前最近的「节」 | `bazi.month.jie-boundary` |
-| 日柱 | 出生地民用日零点 | `bazi.day.sexagenary-jdn` |
-| 时柱 | 真太阳时两小时一时辰 | `bazi.hour.true-solar-time` |
+| 柱 | 边界 | 通用派规则 | 子初派规则 |
+| --- | --- | --- | --- |
+| 年柱 | 立春（太阳视黄经 315°）瞬间 | `bazi.year.solar-term-boundary` | 同左 |
+| 月柱 | 出生瞬间之前最近的「节」 | `bazi.month.jie-boundary` | 同左 |
+| 日柱 | 换日基准随流派 | `bazi.day.sexagenary-jdn`（子正） | `bazi.day.zi-chu-true-solar`（子初） |
+| 时柱 | 真太阳时两小时一时辰 | `bazi.hour.true-solar-time` | 同左 |
+
+**换日基准是流派分歧，不是参数细节。** 通用派按出生地民用日零点换日（子正），子初派按真太阳时 23:00 换日（子初）。
+子初换日下，23:00—24:00 出生者的日柱属次日，**时干必须同步使用次日日干**——否则日柱换了时干没换，两柱自相矛盾。
 
 **日柱必须按出生地民用日计算，不能按 UTC 日序。** 东八区凌晨出生时 UTC 仍属前一天，用 UTC 日序会把日柱整体算错一天。这一点已固化为回归用例。
 
@@ -19,7 +22,11 @@
 
 起运年龄 = 出生时刻到顺／逆方向相邻「节」的天数 ÷ 3（规则 `bazi.luck.days-to-boundary-over-3`）。
 
-顺逆方向默认由年干阴阳与性别决定：阳年干男命、阴年干女命顺行，其余逆行（规则 `bazi.luck.year-stem-polarity`）。
+顺逆方向随流派：通用派由年干阴阳与性别共同决定（阳年干男命、阴年干女命顺行，规则 `bazi.luck.year-stem-polarity`）；
+子初派只看性别（男顺女逆，规则 `bazi.luck.gender-only`）。
+
+起运年龄的取整口径同样随流派：通用派保留精确分数，子初派取整到整年。`luck.method` 会随口径变化
+（`days-to-boundary-divided-by-3` / `days-to-boundary-divided-by-3-rounded`），避免取整后的结果被当成精确值读。
 
 不同门派可能对起运取整、子初换日、性别规则有不同约定，因此结果必须保留 `method`、`direction`、`ruleId` 与 `options`，不能脱离参数单独解释。
 

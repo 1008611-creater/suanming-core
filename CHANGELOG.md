@@ -1,5 +1,31 @@
 # 更新记录
 
+## 0.3.0
+
+### 多流派并列（把文档承诺变成代码能力）
+
+- 新增第二套规则集 `bazi-zichu-0.1.0`（子初派），与默认的 `bazi-core-0.1.0`（通用派）在四处取值不同：换日基准、大运顺逆、起运取整、五行力量计法。
+- 新增 `compareSchools(input)`：同一输入跑多套规则集，输出每派各自的命盘、事实图与规则指纹，外加逐字段分歧清单。
+  **不返回裁决字段，不合并成综合命盘**——分歧只能被呈现，不能被抹平。见 [ADR-0004](docs/decisions/ADR-0004-multi-school-parallel.md)。
+- `listRuleSets()` 的每项新增 `divergences`：枚举该规则集相对默认集取值不同的 `ruleId`。
+- 流派分歧改用机器可读参数表达，计算代码不再分叉：`dayBoundaryMode`、`luckDirectionMode`、`luckStartRounding`、`hiddenStemWeights`。
+- 新增 `engineCompatibility` 强制校验：规则集必须声明所支持的引擎版本区间，当前 `ENGINE_VERSION` 落在区间外会让审计失败。
+
+### 计算
+
+- **子初换日落地**：`dayBoundaryMode: 'zi-chu-true-solar'` 时，真太阳时 23:00 后即进次日日柱。
+  日柱换日后**时干同步使用次日日干**——否则日柱换了时干没换，两柱会自相矛盾。
+- **大运顺逆可换口径**：`luckDirectionMode: 'gender-only'` 支持「男顺女逆，不问年干阴阳」的流派。
+- **起运取整可换口径**：`luckStartRounding: 'whole-year'` 支持取整到整年，`method` 字段随口径变化，结果不会被误读。
+- 新增五行力量派生层 `elementStrength()`：权重来自规则集，输出力量、占比、排名与主导五行。
+- 版本常量集中到 `src/version.js`，新增 `parseVersion` / `compareVersions` / `satisfiesRange`，无法解析的版本区间一律判为不兼容。
+
+### 工程
+
+- 新增 `tests/multi-school-smoke.js`（并列、分歧可枚举、各派独立可溯源、红线断言）与 `tests/wuxing-smoke.js`（权重、排名、版本区间）。
+- `tests/rule-set-smoke.js` 改为断言「至少一套且每套自洽」，不再写死规则集数量——新增流派不该让测试失败。
+- 自检清单补入第二套规则集与三个新模块。测试从 21 项增加到 23 项。
+
 ## 0.2.0
 
 ### 规则集独立成层
@@ -38,4 +64,7 @@
 - 支持农历朔日、月份区间、中气判断和闰月候选标记。
 - 增加命盘 Schema、结构校验、示例、回归检查和 GitHub Actions。
 
-当前版本仍将更多流派规则和解释语料作为后续版本工作；这些部分不会被伪装成已经完成的确定能力。
+## 后续
+
+紫微斗数、神煞、格局与完整解释语料仍是后续版本工作；农历历书显示目前只到月份编号层。
+这些部分不会被伪装成已经完成的确定能力。

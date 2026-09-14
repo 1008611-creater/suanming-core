@@ -40,10 +40,50 @@ validateTraceability(chart).valid;     // 结论置信度是否超过其规则�
 
 CI 会跑这三项。人为把某个结论的置信度调到高于其规则，构建立即失败（见 `tests/traceability-smoke.js`）。
 
+## 已登记的流派
+
+| 规则集 | 流派 | 换日基准 | 大运顺逆 | 起运取整 | 五行力量 |
+| --- | --- | --- | --- | --- | --- |
+| `bazi-core-0.1.0`（默认） | 通用派 | 子正换日（民用日零点） | 阳年干男／阴年干女顺行 | 精确分数 | 天干 + 地支本气各计一次 |
+| `bazi-zichu-0.1.0` | 子初派 | 子初换日（真太阳时 23:00） | 男顺女逆，不问年干阴阳 | 取整到整年 | 藏干加权 `[1, 0.5, 0.3]` |
+
+分歧点是**可枚举**的：`listRuleSets()` 的每一项都带 `divergences`，列出该规则集相对默认集取值不同的 `ruleId`。
+
+```js
+listRuleSets().find(r => r.id === 'bazi-zichu-0.1.0').divergences;
+// ['bazi.day.zi-chu-true-solar', 'bazi.luck.gender-only',
+//  'bazi.luck.days-to-boundary-rounded-year', 'bazi.wuxing.element-weighted']
+```
+
+## 多流派并列
+
+```js
+import { compareSchools } from 'suanming-core';
+
+const result = compareSchools(input);
+// 也可只对比指定流派：
+// compareSchools(input, { ruleSetIds: ['bazi-core-0.1.0', 'bazi-zichu-0.1.0'] })
+```
+
+返回结构：
+
+| 字段 | 内容 |
+| --- | --- |
+| `schools` | 每个流派一份完整命盘，各带自己的 `ruleSetHash`、`manifest` 与事实图 |
+| `divergences` | 逐字段列出分歧：`path`、各派取值、各派对应的 `ruleId` 与 `source` |
+| `agreement` | 各派取值一致的字段 |
+| `disclaimer` | 说明本结果并列展示、不判定孰是孰非 |
+| `fieldOrder` | 参与对比的全部字段，`agreement` 与 `divergences` 的并集必须等于它 |
+
+**设计红线**：`compareSchools()` 不返回 `answer` / `winner` / `recommended` 之类的裁决字段，也不把两套结果合并成一个「综合命盘」。分歧只能被呈现，不能被抹平。测试会断言这一点。
+
+只有两侧取值确实不同时，字段才会进入 `divergences`：既不制造虚假分歧，也不隐藏真实分歧。
+
 ## 新增流派
 
-1. 新建 `rules/<流派>-<版本>/ruleset.js`，沿用同一结构。
+1. 新建 `rules/<流派>-<版本>/ruleset.js`，沿用同一结构，并在 `parameters` 里用机器可读的取值声明差异（如 `dayBoundaryMode`、`luckDirectionMode`、`hiddenStemWeights`）。
 2. 在 `rules/index.js` 的 `RULE_SETS` 登记。
-3. 调用时传 `castBazi(input, { ruleSetId: '<流派>-<版本>' })`。
+3. 调用时传 `castBazi(input, { ruleSetId: '<流派>-<版本>' })`，或直接用 `compareSchools` 并列。
+4. 新增流派会让 `listRuleSets()` 的项数变化，但不应让任何测试失败——测试断言的是「至少两套」与「每套都自洽」，不是写死的数量。
 
-同一份输入可以用两套规则集分别排盘，两份结果各自带自己的规则指纹，可以并列展示而不必假装只有一个正确答案。
+规则集还必须声明 `engineCompatibility`（如 `">=0.3.0 <0.4.0"`）。审计会校验当前 `ENGINE_VERSION` 落在区间内，版本对不上会让 CI 失败。
