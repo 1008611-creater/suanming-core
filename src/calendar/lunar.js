@@ -19,3 +19,13 @@ export function monthHasZhongqi(startJd, endJd) {
   const terms = [...solarTermsOfYear(y-1), ...solarTermsOfYear(y), ...solarTermsOfYear(y+1)];
   return terms.some(t => t.utc >= startJd && t.utc < endJd && t.degree % 30 === 0);
 }
+
+export function annotateLunarMonths(year) {
+  const anchors = lunarMonthAnchors(year);
+  return anchors.slice(0, -1).map((a, i) => ({
+    ...a,
+    endJd: anchors[i + 1].jd,
+    hasZhongqi: monthHasZhongqi(a.jd, anchors[i + 1].jd),
+    leapCandidate: !monthHasZhongqi(a.jd, anchors[i + 1].jd)
+  }));
+}
