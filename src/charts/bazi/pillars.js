@@ -8,3 +8,4 @@ export function dayPillar(jd) { return sexagenaryDay(jd); }
 export function hourPillar(dayStem,hourBranch) { const s=STEMS.indexOf(dayStem), b=typeof hourBranch==='number'?hourBranch:BRANCHES.indexOf(hourBranch); return STEMS[((s%5)*2+Math.floor(b/2))%10]+BRANCHES[b]; }
 export const hiddenStems={子:['癸'],丑:['己','癸','辛'],寅:['甲','丙','戊'],卯:['乙'],辰:['戊','乙','癸'],巳:['丙','戊','庚'],午:['丁','己'],未:['己','丁','乙'],申:['庚','壬','戊'],酉:['辛'],戌:['戊','辛','丁'],亥:['壬','甲']};
 export function tenGod(d,o) { return ['比肩','劫财','食神','伤官','偏财','正财','七杀','正官','偏印','正印'][(STEMS.indexOf(o)-STEMS.indexOf(d)+10)%10]; }
+export function luckDirection(yearStem, gender) { return ((STEMS.indexOf(yearStem) % 2 === 0) === (gender === 'male')) ? 1 : -1; }
