@@ -10,8 +10,9 @@
     "./astro": "./src/astro/index.js"
     ,"./bazi": "./src/charts/bazi/index.js"
   },
-  "files": [
+    "files": [
     "src",
+    "examples",
     "docs",
     "rules",
     "schema",
