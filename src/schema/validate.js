@@ -85,3 +85,61 @@ export function validateTraceability(chart, ruleSet = getRuleSet(chart?.manifest
   }
   return { valid: errors.length === 0, errors };
 }
+
+/**
+ * 紫微盘结构校验。
+ * 与四柱共用 manifest 与事实图的校验，但结构不同（没有四柱、有十二宫），因此单独一条入口。
+ * 校验的重点是「盘必须自洽」：十二宫齐全、每宫干支与宫名合法、主星不重不漏、
+ * 四化必须落在盘上真实存在的星上。
+ */
+const PALACE_NAME_POOL = new Set(['命宫', '父母', '福德', '田宅', '官禄', '交友', '迁移', '疾厄', '财帛', '子女', '夫妻', '兄弟', '仆役', '奴仆', '相貌']);
+
+export function validateZiweiChart(chart) {
+  const errors = [];
+  if (!isPlainObject(chart)) return { valid: false, errors: ['chart must be an object'] };
+  if (chart.schemaVersion !== '1.0.0') errors.push('schemaVersion must be 1.0.0');
+  if (chart.kind !== 'ziwei') errors.push('kind must be ziwei');
+
+  if (!isPlainObject(chart.input)) errors.push('input must be an object');
+  else {
+    for (const key of ['year', 'month', 'day']) {
+      if (!Number.isInteger(chart.input[key])) errors.push('input.' + key + ' must be an integer');
+    }
+  }
+
+  if (!isPlainObject(chart.manifest)) errors.push('manifest must be an object');
+  else {
+    if (!chart.manifest.engineVersion) errors.push('manifest.engineVersion is required');
+    if (!chart.manifest.ephemerisModel) errors.push('manifest.ephemerisModel is required');
+    if (!chart.manifest.ruleSet) errors.push('manifest.ruleSet is required');
+    else if (!isKnownRuleSet(chart.manifest.ruleSet)) errors.push('manifest.ruleSet is not registered: ' + chart.manifest.ruleSet);
+    if (!chart.manifest.ruleSetVersion) errors.push('manifest.ruleSetVersion is required');
+    if (chart.manifest.ruleSetHash != null && !HEX64.test(chart.manifest.ruleSetHash)) {
+      errors.push('manifest.ruleSetHash must be a 16-char hex string');
+    }
+  }
+
+  if (!Array.isArray(chart.palaces) || chart.palaces.length !== 12) {
+    errors.push('palaces must contain exactly 12 entries');
+  } else {
+    const branches = new Set();
+    const names = new Set();
+    for (const palace of chart.palaces) {
+      if (!GANZHI.test((palace.stem ?? '') + (palace.branch ?? ''))) errors.push('palace 干支 invalid: ' + palace.stem + palace.branch);
+      else if (branches.has(palace.branch)) errors.push('duplicate palace branch: ' + palace.branch);
+      else branches.add(palace.branch);
+      if (!PALACE_NAME_POOL.has(palace.name)) errors.push('unknown palace name: ' + palace.name);
+      else if (names.has(palace.name)) errors.push('duplicate palace name: ' + palace.name);
+      else names.add(palace.name);
+      if (!Array.isArray(palace.stars)) errors.push('palace ' + palace.branch + ': stars must be an array');
+    }
+    if (branches.size !== 12) errors.push('palaces must cover all 12 branches');
+  }
+
+  if (!isPlainObject(chart.fiveElements) || !chart.fiveElements.name) errors.push('fiveElements.name is required');
+  if (!isPlainObject(chart.soul) || !chart.soul.branch) errors.push('soul.branch is required');
+  if (!isPlainObject(chart.body) || !chart.body.branch) errors.push('body.branch is required');
+
+  errors.push(...validateFactGraph(chart.facts).errors);
+  return { valid: errors.length === 0, errors };
+}

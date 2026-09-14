@@ -6,6 +6,7 @@
  */
 import baziCore from './bazi-core-0.1.0/ruleset.js';
 import baziZichu from './bazi-zichu-0.1.0/ruleset.js';
+import ziweiCore from './ziwei-core-0.1.0/ruleset.js';
 import { stableStringify, fnv1a64 } from '../src/derive/hash.js';
 import { ENGINE_VERSION, satisfiesRange } from '../src/version.js';
 
@@ -16,11 +17,32 @@ function withHash(ruleSet) {
 
 export const RULE_SETS = Object.freeze({
   'bazi-core-0.1.0': withHash(baziCore),
-  'bazi-zichu-0.1.0': withHash(baziZichu)
+  'bazi-zichu-0.1.0': withHash(baziZichu),
+  'ziwei-core-0.1.0': withHash(ziweiCore)
 });
 
 /** 默认四柱规则集 */
 export const DEFAULT_BAZI_RULE_SET = 'bazi-core-0.1.0';
+/** 默认紫微规则集 */
+export const DEFAULT_ZIWEI_RULE_SET = 'ziwei-core-0.1.0';
+
+/** 各盘系的参照规则集：分歧只与**同盘系**的参照集比较。 */
+const REFERENCE_BY_SYSTEM = Object.freeze({
+  bazi: 'bazi-core-0.1.0',
+  ziwei: 'ziwei-core-0.1.0'
+});
+
+/** 规则集的盘系；未声明时按四柱处理（早期规则集没有该字段）。 */
+export function systemOf(ruleSet) {
+  return ruleSet?.system ?? 'bazi';
+}
+
+/** 某盘系下的全部规则集 id；不传盘系则返回全部。 */
+export function ruleSetIdsOf(system) {
+  const all = Object.keys(RULE_SETS);
+  if (!system) return all;
+  return all.filter((id) => systemOf(RULE_SETS[id]) === system);
+}
 
 export function isKnownRuleSet(id) { return Object.prototype.hasOwnProperty.call(RULE_SETS, id); }
 
@@ -30,23 +52,33 @@ export function getRuleSet(id = DEFAULT_BAZI_RULE_SET) {
   return ruleSet;
 }
 
-export function listRuleSets() {
-  return Object.entries(RULE_SETS).map(([id, r]) => ({
-    id, version: r.version, title: r.title, school: r.school,
-    engineCompatibility: r.engineCompatibility, hash: r.hash, ruleCount: ruleEntries(r).length,
-    divergences: divergenceKeys(r)
-  }));
+/**
+ * 列出已登记的规则集。
+ * 传 { system } 可只看某一盘系 —— 上层若要拿「全部四柱流派」去并列，必须显式过滤，
+ * 否则会把紫微规则集喂给四柱排盘函数，得到的是崩溃而不是结果。
+ */
+export function listRuleSets(options = {}) {
+  const system = typeof options === 'string' ? options : options.system;
+  return Object.entries(RULE_SETS)
+    .filter(([, r]) => !system || systemOf(r) === system)
+    .map(([id, r]) => ({
+      id, system: systemOf(r), version: r.version, title: r.title, school: r.school,
+      engineCompatibility: r.engineCompatibility, hash: r.hash, ruleCount: ruleEntries(r).length,
+      divergences: divergenceKeys(r)
+    }));
 }
 
 /**
- * 规则集的可枚举分歧点：凡是与「参照规则集」取值不同的规则条目，都登记为分歧。
+ * 规则集的可枚举分歧点：凡是与**同盘系参照规则集**取值不同的规则条目，都登记为分歧。
  * 用途是让上层可以问「这两套流派到底哪里不一样」，而不是只能凭肉眼比对两份结果。
+ *
+ * 分歧只在同一盘系内定义：四柱与紫微是两套不同的盘，ruleId 命名空间也不同，
+ * 把它们互相比较会把「另一个盘系的全部规则」误报成分歧，分歧清单随之失去意义。
  */
-const REFERENCE_RULE_SET = 'bazi-core-0.1.0';
-
 export function divergenceKeys(ruleSet) {
-  const reference = RULE_SETS[REFERENCE_RULE_SET];
-  if (!reference || ruleSet.id === REFERENCE_RULE_SET) return [];
+  const referenceId = REFERENCE_BY_SYSTEM[systemOf(ruleSet)];
+  const reference = RULE_SETS[referenceId];
+  if (!reference || ruleSet.id === referenceId) return [];
   const ref = new Map(ruleEntries(reference).map(e => [e.ruleId, e]));
   const out = [];
   for (const entry of ruleEntries(ruleSet)) {
@@ -136,8 +168,11 @@ export function auditRuleSet(ruleSet = getRuleSet()) {
 
 /**
  * 事实图溯源审计：每个事实必须指向已登记的 ruleId，且置信度不得超过规则本身。
+ *
+ * 默认规则集从事实图自带的清单里解析，而不是一律取四柱默认集：
+ * 事实图可能是紫微盘产出的，用四柱规则集去查会把每一条都判成「未知 ruleId」。
  */
-export function auditFactGraph(graph, ruleSet = getRuleSet()) {
+export function auditFactGraph(graph, ruleSet = getRuleSet(graph?.manifest?.ruleSet)) {
   const index = ruleIndex(ruleSet);
   const errors = [];
   const facts = graph?.facts ?? [];

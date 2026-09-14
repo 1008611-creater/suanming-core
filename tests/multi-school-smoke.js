@@ -6,14 +6,18 @@ import {
 
 const input = { year: 2005, month: 7, day: 13, hour: 8, minute: 58, longitude: 118.18, gender: 'male' };
 
-// 至少要有两套规则集，否则「流派可并列」这条设计原则无法被验证。
+// 至少要有两套**同盘系**规则集，否则「流派可并列」这条设计原则无法被验证。
+// 注意按盘系过滤：紫微规则集是另一个盘系，不能被拿去跑 castBazi，也不参与四柱流派并列。
 const listed = listRuleSets();
-assert.ok(listed.length >= 2, 'need at least two rule sets to compare, got ' + listed.length);
+const baziListed = listRuleSets({ system: 'bazi' });
+assert.ok(baziListed.length >= 2, 'need at least two bazi rule sets to compare, got ' + baziListed.length);
+assert.ok(listed.length > baziListed.length, 'registry must also contain the ziwei rule set');
+for (const entry of listed) assert.ok(entry.system, entry.id + ' must declare its chart system');
 
 const result = compareSchools(input);
 
 // 每个流派各自带自己的规则指纹与清单，不是合并成一份。
-assert.equal(result.schools.length, listed.length);
+assert.equal(result.schools.length, baziListed.length);
 for (const school of result.schools) {
   assert.match(school.ruleSetHash, /^[0-9a-f]{16}$/, school.ruleSetId + ' must carry its own hash');
   assert.equal(school.manifest.ruleSet, school.ruleSetId);

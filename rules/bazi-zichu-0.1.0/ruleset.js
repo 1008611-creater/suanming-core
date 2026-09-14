@@ -21,7 +21,8 @@ export default {
   title: '四柱规则集（子初换日派）',
   school: 'zichu',
   locale: 'zh-Hans',
-  engineCompatibility: '>=0.3.0 <0.4.0',
+  system: 'bazi',
+  engineCompatibility: '>=0.3.0 <0.5.0',
 
   conventions: {
     yearBoundary: {

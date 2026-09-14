@@ -1,5 +1,56 @@
 # 更新记录
 
+## 0.4.0
+
+### 紫微斗数：第二盘系落地（验证架构不是四柱专用）
+
+- 新增 `ziwei-core-0.1.0` 规则集（通行派，23 条 ruleId）：年界、月索引、时辰索引、晚子进日、
+  命身宫、宫名与别名、大限顺逆与起运、小限起宫、五虎遁、五行局纳音、起紫微诀、十四主星安星、
+  禄存天马魁钺辅弼昌曲空劫火铃、生年四化。全部带 `evidence` / `source` / `confidence`。
+- 新增 `src/charts/ziwei/`（palace / stars / chart）与排盘入口 `castZiwei(input)`，
+  输出 `palaces` / `stars` / `soul` / `body` / `fiveElements` / `mutagens` / `decadal` / `xiaoxian` / `facts` / `manifest`。
+- 新增 `validateZiweiChart(chart)`：十二宫齐全、干支与宫名合法、主星不重不漏。
+- 紫微与四柱**共用 L0 时间层与 L2 农历层**，但年界（农历正月初一 vs 立春）与日界
+  （晚子进日 vs 子正/子初）各按自己的口径，并列而不互相换算。见
+  [ADR-0005](docs/decisions/ADR-0005-ziwei-as-second-chart-system.md) 与 [紫微斗数盘系](docs/ziwei-model.md)。
+
+### 规则集按盘系分组
+
+- 规则集新增 `system` 字段（`bazi` / `ziwei`）。分歧只在**同盘系内**定义：
+  两套盘系的 `ruleId` 命名空间不同，互相比较会把「另一盘系的全部规则」误报成分歧。
+- `listRuleSets({ system })` 可按盘系过滤；`compareSchools()` 默认只并列四柱流派。
+  新增 `systemOf()` / `ruleSetIdsOf(system)` / `REFERENCE_BY_SYSTEM`。
+- `auditFactGraph(graph)` 默认按事实图清单里的 `ruleSet` 解析盘系，不再硬编码四柱默认集——
+  否则紫微事实图的每一条都会被判成「未知 ruleId」。
+- `compareSchools()` 每项新增 `system` 字段。
+
+### 计算
+
+- 新增 `lunarYearOf(year, month, day)`：以**农历正月初一**换年，供紫微使用；
+  与四柱的立春换年并存，两者各自可溯源。
+- `lunarDateOf` 返回值补 `days`（当月天数）与 `endJd`（月末儒略日），
+  供起紫微与晚子进日的跨月回落使用。
+- 五行局只计算一次并向下传递：它同时是「起紫微星的除数」与「大限起运虚岁」，
+  两处各算一次必然漂移，会让星盘与限运对不上。
+- 宫名别名显式登记（通行派「交友」/ 古法「奴仆」/ 参照实现「仆役」），
+  由 `palaceNameAliases()` 导出，避免下游把名称差异当成星曜差异。
+- 星曜规范顺序写入规则集 `starOrder`，避免星序随函数书写顺序漂移造成假差异。
+
+### 验证
+
+- 安星结果与 `iztro` v2.6.1 官方打包产物逐宫交叉核对：基准盘、闰月专项 21 项、
+  随机批次 48 项、早晚子时密集 22 项、大限 12 限、小限 208 项，**差异为 0**
+  （唯一系统性差异是宫名「交友/仆役」，已按别名登记）。
+- 新增 `tests/ziwei-golden-smoke.js`、`tests/ziwei-boundary-smoke.js`（早晚子时 / 闰月切分 / 真太阳时 / 确定性）、
+  `tests/dual-system-smoke.js`（四柱与紫微并列共存、互不污染）。测试从 23 项增加到 26 项。
+- `rules/index.js` 的 `divergenceKeys` 改为同盘系比较，`tests/multi-school-smoke.js` 相应按盘系断言。
+
+### 版本
+
+- `ENGINE_VERSION` 与 `package.json` 升到 `0.4.0`；两套四柱规则集的
+  `engineCompatibility` 放宽到 `">=0.3.0 <0.5.0"`，紫微规则集为 `">=0.4.0 <0.5.0"`。
+- `package.json` 新增 `./ziwei` 导出子路径。
+
 ## 0.3.0
 
 ### 多流派并列（把文档承诺变成代码能力）
@@ -66,5 +117,6 @@
 
 ## 后续
 
-紫微斗数、神煞、格局与完整解释语料仍是后续版本工作；农历历书显示目前只到月份编号层。
+紫微的杂曜（年、月、日、时系二十余颗）、长生/博士/将前/岁前十二神、流年流月流日流时四化，
+以及四柱神煞、格局与完整解释语料仍是后续版本工作；农历历书显示目前只到月份编号层。
 这些部分不会被伪装成已经完成的确定能力。

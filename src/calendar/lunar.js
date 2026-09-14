@@ -138,6 +138,39 @@ export function annotateLunarMonths(year) {
     .map(m => ({ ...m, leapCandidate: !m.hasZhongqi }));
 }
 
+/**
+ * 公历日期 → 农历年干支。
+ * ---------------------------------------------------------------------------
+ * 换年基准是**正月初一**，不是立春：这是紫微斗数的通行口径，也是它与四柱的实质分歧之一。
+ * 两者必须各自算、各自标注出处，不能互相借用 —— 否则整个正月出生的人年干会集体错位。
+ * 干支用纪年法直接推算（年份 − 4 后取模），不依赖任何盘系。
+ */
+export function lunarYearOf(year, month, day) {
+  const jd = julianDayFromGregorian(year, month, day);
+  const months = numberedMonthsCovering(jd - 400, jd + 400);
+  const found = months.find((m) => jd >= m.jd && jd < m.endJd);
+  if (!found) return null;
+  // 农历年 = 不晚于出生日的最后一个「正月初一」所在的公历年。
+  const newYearMonth = [...months].reverse().find((m) => m.monthNumber === 1 && !m.leap && m.jd <= jd);
+  if (!newYearMonth) return null;
+  const lunarYear = dateFromJulianDay(newYearMonth.jd + CHINA_OFFSET_DAYS).getUTCFullYear();
+  const stems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+  const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+  const offset = ((lunarYear - 4) % 60 + 60) % 60;
+  return {
+    lunarYear,
+    stem: stems[offset % 10],
+    branch: branches[offset % 12],
+    ganzhi: stems[offset % 10] + branches[offset % 12],
+    monthNumber: found.monthNumber,
+    leap: found.leap,
+    day: jd - found.jd + 1,
+    days: found.endJd - found.jd,
+    monthStartJd: found.jd,
+    endJd: found.endJd
+  };
+}
+
 /** 公历日期 → 农历月序、日序与闰月标记。 */
 export function lunarDateOf(year, month, day) {
   const jd = julianDayFromGregorian(year, month, day);
@@ -149,8 +182,12 @@ export function lunarDateOf(year, month, day) {
     monthNumber: found.monthNumber,
     leap: found.leap,
     day: jd - found.jd + 1,
+    // 本月共几日：起紫微星时「晚子进一日」可能越过月末，需要回落到下月初一，
+    // 因此月长是必需量，不是展示用的附加信息。
+    days: found.endJd - found.jd,
     hasZhongqi: found.hasZhongqi,
     monthStartJd: found.jd,
+    endJd: found.endJd,
     newMoonJd: found.newMoonJd
   };
 }

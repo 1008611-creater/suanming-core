@@ -6,7 +6,8 @@ import {
   castBazi, explain, validateChart, validateTraceability,
   auditRuleSet, auditFactGraph, listRuleSets,
   hashInput, hashFacts, numberedLunarMonths,
-  compareSchools, elementStrength
+  compareSchools, elementStrength,
+  castZiwei, validateZiweiChart, palaceNameAliases
 } from '../src/index.js';
 
 const input = {
@@ -61,6 +62,25 @@ console.log('\n五行力量（权重来自规则集，换流派就换结果）�
 for (const school of compared.schools) {
   console.log('  ' + school.ruleSetId.padEnd(20), '权重 ' + JSON.stringify(school.wuxing.weights),
     JSON.stringify(school.wuxing.totals), '主导 ' + school.wuxing.dominant);
+}
+
+console.log('\n紫微斗数（并列盘系，与四柱互不换算）：');
+const ziwei = castZiwei(input);
+console.log('  农历         ', ziwei.lunar.ganzhi + '年' + (ziwei.lunar.leap ? '闰' : '') + ziwei.lunar.monthNumber + '月' + ziwei.lunar.day + '日');
+console.log('  命宫 / 身宫  ', ziwei.soul.branch + '（' + ziwei.soul.stem + '） / ' + ziwei.body.branch);
+console.log('  五行局       ', ziwei.fiveElements.name);
+console.log('  大限方向     ', ziwei.decadal.direction === 1 ? '顺行' : '逆行', '起运虚岁 ' + ziwei.fiveElements.value);
+console.log('  结构校验     ', validateZiweiChart(ziwei));
+console.log('  溯源审计     ', auditFactGraph(ziwei.facts));
+console.log('  事实图指纹   ', hashFacts(ziwei.facts));
+console.log('  宫名别名     ', palaceNameAliases('交友').join(' / '));
+console.log('  十二宫：');
+for (const palace of ziwei.palaces) {
+  const label = palace.name + (palace.isSoulPalace ? '·命' : '') + (palace.isBodyPalace ? '·身' : '');
+  console.log('    ' + (palace.stem + palace.branch).padEnd(4), label.padEnd(6),
+    (palace.starNames.join(' ') || '—').padEnd(30),
+    palace.mutagens.length ? '四化 ' + palace.mutagens.join('') : '',
+    palace.decadal ? '大限 ' + palace.decadal.startAge + '-' + palace.decadal.endAge : '');
 }
 
 console.log('\n2024 年农历月份编号：');

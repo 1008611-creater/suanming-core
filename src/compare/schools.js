@@ -79,7 +79,9 @@ function sameValue(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
  * @returns {{input:object, schools:object[], divergences:object[], agreement:string[], fieldOrder:string[], disclaimer:string}}
  */
 export function compareSchools(input, options = {}) {
-  const ids = options.ruleSetIds ?? listRuleSets().map((r) => r.id);
+  // 默认只并列**同盘系**的规则集。本函数用 castBazi 排盘，把紫微规则集混进来不会得到
+  // 另一种结果，只会因为缺少 tables.stems 而崩溃。要比较紫微流派请调用 compareZiwei。
+  const ids = options.ruleSetIds ?? listRuleSets({ system: 'bazi' }).map((r) => r.id);
   if (!Array.isArray(ids) || ids.length < 2) {
     throw new Error('compareSchools requires at least two rule set ids');
   }
@@ -97,6 +99,7 @@ export function compareSchools(input, options = {}) {
       ruleSetId: ruleSet.id,
       ruleSetVersion: ruleSet.version,
       ruleSetHash: ruleSet.hash,
+      system: ruleSet.system ?? 'bazi',
       school: ruleSet.school,
       title: ruleSet.title,
       engineCompatibility: ruleSet.engineCompatibility,

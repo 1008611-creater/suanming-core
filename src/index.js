@@ -9,6 +9,7 @@ export * from './version.js';
 export * from './compare/schools.js';
 export * from './interpret/explain.js';
 export * from './charts/bazi/index.js';
+export * from './charts/ziwei/index.js';
 export * from './manifest.js';
 export * from './calendar/lunar.js';
 export * from './calendar/lunar-facts.js';
