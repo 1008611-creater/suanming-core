@@ -29,3 +29,20 @@ export function annotateLunarMonths(year) {
     leapCandidate: !monthHasZhongqi(a.jd, anchors[i + 1].jd)
   }));
 }
+
+export function numberedLunarMonths(year) {
+  const months = annotateLunarMonths(year);
+  const winter = solarTermsOfYear(year).find(t => t.degree === 270);
+  let solsticeIndex = months.findIndex(m => winter && m.jd <= winter.utc && winter.utc < m.endJd);
+  if (solsticeIndex < 0) solsticeIndex = 0;
+  let number = 11;
+  let previous = null;
+  return months.map((m, i) => {
+    if (i === solsticeIndex) number = 11;
+    else if (!m.leapCandidate) number = (number % 12) + 1;
+    const leap = Boolean(m.leapCandidate && previous);
+    const result = { ...m, monthNumber: number, leap };
+    previous = result;
+    return result;
+  });
+}
