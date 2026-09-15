@@ -1,29 +1,36 @@
 {
   "name": "suanming-core",
-  "version": "0.1.0",
-  "description": "Deterministic Chinese metaphysics calculation core: astronomical time, calendar, chart casting, rule engine. Interpretation is downstream and never computes.",
+  "version": "0.5.0",
+  "description": "Deterministic Chinese metaphysics calculation core: astronomical time, calendar, chart casting, multi-school rule engine. Interpretation is downstream and never computes.",
   "type": "module",
   "license": "MIT",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./astro": "./src/astro/index.js"
-    ,"./bazi": "./src/charts/bazi/index.js"
+    "./astro": "./src/astro/index.js",
+    "./bazi": "./src/charts/bazi/index.js",
+    "./ziwei": "./src/charts/ziwei/index.js",
+    "./rules": "./rules/index.js",
+    "./schema/chart.schema.json": "./schema/chart.schema.json",
+    "./package.json": "./package.json"
   },
-    "files": [
+  "files": [
     "src",
-    "examples",
-    "docs",
     "rules",
     "schema",
-    "README.md"
+    "examples",
+    "docs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "scripts": {
     "test": "node scripts/check.js",
     "test:golden": "node tests/term-boundary-smoke.js",
     "test:property": "node tests/chart-smoke.js",
     "test:coverage": "node scripts/check.js",
-    "check": "node scripts/check.js"
+    "check": "node scripts/check.js",
+    "example": "node examples/basic.mjs"
   },
   "keywords": [
     "bazi",
@@ -32,7 +39,11 @@
     "ephemeris",
     "vsop87",
     "chinese-calendar",
-    "solar-terms"
+    "solar-terms",
+    "rule-engine",
+    "multi-school",
+    "rule-set",
+    "traceability"
   ],
   "engines": {
     "node": ">=20"

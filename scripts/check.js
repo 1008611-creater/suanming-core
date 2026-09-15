@@ -1,16 +1,64 @@
-import fs from 'node:fs';
-const required=['README.md','docs/architecture.md','src/index.js','src/charts/bazi/index.js','src/schema/chart.schema.json'];
-for(const f of required) if(!fs.existsSync(f)) throw new Error('missing '+f);
-await import('../tests/basic.test.js');
-await import('../tests/chart-smoke.js');
-await import('../tests/term-boundary-smoke.js');
-await import('../tests/lichun-boundary-smoke.js');
-await import('../tests/luck-smoke.js');
-await import('../tests/facts-smoke.js');
-await import('../tests/luck-age-smoke.js');
-await import('../tests/lunar-smoke.js');
-await import('../tests/zhongqi-smoke.js');
-await import('../tests/lunar-months-smoke.js');
-await import('../tests/lunar-number-smoke.js');
-await import('../tests/schema-smoke.js');
-console.log('suanming-core check passed');
+/**
+ * 工程自检入口（npm test）
+ * ---------------------------------------------------------------------------
+ * 1. 必需文件必须存在（路径相对本文件定位，从任意工作目录调用都成立）。
+ * 2. tests/ 下的测试自动全量执行——不维护手工清单，新增测试不会被静默跳过。
+ * 3. 任一测试失败则退出码非零，CI 立即失败。
+ */
+import { existsSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+const required = [
+  'README.md',
+  'CHANGELOG.md',
+  'docs/architecture.md',
+  'docs/api.md',
+  'docs/rule-sets.md',
+  'src/index.js',
+  'src/charts/bazi/index.js',
+  'src/derive/hash.js',
+  'rules/index.js',
+  'rules/bazi-core-0.1.0/ruleset.js',
+  'rules/bazi-zichu-0.1.0/ruleset.js',
+  'rules/ziwei-core-0.1.0/ruleset.js',
+  'rules/ziwei-core-0.2.0/ruleset.js',
+  'src/charts/ziwei/index.js',
+  'src/charts/ziwei/chart.js',
+  'src/charts/ziwei/minor-stars.js',
+  'src/charts/ziwei/twelve-gods.js',
+  'docs/ziwei-model.md',
+  'src/version.js',
+  'src/derive/wuxing.js',
+  'src/compare/schools.js',
+  'schema/chart.schema.json',
+  'src/schema/chart.schema.json'
+];
+const missing = required.filter(f => !existsSync(resolve(ROOT, f)));
+if (missing.length) throw new Error('missing required files: ' + missing.join(', '));
+
+const testsDir = resolve(ROOT, 'tests');
+const tests = readdirSync(testsDir)
+  .filter(f => f.endsWith('.js') || f.endsWith('.mjs'))
+  .sort();
+
+if (!tests.length) throw new Error('no tests found in ' + testsDir);
+
+const failures = [];
+for (const test of tests) {
+  try {
+    await import(new URL('../tests/' + test, import.meta.url).href);
+  } catch (error) {
+    failures.push(test + ': ' + (error?.stack ?? error));
+  }
+}
+
+if (failures.length) {
+  console.error('suanming-core check failed (' + failures.length + '/' + tests.length + ')');
+  for (const failure of failures) console.error(failure);
+  process.exitCode = 1;
+} else {
+  console.log('suanming-core check passed (' + tests.length + ' tests)');
+}
