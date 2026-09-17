@@ -166,7 +166,12 @@
     return { gua: gua, list: list, jiFang: jiFang, xiongFang: xiongFang };
   }
 
-  /* ---------- 5. 姓名五格（康熙笔画） ---------- */
+  /* ---------- 5. 姓名五格（康熙笔画） ----------
+   * 康熙笔画数据表由 scripts/build-bihua-data.mjs 生成，产物是 web/bihua-data.js，
+   * 页面必须先加载它、再加载本文件。这里保留一份人工校订的常用字表：
+   * 一是没有加载数据表时（例如只引 analysis.js）仍能算常用姓名，
+   * 二是人工校订过的字优先级最高，生成的数据不得覆盖。
+   */
   var BIHUA = {
     刘:15, 李:7, 王:4, 张:11, 陈:16, 杨:13, 赵:14, 黄:12, 周:8, 吴:7, 徐:10, 孙:10, 马:10, 朱:6, 胡:11, 郭:15, 林:8, 何:7, 高:10, 罗:20, 郑:19, 梁:11, 谢:17, 宋:7, 唐:10, 许:11, 韩:17, 冯:12, 邓:19, 曹:11, 彭:12, 曾:12, 萧:18, 田:5, 董:15, 袁:10, 潘:16, 于:3, 蒋:17, 蔡:17, 余:7, 杜:7, 叶:15, 程:12, 苏:22, 魏:18, 吕:7, 丁:2, 任:6, 沈:8, 姚:9, 卢:16, 姜:9, 崔:11, 钟:17, 谭:19, 陆:16, 汪:8, 范:11, 金:8, 石:5, 廖:14, 贾:13, 夏:10, 韦:9, 付:5, 方:4, 白:5, 邹:17, 孟:8, 熊:14, 秦:10, 邱:12, 江:7, 尹:4, 薛:19, 闫:11, 段:9, 雷:13, 侯:9, 龙:16, 史:5, 陶:16, 黎:15, 贺:12, 顾:21, 毛:4, 郝:14, 龚:22, 邵:12, 万:15, 钱:16, 严:20, 武:8, 戴:18, 莫:13, 孔:4, 向:6, 汤:13,
     曙:17, 宾:14, 承:8, 洋:10, 可:5, 思:9, 雨:8, 明:8, 华:14, 建:9, 国:11, 文:4, 志:7, 强:11, 伟:11, 军:9, 平:5, 永:5, 海:11, 波:9, 涛:18, 峰:10, 磊:15, 超:12, 刚:10, 勇:9, 杰:12, 浩:11, 宇:6, 轩:10, 泽:17, 晨:11, 阳:17, 龙:16, 飞:9, 鹏:19, 翔:12, 天:4, 成:7, 功:5, 立:5, 业:13, 兴:16, 旺:8, 发:12, 财:10, 富:12, 贵:12, 荣:14, 昌:8, 盛:12, 隆:17, 泰:9, 安:6, 康:11, 宁:14, 和:8, 顺:12, 达:16, 通:14, 远:17, 博:12, 学:16, 书:10, 礼:18, 义:13, 仁:4, 德:15, 信:9, 忠:8, 孝:7, 廉:13, 智:12, 慧:15, 敏:11, 睿:14, 哲:10, 思:9, 维:14, 新:13, 春:9, 秋:9, 冬:5, 雪:11, 云:12, 月:4, 星:9, 辰:7, 曦:20, 昕:8, 晗:11, 悦:11, 欣:8, 怡:9, 雅:12, 静:16, 淑:12, 婉:11, 婷:12, 丽:19, 美:9, 秀:7, 娟:10, 慧:15, 玲:10, 珊:10, 琳:13, 琪:13, 瑶:15, 瑾:16, 瑞:14, 瑜:14, 璇:16, 宁:14, 涵:12, 沁:8, 淇:12, 湘:13, 澜:21, 潮:16, 源:14, 泉:9, 溪:14, 润:16, 沛:8, 泓:9, 浚:11, 清:12, 淳:12, 湛:13, 瀚:20, 灏:25,
@@ -174,6 +179,23 @@
   };
   // 部分字的康熙笔画存在异说，标注出来
   var BIHUA_NOTE = { 曙:'康熙字典日部13画计17画；部分姓名学书作18画，两家取法不同，需以你采用的版本为准。' };
+
+  /* 并入生成的全量表（web/bihua-data.js）。
+   * 人工校订表覆盖自动取值，自动取值只补人工表没有的字；异说标注同样以人工说明优先。
+   * 数据表缺失时不报错，退回人工表，只是可算的字较少。 */
+  var GLOBAL = (typeof self !== 'undefined' && self) ||
+    (typeof globalThis !== 'undefined' && globalThis) || null;
+  var FULL = (GLOBAL && GLOBAL.SUANMING_BIHUA) || null;
+  if (FULL && FULL.bihua) {
+    Object.keys(FULL.bihua).forEach(function (c) {
+      if (!Object.prototype.hasOwnProperty.call(BIHUA, c)) BIHUA[c] = FULL.bihua[c];
+    });
+    if (FULL.note) {
+      Object.keys(FULL.note).forEach(function (c) {
+        if (!Object.prototype.hasOwnProperty.call(BIHUA_NOTE, c)) BIHUA_NOTE[c] = FULL.note[c];
+      });
+    }
+  }
 
   var SHU_JI = {
     1:'太极之数，万物开泰，生发无穷，利禄亨通。吉', 2:'两仪之数，混沌未开，进退保守，志望难达。凶',
@@ -221,17 +243,18 @@
   function shuJi(n) { var k = ((n - 1) % 81) + 1; return { num: k, text: SHU_JI[k] || '', ji: (SHU_JI[k] || '').slice(-1) }; }
 
   function wuGe(name) {
-    var chars = name.split('');
+    var chars = String(name || '').split('').filter(function (c) { return c.trim() !== ''; });
+    if (!chars.length) return { ok: false, reason: 'no-name', unknown: [], bi: [], notes: [] };
     var bi = chars.map(function (c) { return BIHUA[c] || null; });
     var unknown = chars.filter(function (c, i) { return bi[i] === null; });
     var notes = chars.filter(function (c) { return BIHUA_NOTE[c]; }).map(function (c) { return c + '：' + BIHUA_NOTE[c]; });
-    if (unknown.length) return { ok: false, unknown: unknown, bi: bi, notes: notes };
+    if (unknown.length) return { ok: false, reason: 'unknown-char', unknown: unknown, bi: bi, notes: notes };
     var n = bi.length;
     var tian, ren, di, wai, zong;
     if (n === 2) { tian = bi[0] + 1; ren = bi[0] + bi[1]; di = bi[1] + 1; wai = 2; zong = bi[0] + bi[1]; }
     else if (n === 3) { tian = bi[0] + 1; ren = bi[0] + bi[1]; di = bi[1] + bi[2]; wai = bi[2] + 1; zong = bi[0] + bi[1] + bi[2]; }
     else if (n === 4) { tian = bi[0] + bi[1]; ren = bi[1] + bi[2]; di = bi[2] + bi[3]; wai = bi[0] + bi[3]; zong = bi[0] + bi[1] + bi[2] + bi[3]; }
-    else return { ok: false, unknown: ['仅支持 2-4 字姓名'], bi: bi, notes: notes };
+    else return { ok: false, reason: 'unsupported-length', unknown: [], bi: bi, notes: notes, length: n };
     var ge = { 天格: tian, 人格: ren, 地格: di, 外格: wai, 总格: zong };
     var detail = {};
     Object.keys(ge).forEach(function (k) { detail[k] = shuJi(ge[k]); });
@@ -241,6 +264,11 @@
 
   /* ---------- 6. 合婚 ---------- */
   function hehun(a, b) {
+    // 称呼随双方性别变化：一男一女用「男方/女方」，同性别用「本人/对方」，
+    // 否则男男或女女组合会被页面写成「男方日主/女方日主」，与事实不符。
+    var diff = a.gender !== b.gender;
+    var aLabel = diff ? (a.gender === '男' ? '男方' : '女方') : '本人';
+    var bLabel = diff ? (b.gender === '男' ? '男方' : '女方') : '对方';
     var wx = function (p) { return p.wx.score; };
     var A = wx(a), B = wx(b);
     var nianZhi = [a.zhi[0], b.zhi[0]];
@@ -251,14 +279,18 @@
     // 互补：一方缺的五行是另一方的用神/旺神
     var wsA = wangShuai(a), wsB = wangShuai(b);
     var complement = [];
-    wsA.yong.forEach(function (w) { if (B[w] > A[w]) complement.push('女方' + w + '气较旺，补男方所需'); });
-    wsB.yong.forEach(function (w) { if (A[w] > B[w]) complement.push('男方' + w + '气较旺，补女方所需'); });
+    wsA.yong.forEach(function (w) { if (B[w] > A[w]) complement.push(bLabel + w + '气较旺，补' + aLabel + '所需'); });
+    wsB.yong.forEach(function (w) { if (A[w] > B[w]) complement.push(aLabel + w + '气较旺，补' + bLabel + '所需'); });
     var score = 50;
     if (he) score += 15; if (chong) score -= 15;
     score += complement.length * 6;
     score = Math.max(20, Math.min(95, score));
     var level = score >= 80 ? '上等' : score >= 65 ? '中上' : score >= 50 ? '中等' : '偏下';
-    return { score: score, level: level, nianHe: he, nianChong: chong, complement: complement, wsA: wsA, wsB: wsB };
+    return {
+      score: score, level: level, nianHe: he, nianChong: chong,
+      complement: complement, wsA: wsA, wsB: wsB,
+      labels: { a: aLabel, b: bLabel }
+    };
   }
 
   function round(x, n) { var m = Math.pow(10, n === undefined ? 2 : n); return Math.round(x * m) / m; }

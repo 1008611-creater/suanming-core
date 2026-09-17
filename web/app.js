@@ -14,7 +14,7 @@ import { API } from './engine-adapter.js';
 
   /* ---------- 城市经度表 ---------- */
   var CITY = [
-    ['河北 唐山（丰南）', 118.18], ['河北 唐山（市区）', 118.18], ['河北 石家庄', 114.51],
+    ['河北 唐山（市区）', 118.18], ['河北 唐山（丰南）', 118.11], ['河北 石家庄', 114.51],
     ['河北 保定', 115.46], ['河北 邯郸', 114.49], ['河北 廊坊', 116.70], ['河北 沧州', 116.86],
     ['北京', 116.41], ['天津', 117.20], ['上海', 121.47], ['重庆', 106.55],
     ['广东 广州', 113.26], ['广东 深圳', 114.06], ['广东 东莞', 113.75],
@@ -62,10 +62,21 @@ import { API } from './engine-adapter.js';
       sel.appendChild(o);
     });
     sel.value = 0;
+    // 默认经度取自城市表本身，不在 HTML 里再写一份，避免两处漂移。
+    $('lng').value = CITY[0][1];
+    var tip = $('lngTip');
     sel.addEventListener('change', function () {
       var c = CITY[sel.value];
-      if (c[1] !== null) $('lng').value = c[1];
-      else $('lng').focus();
+      if (c[1] !== null) {
+        $('lng').value = c[1];
+        if (tip) { tip.style.display = 'none'; tip.textContent = ''; }
+      } else {
+        $('lng').focus();
+        if (tip) {
+          tip.style.display = 'block';
+          tip.textContent = '请填出生地所在城市的东经度数（0–180）。不确定可先选就近城市，或用手机地图长按出生点查看经度。';
+        }
+      }
     });
   })();
 
@@ -76,14 +87,24 @@ import { API } from './engine-adapter.js';
     var tstr = $(p + 'time').value;
     if (!dstr || !tstr) return null;
     var dp = dstr.split('-'), tp = tstr.split(':');
-    var lng = $(p + 'lng') ? Number($(p + 'lng').value) : 120;
-    if (!isFinite(lng)) lng = 120;
+    // 经度非法时绝不静默按 120° 算：那会悄悄换一个盘，用户却看不到任何提示。
+    var lngRaw = $(p + 'lng') ? String($(p + 'lng').value).trim() : '';
+    var lng = Number(lngRaw);
+    var lngError = '';
+    if (lngRaw === '') {
+      lngError = '请填写出生地经度（东经度数）。';
+    } else if (!isFinite(lng)) {
+      lngError = '经度需为数字，当前填的是「' + lngRaw + '」。';
+    } else if (lng < 0 || lng > 180) {
+      lngError = '经度需在 0–180 之间（中国境内约 73–135），当前填的是 ' + lng + '。';
+    }
     return {
-      name: $(p + 'name').value || '无名',
+      name: String($(p + 'name').value || '').trim(),
       gender: $(p + 'gender').value,
       year: +dp[0], month: +dp[1], day: +dp[2],
       hour: +tp[0], minute: +tp[1],
       lng: lng,
+      lngError: lngError,
       useTrueSolar: $(p + 'ts') ? $(p + 'ts').value === '1' : true
     };
   }
@@ -91,9 +112,10 @@ import { API } from './engine-adapter.js';
   function calc(opt) {
     var p = B.paipan(opt);
     p.ws = A.wangShuai(p);
-    p.gua = A.mingGua(opt.year, opt.gender);
+    // 命卦按立春换年，与年柱同口径；用公历年会让 1 月初出生者算错。
+    p.gua = A.mingGua(p.guaYear, opt.gender);
     p.bazhai = A.baZhai(p.gua.gua);
-    p.name5 = A.wuGe(opt.name);
+    p.name5 = A.wuGe(opt.name || '');
     p.ziwei = B.ziwei(opt);
     return p;
   }
@@ -208,7 +230,15 @@ import { API } from './engine-adapter.js';
 
     /* --- 5. 流年 --- */
     var c5 = el('div', 'card');
-    c5.appendChild(el('h2', null, '流年运势（2026 – 2035）'));
+    // 区间与标题都从数据推导：写死年份会在跨年后与内容脱节。
+    // 区间必须同时满足两点：不早于出生年（否则未来出生者会看到出生前的年份、虚岁为负），
+    // 又尽量覆盖「今年前后」。未出生的人则以出生年起算。
+    var lnUnborn = p.input.year > nowYear;
+    var lnFrom = Math.max(nowYear - 1, p.input.year);
+    var lnTo = Math.max(nowYear + 9, p.input.year + 9);
+    var lnList = p.liuNian.filter(function (x) { return x.year >= lnFrom && x.year <= lnTo; });
+    if (!lnList.length) lnList = p.liuNian.slice(-10);
+    c5.appendChild(el('h2', null, '流年运势（' + lnList[0].year + ' – ' + lnList[lnList.length - 1].year + '）'));
     var t2 = el('table');
     var h2 = '<tr><th>年份</th><th>干支</th><th>十神</th><th>虚岁</th><th>吉凶</th><th>简评</th></tr>';
     var LN_MEAN = {
@@ -223,16 +253,21 @@ import { API } from './engine-adapter.js';
       '食神':'食神之年，舒展才华、有口福，利创作与副业。',
       '伤官':'伤官之年，才华外露但易口舌冲动，宜收敛。'
     };
-    p.liuNian.filter(function (x) { return x.year >= 2026 && x.year <= 2035; }).forEach(function (x) {
+    lnList.forEach(function (x) {
       var r = A.rateLuck(x.gan, x.zhi, ws);
       var isNow = x.year === nowYear;
       h2 += '<tr class="' + (isNow ? 'now' : '') + '"><td>' + x.year + '</td><td style="font-size:15px">' + x.gz + '</td>' +
-        '<td>' + x.shiShen + '</td><td>' + (x.year - p.input.year + 1) + '</td>' +
+        '<td>' + x.shiShen + '</td><td>' + (x.year < p.input.year ? '—' : (x.year - p.input.year + 1)) + '</td>' +
         '<td><span class="tag ' + jClass(r.label) + '">' + r.label + '</span></td>' +
         '<td style="text-align:left;color:var(--dim);font-size:12px">' + (LN_MEAN[x.shiShen] || '') + '</td></tr>';
     });
     t2.innerHTML = h2;
     c5.appendChild(t2);
+    c5.appendChild(el('div', 'note',
+      '流年范围按打开页面时的年份生成（' + lnList[0].year + ' – ' + lnList[lnList.length - 1].year + '）' +
+      (lnUnborn ? '，已从出生年起算' : '') + '，已发生年份可用于回看核对。' +
+      '年柱以立春为界；吉凶按用神喜忌评分，仅供参考。'
+    ));
     box.appendChild(c5);
 
     /* --- 5b. 紫微斗数 --- */
@@ -338,7 +373,15 @@ import { API } from './engine-adapter.js';
     c7.appendChild(el('h2', null, '姓名五格分析'));
     var n5 = p.name5;
     if (!n5.ok) {
-      c7.appendChild(el('div', 'note', '姓名字形笔画未收录：' + (n5.unknown || []).join('、') + '，无法计算五格。'));
+      if (n5.reason === 'no-name') {
+        c7.appendChild(el('div', 'note', '填写姓名后可计算五格。'));
+      } else if (n5.reason === 'unsupported-length') {
+        c7.appendChild(el('div', 'note', '本页五格按 2–4 字姓名计算，当前是 ' + n5.length + ' 字，暂不支持。'));
+      } else {
+        c7.appendChild(el('div', 'note',
+          '以下字未收录康熙笔画：' + (n5.unknown || []).join('、') +
+          '。五格剖象法要求逐字给出康熙字典笔画，缺字时结果会整体偏移，因此这里不给出五格。'));
+      }
     } else {
       var ge = el('div', 'ge');
       [['天格','天格'],['人格','人格'],['地格','地格'],['外格','外格'],['总格','总格']].forEach(function (pair) {
@@ -369,8 +412,8 @@ import { API } from './engine-adapter.js';
       hbox.innerHTML =
         '<div>' + kv('合婚评分', '<span class="big">' + he.score + ' 分 · ' + he.level + '</span>') +
         kv('年支关系', he.nianHe ? '六合（相合）' : (he.nianChong ? '相冲' : '无合无冲')) + '</div>' +
-        '<div>' + kv('男方日主', p.dayGanWx + '（' + p.ws.strong + '）') +
-        kv('女方日主', p.partner.dayGanWx + '（' + p.partner.ws.strong + '）') + '</div>';
+        '<div>' + kv(he.labels.a + '日主', p.dayGanWx + '（' + p.ws.strong + '）') +
+        kv(he.labels.b + '日主', p.partner.dayGanWx + '（' + p.partner.ws.strong + '）') + '</div>';
       c8.appendChild(hbox);
       var comp = el('div');
       comp.style.marginTop = '14px';
@@ -415,9 +458,11 @@ import { API } from './engine-adapter.js';
   function run() {
     var opt = readForm('');
     if (!opt) { alert('请填写完整的出生日期与时间'); return; }
+    if (opt.lngError) { alert(opt.lngError); $('lng').focus(); return; }
     var p = calc(opt);
     var po = readForm('p_');
     if (po && po.year && document.getElementById('partnerBox').style.display !== 'none') {
+      if (po.lngError) { alert('合婚对象：' + po.lngError); $('p_lng').focus(); return; }
       var q = calc(po);
       p.partner = q;
       p.partnerInput = po;

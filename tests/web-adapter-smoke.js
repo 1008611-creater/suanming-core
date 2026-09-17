@@ -14,7 +14,7 @@
  *   7. 紫微盘可用。
  */
 import { readFileSync } from 'node:fs';
-import { paipan, ziwei, GAN, ZHI, CANG, ENGINE_INFO } from '../web/engine-adapter.js';
+import { paipan, ziwei, flowYear, palaceTriad, GAN, ZHI, CANG, ENGINE_INFO } from '../web/engine-adapter.js';
 
 function assert(condition, message) {
   if (!condition) throw new Error('[web-adapter] ' + message);
@@ -106,4 +106,56 @@ eq(z.soul.branch, '未', '紫微命宫地支');
 eq(z.soul.stem, '辛', '紫微命宫天干');
 assert(z.palaces.some(x => x.branch === '未'), '紫微命宫未出现在十二宫中');
 
-console.log('[web-adapter] ok  四柱=' + p.gz.join(' ') + '  大运=' + p.daYun.list[0].gz + '  紫微=' + z.fiveElements.name);
+/* --- 8. 命卦用年：必须与年柱同口径（立春换年） --- */
+// 1990-01-01 在立春前，年柱已是己巳（1989）。命卦若用公历年会得出另一个卦。
+eq(p.guaYear, 1989, '立春前出生者的命卦用年');
+const summer = paipan({ ...base, month: 6, day: 1 });
+eq(summer.guaYear, 1990, '立春后出生者的命卦用年仍为当年');
+eq(summer.gz[0], '庚午', '立春后年柱为当年干支');
+
+/* --- 9. 自检页取数：flowYear 与 palaceTriad --- */
+const fy = flowYear(2015, p);
+eq(fy.gz, '乙未', '指定流年干支');
+eq(fy.shiShen, '正印', '指定流年十神');
+eq(fy.xuSui, 26, '指定流年虚岁');
+eq(fy.daYun.gz, '甲戌', '指定流年所处大运');
+// 流年干支必须与引擎的流年表逐字一致，避免自检页出现第二套口径。
+const inTable = p.liuNian.find((x) => x.year === 2015);
+eq(fy.gz, inTable.gz, 'flowYear 与流年表同源');
+eq(fy.shiShen, inTable.shiShen, 'flowYear 十神与流年表一致');
+
+eq(palaceTriad(5), { self: 5, opposite: 11, trine: [9, 1] }, '三方四正索引');
+eq(palaceTriad(0).trine, [4, 8], '三方四正回绕');
+
+/* --- 10. 未来出生年份：流年表不得整体落在出生之前 --- */
+// 反例：表单允许填未来日期。若流年表只按「今年」起算，2040 年出生者会拿到
+// 2025 起的年份，流年卡片显示出生前的年份、虚岁为负数。
+const nowYear = new Date().getFullYear();
+const future = paipan({ ...base, year: nowYear + 14, month: 5, day: 5 });
+const bornYear = future.input.year;
+assert(future.liuNian.some((x) => x.year >= bornYear), '未来出生者的流年表不含出生当年及以后');
+assert(future.liuNian.some((x) => x.year >= bornYear + 9), '未来出生者的流年表未覆盖出生后十年');
+assert(future.liuNian[future.liuNian.length - 1].year >= nowYear + 11, '流年表上界未随出生年顺延');
+
+// 出生当年及之后的虚岁必须为正，出生前不得出现。
+const after = future.liuNian.filter((x) => x.year >= bornYear);
+assert(after.length >= 10, '出生年及之后的流年不足十条：' + after.length);
+assert(after.every((x) => x.year - bornYear + 1 >= 1), '出生年及之后出现非正虚岁');
+// 出生前的年份允许存在（用于回看历史大运），但页面必须能把它们过滤掉。
+assert(future.liuNian.some((x) => x.year < bornYear), '未来出生者应保留出生前年份供历史对照');
+
+// 页面筛选口径：不得早于出生年，且要覆盖出生后十年。
+const lnFrom = Math.max(nowYear - 1, bornYear);
+const lnTo = Math.max(nowYear + 9, bornYear + 9);
+const shown = future.liuNian.filter((x) => x.year >= lnFrom && x.year <= lnTo);
+assert(shown.length >= 10, '页面筛选后流年不足十条：' + shown.length);
+assert(shown.every((x) => x.year >= bornYear), '页面筛选后仍出现出生前的年份');
+assert(shown.every((x) => x.year - bornYear + 1 >= 1), '页面筛选后仍出现非正虚岁');
+assert(shown[0].year === bornYear, '页面筛选后应从出生年开始：' + shown[0].year);
+
+// 已出生者不受影响：仍是「今年前后」的窗口。
+const past = p.liuNian.filter((x) => x.year >= Math.max(nowYear - 1, p.input.year) && x.year <= Math.max(nowYear + 9, p.input.year + 9));
+assert(past.some((x) => x.year === nowYear), '已出生者的流年窗口未包含今年');
+assert(past[0].year === nowYear - 1, '已出生者的流年窗口起点应为去年：' + past[0].year);
+
+console.log('[web-adapter] ok  四柱=' + p.gz.join(' ') + '  大运=' + p.daYun.list[0].gz + '  紫微=' + z.fiveElements.name + '  命卦年=' + p.guaYear);

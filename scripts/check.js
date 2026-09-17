@@ -45,7 +45,9 @@ const required = [
   'scripts/privacy-scan.mjs',
   'scripts/verify.mjs',
   'scripts/build-web-engine.mjs',
+  'scripts/build-bihua-data.mjs',
   'web/engine.js',
+  'web/bihua-data.js',
   'web/engine-adapter.js'
 ];
 const missing = required.filter(f => !existsSync(resolve(ROOT, f)));

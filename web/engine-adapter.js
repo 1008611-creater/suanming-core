@@ -122,9 +122,13 @@ export function paipan(opt) {
 
   /* ---------- 流年：年柱由引擎的年柱规则给出，不在这里另写一套 ---------- */
   const nowYear = new Date().getFullYear();
+  // 区间要同时覆盖「今年前后」与「出生年之后」：只按 nowYear 生成的话，
+  // 出生年份晚于 nowYear 的人（表单允许填未来日期）会拿到一整段出生前的年份，
+  // 流年卡片就会显示出生前的年份、虚岁为负。
   const fromYear = Math.min(input.year, nowYear - 1);
+  const toYear = Math.max(nowYear + 11, input.year + 11);
   const liuNian = [];
-  for (let y = fromYear; y <= nowYear + 11; y++) {
+  for (let y = fromYear; y <= toYear; y++) {
     const gz = Engine.yearPillar(y, 6, 1, { yearBoundary: 'calendar', ruleSet });
     liuNian.push({
       year: y, gan: GAN.indexOf(gz[0]), zhi: ZHI.indexOf(gz[1]), gz,
@@ -133,6 +137,14 @@ export function paipan(opt) {
   }
 
   const dayIndex = sexagenaryIndex(chart.pillars.day[0], chart.pillars.day[1]);
+
+  /* ---------- 命卦用年：必须与年柱同口径（立春换年） ----------
+   * 三元命卦按立春分年，而表单里的 year 是公历年。1 月 1 日出生者在立春前，
+   * 年柱已退到上一年，命卦若仍用公历年就会与四柱自相矛盾。
+   * 这里只比较引擎自己算出的年柱，不在页面重写立春算法。 */
+  const guaYear = Engine.yearPillar(input.year, input.month, input.day, {
+    yearBoundary: 'calendar', ruleSet
+  }) === chart.pillars.year ? input.year : input.year - 1;
 
   return {
     name: opt.name || '无名',
@@ -157,6 +169,7 @@ export function paipan(opt) {
     dayGanWx: Engine.elementOfStem(dayStem, ruleSet),
     zodiac: SHENGXIAO[ZHI.indexOf(chart.pillars.year[1])],
     xunKong: XUN_KONG[Math.floor(dayIndex / 10)],
+    guaYear,
     monthTerm: Engine.currentMonthBoundary(chart.time.jdUTC)?.name ?? '',
     wx: { score: { ...strength.totals }, weights: [...strength.weights], method: strength.method, ruleSet: strength.ruleSet },
     daYun,
@@ -186,8 +199,52 @@ export function ziwei(opt) {
   return { ...chart, gender: GENDER_TO_VIEW[input.gender], useTrueSolar, engine: ENGINE_INFO };
 }
 
+/**
+ * 指定公历年的流年信息。
+ *
+ * 自检页要让用户拿「已经发生过的某一年」来核对结构，年份由用户给定，
+ * 因此不能只依赖 paipan() 里那张固定区间的流年表。年柱仍由引擎的年柱规则
+ * 给出，这里只补十神、虚岁与当年所处大运，不重写任何干支算法。
+ *
+ * @param {number} year 公历年
+ * @param {object} p paipan() 的返回值（取日干、大运与规则集）
+ */
+export function flowYear(year, p) {
+  const ruleSet = Engine.getRuleSet(p.chart.manifest.ruleSetId);
+  const gz = Engine.yearPillar(year, 6, 1, { yearBoundary: 'calendar', ruleSet });
+  const dayStem = p.gz[2][0];
+  const luck = p.daYun ? p.daYun.list.filter((d) => year >= d.startYear).pop() ?? null : null;
+  return {
+    year,
+    gz,
+    gan: GAN.indexOf(gz[0]),
+    zhi: ZHI.indexOf(gz[1]),
+    shiShen: Engine.tenGod(dayStem, gz[0], ruleSet),
+    zhiShiShen: Engine.tenGod(dayStem, CANG[gz[1]][0], ruleSet),
+    xuSui: year - p.input.year + 1,
+    daYun: luck
+      ? { gz: luck.gz, shiShen: luck.shiShen, startAge: luck.startAge, startYear: luck.startYear }
+      : null
+  };
+}
+
+/**
+ * 三方四正：以寅基宫位索引取本宫、对宫（+6）与三合两宫（+4、+8）。
+ *
+ * 这是宫位几何关系（寅午戌三合、寅申相冲），不含任何取值口径，
+ * 与具体流派无关，因此放在适配层而不是解释层。
+ */
+export function palaceTriad(palaceIndex) {
+  const fix = (i) => ((i % 12) + 12) % 12;
+  return {
+    self: fix(palaceIndex),
+    opposite: fix(palaceIndex + 6),
+    trine: [fix(palaceIndex + 4), fix(palaceIndex + 8)]
+  };
+}
+
 export const API = {
-  paipan, ziwei, GAN, ZHI, CANG, SHENGXIAO, ENGINE_INFO,
+  paipan, ziwei, flowYear, palaceTriad, GAN, ZHI, CANG, SHENGXIAO, ENGINE_INFO,
   engine: Engine
 };
 

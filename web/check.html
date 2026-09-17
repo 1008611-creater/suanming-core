@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>自检 · 用已经发生的事校盘</title>
+<meta name=description content=用已经发生过的经历核对命盘结构：大运起运、流年十神、命宫身宫、五行偏枯与紫微命宫三方四正。只呈现结构，不下吉凶断语。>
+<link rel=icon href=favicon.svg type=image/svg+xml>
+<link rel="stylesheet" href="style.css">
+<style>
+.cklist{display:grid;gap:12px}
+.ckrow{background:#0f131b;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.ckrow .q{font-size:14px;color:var(--ink);margin-bottom:6px}
+.ckrow .a{font-size:12.5px;color:var(--dim);line-height:1.8}
+.ckrow .a b{color:var(--gold2);font-weight:600}
+.cand{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.candc{background:#0f131b;border:1px solid var(--line);border-radius:12px;padding:14px 12px;text-align:center}
+.candc.mid{border-color:rgba(200,164,92,.55);box-shadow:0 0 0 1px rgba(200,164,92,.16) inset}
+.candc .ct{font-size:11px;color:var(--dim2);letter-spacing:.14em}
+.candc .cg{font-size:26px;font-weight:600;margin:8px 0;color:var(--gold2);letter-spacing:.06em}
+.candc .cl{font-size:12px;color:var(--dim);line-height:1.7}
+.candc .cl b{color:var(--ink)}
+.pick{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.pick button{background:transparent;border:1px solid var(--line);color:var(--dim);padding:9px 20px;border-radius:8px;font-size:13px}
+.pick button:hover{border-color:var(--gold);color:var(--gold2)}
+.pick button.on{background:rgba(200,164,92,.14);border-color:var(--gold);color:var(--gold2)}
+@media(max-width:640px){.cand{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>盘面自检</h1>
+    <div class="sub">先验证已经发生的事，再讨论未来的选择</div>
+    <div class="rule"></div>
+  </div>
+
+  <div class="card">
+    <h2>这一页做什么</h2>
+    <div class="hint">
+      同一组出生信息，换一套取值口径就会得出不同的盘。这一页不替你判断吉凶，只把盘面结构摊开，
+      让你拿<b style="color:var(--gold2)">已经发生过的真实经历</b>去核对。
+      最常见的坑是<b style="color:var(--gold2)">出生时辰记错</b>——下面的时辰对照就是为这件事准备的。
+      所有计算都在你自己的浏览器里完成，不保存、不上传。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>出生信息</h2>
+    <div class="form">
+      <div class="f"><label>性别</label><select id="gender"><option>男</option><option>女</option></select></div>
+      <div class="f"><label>出生日期（公历）</label><input id="date" type="date" value=""></div>
+      <div class="f"><label>出生时间（钟表）</label><input id="time" type="time" value=""></div>
+      <div class="f"><label>出生地经度</label><input id="lng" inputmode="decimal" value=""></div>
+      <div class="f wide"><label>时制</label><select id="ts"><option value="1">真太阳时（推荐）</option><option value="0">钟表时间</option></select></div>
+      <div class="actions">
+        <button class="btn-main" id="go">开始自检</button>
+        <button class="btn-ghost" id="back">返回排盘</button>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:14px">经度按出生城市填，中国境内约 73–135。记不清就填出生地所在市，误差一般不影响时辰判断。</div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="footer">
+    本页只呈现盘面结构，不做吉凶断语，也不预测未来<br>
+    命理适合作为传统文化与自我观察的参考，不替代医疗、法律、投资等专业意见
+  </div>
+</div>
+<script src="bihua-data.js"></script>
+<script src="analysis.js"></script>
+<script type="module" src="check.js"></script>
+</body>
+</html>

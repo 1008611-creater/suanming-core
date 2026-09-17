@@ -2167,7 +2167,7 @@ function hashFacts(graph) {
 }
 
 // src/version.js
-var ENGINE_VERSION = "0.5.1";
+var ENGINE_VERSION = "0.5.2";
 var EPHEMERIS_MODEL = "VSOP87D+IAU1980+Meeus49";
 var SCHEMA_VERSION = "1.0.0";
 function parseVersion(value) {
@@ -3864,5 +3864,5 @@ export {
   zoneOffsetMinutes
 };
 
-export const WEB_ENGINE_SOURCE_HASH = "c8b0094493d7f989";
+export const WEB_ENGINE_SOURCE_HASH = "b67524e5cf35fcbc";
 export const WEB_ENGINE_SOURCE_FILES = 37;

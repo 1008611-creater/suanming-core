@@ -6,147 +6,7 @@
 <title>在线排盘 · 命理排盘工具</title>
 <meta name=description content=四柱八字与紫微斗数在线排盘：真太阳时、大运流年、十二宫星曜，每个结果都标明计算口径与来源。>
 <link rel=icon href=favicon.svg type=image/svg+xml>
-<style>
-:root{
-  --bg:#0b0d12; --bg2:#12151d; --card:#161a24; --card2:#1c2130;
-  --line:#2a3142; --gold:#c8a45c; --gold2:#e8cd8a; --jade:#4fb3a3;
-  --ink:#e8ecf4; --dim:#8e98ad; --dim2:#6b7488;
-  --mu:#4caf7d; --huo:#e0605c; --tu:#c8a45c; --jin:#d6d9e6; --shui:#5a93dd;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:radial-gradient(1200px 700px at 50% -10%,#1a2030 0%,var(--bg) 55%) fixed;
-  color:var(--ink);
-  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB","Source Han Sans SC",system-ui,sans-serif;
-  line-height:1.7; -webkit-font-smoothing:antialiased; padding:28px 18px 90px;
-}
-.wrap{max-width:1080px;margin:0 auto}
-.hero{text-align:center;padding:14px 0 30px}
-.hero h1{font-size:30px;letter-spacing:.22em;font-weight:600;
-  background:linear-gradient(180deg,var(--gold2),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero .sub{margin-top:10px;color:var(--dim);font-size:13px;letter-spacing:.14em}
-.hero .rule{width:64px;height:1px;margin:18px auto 0;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
-
-.card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
-  border-radius:16px;padding:22px 22px;margin-bottom:20px;box-shadow:0 10px 34px rgba(0,0,0,.35)}
-.card h2{font-size:15px;letter-spacing:.16em;color:var(--gold2);font-weight:600;margin-bottom:16px;
-  display:flex;align-items:center;gap:10px}
-.card h2::before{content:"";width:3px;height:14px;background:var(--gold);border-radius:2px;display:inline-block}
-.hint{color:var(--dim2);font-size:12px;line-height:1.9}
-
-.form{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.f{display:flex;flex-direction:column;gap:7px}
-.f label{font-size:12px;color:var(--dim);letter-spacing:.08em}
-.f input,.f select{background:#0e1219;border:1px solid var(--line);color:var(--ink);
-  border-radius:10px;padding:11px 12px;font-size:14px;font-family:inherit;outline:none;transition:.18s;width:100%}
-.f input:focus,.f select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,164,92,.13)}
-.f.wide{grid-column:span 2}
-.actions{grid-column:span 4;display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
-button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-size:14px;letter-spacing:.1em;transition:.18s}
-.btn-main{background:linear-gradient(180deg,var(--gold2),var(--gold));color:#1a1408;font-weight:700;padding:13px 34px}
-.btn-main:hover{filter:brightness(1.08);transform:translateY(-1px)}
-.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--dim);padding:13px 22px}
-.btn-ghost:hover{border-color:var(--gold);color:var(--gold2)}
-
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:860px){
-  .form{grid-template-columns:1fr 1fr}
-  .f.wide{grid-column:span 2}
-  /* 按钮区必须跟着列数一起改：仍写 span 4 会生成两条隐式列，把整页撑出横向滚动 */
-  .actions{grid-column:span 2}
-  .grid2{grid-template-columns:1fr}
-}
-@media(max-width:520px){
-  .form{grid-template-columns:1fr}
-  .f.wide{grid-column:span 1}
-  .actions{grid-column:span 1}
-}
-
-/* 四柱 */
-.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.pil{background:#0f131b;border:1px solid var(--line);border-radius:14px;padding:16px 10px;text-align:center;position:relative;overflow:hidden}
-.pil .pos{font-size:11px;color:var(--dim2);letter-spacing:.2em;margin-bottom:12px}
-.pil .gz{font-size:40px;line-height:1.15;font-weight:600;letter-spacing:.04em;
-  background:linear-gradient(180deg,#fff,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.pil .gz .g{display:block}
-.pil .ss{display:inline-block;margin-top:12px;font-size:12px;color:var(--jade);border:1px solid rgba(79,179,163,.35);
-  border-radius:20px;padding:2px 12px;background:rgba(79,179,163,.08)}
-.pil .cang{margin-top:12px;font-size:11px;color:var(--dim2);letter-spacing:.06em}
-.pil.day{border-color:rgba(200,164,92,.55);box-shadow:0 0 0 1px rgba(200,164,92,.18),0 8px 26px rgba(200,164,92,.10)}
-.pil.day::after{content:"日主";position:absolute;top:8px;right:8px;font-size:10px;color:var(--gold);letter-spacing:.1em}
-
-/* 五行条 */
-.wxrow{display:flex;align-items:center;gap:14px;margin-bottom:11px}
-.wxname{width:34px;font-size:14px;text-align:center;font-weight:600}
-.wxbar{flex:1;height:14px;background:#0e1219;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
-.wxfill{height:100%;border-radius:8px;transition:width .5s ease}
-.wxval{width:64px;text-align:right;font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
-
-/* 表 */
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--line)}
-th{color:var(--dim);font-weight:500;font-size:12px;letter-spacing:.08em}
-td{font-variant-numeric:tabular-nums}
-tr.now{background:rgba(200,164,92,.10)}
-tr.now td{color:var(--gold2);font-weight:600}
-.tag{display:inline-block;font-size:11px;padding:1px 9px;border-radius:20px;border:1px solid var(--line);color:var(--dim)}
-.tag.j{color:var(--jade);border-color:rgba(79,179,163,.4);background:rgba(79,179,163,.08)}
-.tag.x{color:#e08080;border-color:rgba(224,128,128,.35);background:rgba(224,128,128,.07)}
-.tag.dx{color:#ff9a9a;border-color:rgba(255,120,120,.5);background:rgba(255,120,120,.12)}
-
-/* 八宅 */
-.bazhai{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.bz{border:1px solid var(--line);border-radius:12px;padding:13px 10px;text-align:center;background:#0f131b}
-.bz .dir{font-size:11px;color:var(--dim2);letter-spacing:.12em}
-.bz .star{font-size:19px;font-weight:600;margin:7px 0 5px}
-.bz .deg{font-size:10px;color:var(--dim2);font-variant-numeric:tabular-nums}
-.bz.j{border-color:rgba(79,179,163,.42);background:rgba(79,179,163,.07)}
-.bz.j .star{color:var(--jade)}
-.bz.x .star{color:#c98080}
-.bz.dx{border-color:rgba(255,110,110,.5);background:rgba(255,110,110,.09)}
-.bz.dx .star{color:#ff8a8a}
-@media(max-width:640px){.bazhai{grid-template-columns:1fr 1fr}.pillars{grid-template-columns:1fr 1fr}}
-
-.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
-.kv:last-child{border-bottom:none}
-.kv .k{color:var(--dim)}
-.kv .v{color:var(--ink);font-weight:500}
-.big{font-size:22px;color:var(--gold2);font-weight:700;letter-spacing:.06em}
-.note{font-size:12px;color:var(--dim2);line-height:1.85;margin-top:12px;padding-left:12px;border-left:2px solid var(--line)}
-.ge{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;text-align:center}
-.ge .g1{background:#0f131b;border:1px solid var(--line);border-radius:12px;padding:12px 6px}
-.ge .n{font-size:11px;color:var(--dim2);letter-spacing:.1em}
-.ge .num{font-size:26px;font-weight:700;margin:5px 0}
-.ge .txt{font-size:11px;color:var(--dim);line-height:1.6}
-
-/* 紫微盘 */
-.zwgrid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,minmax(128px,auto));gap:8px}
-.zwcell{background:#0f131b;border:1px solid var(--line);border-radius:12px;padding:9px 10px;display:flex;flex-direction:column;gap:5px;min-width:0}
-.zwcell.soul{border-color:rgba(200,164,92,.6);box-shadow:0 0 0 1px rgba(200,164,92,.2) inset}
-.zwcell.body{border-style:dashed}
-.zwtop{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
-.zwtop .zwname{font-size:12px;color:var(--gold2);letter-spacing:.1em}
-.zwtop .zwgz{font-size:11px;color:var(--dim2);font-variant-numeric:tabular-nums}
-.zwstars{display:flex;flex-wrap:wrap;gap:4px}
-.zwstars .maj{font-size:13px;font-weight:600;color:var(--ink)}
-.zwstars .zwnone{font-size:11px;color:var(--dim2)}
-.mg{font-style:normal;font-size:10px;color:#1a1408;background:var(--gold);border-radius:4px;padding:0 3px;margin-left:3px;vertical-align:middle}
-.zwsmall{font-size:10.5px;color:var(--dim);line-height:1.55;word-break:break-all}
-.zwfoot{margin-top:auto;font-size:10px;color:var(--dim2);font-variant-numeric:tabular-nums;border-top:1px dashed var(--line);padding-top:5px}
-.zwcenter{background:radial-gradient(circle at 50% 40%,rgba(200,164,92,.10),transparent 70%);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;text-align:center}
-.zwcenter .zwctitle{font-size:14px;color:var(--gold2);letter-spacing:.1em;font-weight:600}
-.zwcenter .zwcmeta{font-size:11px;color:var(--dim)}
-.zwcenter .zwcmut{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px}
-.zwcenter .zwcmut span{font-size:11px;color:var(--ink)}
-@media(max-width:860px){
-  .zwgrid{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,minmax(104px,auto));gap:6px}
-  .zwcell{padding:7px 7px;gap:4px}
-  .zwstars .maj{font-size:12px}
-  .zwsmall{display:none}
-}
-#result{display:none}
-.footer{text-align:center;color:var(--dim2);font-size:11px;margin-top:34px;letter-spacing:.1em;line-height:2}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
@@ -164,7 +24,7 @@ tr.now td{color:var(--gold2);font-weight:600}
       <div class="f"><label>出生日期（公历）</label><input id="date" type="date" value=""></div>
       <div class="f"><label>出生时间</label><input id="time" type="time" value=""></div>
       <div class="f wide"><label>出生地</label><select id="city"></select></div>
-      <div class="f"><label>经度（可改）</label><input id="lng" value="118.18"></div>
+      <div class="f"><label>经度（可改）</label><input id="lng" inputmode="decimal" value=""></div>
       <div class="f"><label>时制</label><select id="ts"><option value="1">真太阳时（推荐）</option><option value="0">钟表时间</option></select></div>
       <div class="actions">
         <button class="btn-main" id="go">开始排盘</button>
@@ -173,6 +33,7 @@ tr.now td{color:var(--gold2);font-weight:600}
       </div>
     </div>
     <div class="hint" style="margin-top:14px">出生地只影响「真太阳时」的经度修正，一般差异在 10–30 分钟内，跨时辰时才会改变时柱。</div>
+    <div class="hint" id="lngTip" style="display:none;margin-top:8px;color:var(--gold2)"></div>
   </div>
 
   <div class="card" id="partnerBox" style="display:none">
@@ -192,11 +53,13 @@ tr.now td{color:var(--gold2);font-weight:600}
 
   <div class="footer">
     本页为传统命理文化推演工具，结果仅供文化参考与自我反思<br>
-    不构成医疗、法律、投资建议；健康问题请以执业医师意见为准
+    不构成医疗、法律、投资建议；健康问题请以执业医师意见为准<br>
+    <a href="check.html" style="color:var(--gold2)">排完盘 → 用已经发生的事自检一遍</a>
   </div>
 </div>
 <!-- 算法源只有一份：engine.js（由 src/ + rules/ 打包）+ engine-adapter.js（视图模型）。
      app.js 为 module，import adapter，因此这里不再加载任何手写算法脚本。 -->
+<script src="bihua-data.js"></script>
 <script src="analysis.js"></script>
 <script type="module" src="app.js"></script>
 </body>

@@ -139,6 +139,27 @@ npm run example   # 运行示例
 「引擎契约输出 → 页面视图模型」的翻译，`web/analysis.js` 只做解释与评分，不参与历法计算。
 `tests/web-engine-sync-smoke.js` 会在指纹与源文件对不上时直接失败，防止页面与核心算法悄悄分叉。
 
+页面共三个：`web/index.html`（入口）、`web/paipan.html`（排盘）、`web/check.html`（盘面自检）。
+自检页只摊开确定性结构（起运、流年十神、命身宫、五行偏枯、紫微三方四正）与出生时辰对照，
+不下吉凶断语、不预测未来。
+
+### 康熙笔画数据表
+
+姓名五格用**康熙字典笔画**，它既不是现行字形笔画，也不是繁体笔画（例：万 = 15，学 = 16）。
+`web/bihua-data.js` 是生成物，覆盖 CJK 基本区 98.98%（20778 字），**请勿手工编辑**。
+
+```bash
+node scripts/build-bihua-data.mjs   # 需要数据源，默认在 ../_trash-20260917
+```
+
+数据源不随仓库分发（体积大，可由公开来源重新取得），用 `SUANMING_BIHUA_SOURCE_DIR` 指向其所在目录：
+
+- `shunshi-kangxi-core` —— MIT License, Copyright (c) 2026 Shunshi.AI（取值来源）
+- `breezyreeds/kangxi-strokecount` —— MIT License, Copyright (c) 2018 Kawai Lo（交叉校验）
+
+取值优先级：`web/analysis.js` 的人工校订表 > `shunshi-kangxi-core`。两源分歧的常用字逐字标注异说，
+不做静默合并。数据表缺失时页面自动退回人工表，姓名五格只对未收录的字给提示。
+
 ## 状态
 
 当前完成 L0 时间、L1 天文基础、L2 农历天文事实、L3 并列盘系（四柱与大运、紫微斗数十二宫与限运）、
