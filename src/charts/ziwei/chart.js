@@ -47,6 +47,7 @@ export function castZiwei(input, options = {}) {
   // 真太阳时：紫微按时辰起宫，用钟表读数会在西部出生者身上整体错一个时辰。
   const shi = shichenOfCivil(input, longitude, {
     timePrecision: input.timePrecision ?? 'exact',
+    timezone: zone,
     equationOfTimeMinutes: options.equationOfTimeMinutes
   });
   const timeIndex = timeIndexOf(shi.trueSolarMinutes, ruleSet);

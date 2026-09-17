@@ -1,9 +1,14 @@
 /* ============================================================
- *  app.js —— 页面渲染逻辑（依赖 bazi.js 的 BaZi 与 analysis.js 的 MingLi）
+ *  app.js —— 页面渲染逻辑
+ *  数据来源：engine-adapter.js（唯一算法源 src/ + rules/ 的打包产物）
+ *  解释来源：analysis.js 的 MingLi
+ *  本文件不做任何历法或干支计算，只负责取数与渲染。
  * ============================================================ */
+import { API } from './engine-adapter.js';
+
 (function () {
   'use strict';
-  var B = window.BaZi, A = window.MingLi;
+  var B = API, A = window.MingLi;
   var GAN = B.GAN, ZHI = B.ZHI, CANG = B.CANG;
   var WX_COLOR = { 木:'#4caf7d', 火:'#e0605c', 土:'#c8a45c', 金:'#c3c8d8', 水:'#5a93dd' };
 
@@ -89,6 +94,7 @@
     p.gua = A.mingGua(opt.year, opt.gender);
     p.bazhai = A.baZhai(p.gua.gua);
     p.name5 = A.wuGe(opt.name);
+    p.ziwei = B.ziwei(opt);
     return p;
   }
 
@@ -229,6 +235,73 @@
     c5.appendChild(t2);
     box.appendChild(c5);
 
+    /* --- 5b. 紫微斗数 --- */
+    var zw = p.ziwei;
+    var c5b = el('div', 'card');
+    c5b.appendChild(el('h2', null, '紫微斗数'));
+    var zhead = el('div', 'grid2');
+    zhead.innerHTML =
+      '<div>' + kv('农历', zw.lunar.ganzhi + '年 ' + zw.lunar.monthNumber + '月' + zw.lunar.day + '日' + (zw.lunar.leap ? '（闰月）' : '')) +
+      kv('五行局', zw.fiveElements.name) + '</div>' +
+      '<div>' + kv('命宫 / 身宫', zw.soul.branch + '宫' + (zw.body.palaceIndex === zw.soul.palaceIndex ? '（命身同宫）' : ' / ' + zw.body.branch + '宫')) +
+      kv('命主 / 身主', zw.masters.soulMaster + ' / ' + zw.masters.bodyMaster) + '</div>';
+    c5b.appendChild(zhead);
+
+    var grid = el('div', 'zwgrid');
+    grid.style.marginTop = '18px';
+    // 传统盘式：4×4 外圈 12 宫、中间 2×2 为盘心。宫位按地支固定方位，
+    // 上排 巳午未申、左列 辰卯、右列 酉戌、下排 寅丑子亥（自左向右）。
+    var LAYOUT = [
+      [3, 1, 1], [4, 1, 2], [5, 1, 3], [6, 1, 4],
+      [2, 2, 1], [7, 2, 4],
+      [1, 3, 1], [8, 3, 4],
+      [0, 4, 1], [11, 4, 2], [10, 4, 3], [9, 4, 4]
+    ];
+    var byIndex = {};
+    zw.palaces.forEach(function (q) { byIndex[q.palaceIndex] = q; });
+    var cc = el('div', 'zwcenter');
+    cc.style.gridArea = '2 / 2 / 4 / 4';
+    cc.innerHTML = '<div class=zwctitle>' + zw.lunar.ganzhi + '年 · ' + zw.fiveElements.name + '</div>' +
+      '<div class=zwcmeta>命宫 ' + zw.soul.branch + ' · 身宫 ' + zw.body.branch + '</div>' +
+      '<div class=zwcmeta>命主 ' + zw.masters.soulMaster + ' · 身主 ' + zw.masters.bodyMaster + '</div>' +
+      '<div class=zwcmeta>生年四化</div>' +
+      '<div class=zwcmut>' + zw.mutagens.map(function (m) {
+        return '<span>' + m.name + '<i class=mg>' + m.mutagen + '</i></span>';
+      }).join('') + '</div>';
+    grid.appendChild(cc);
+    LAYOUT.forEach(function (cell) {
+      var q = byIndex[cell[0]];
+      var d = el('div', 'zwcell' + (q.isSoulPalace ? ' soul' : '') + (q.isBodyPalace ? ' body' : ''));
+      d.style.gridRow = cell[1];
+      d.style.gridColumn = cell[2];
+      var majors = q.majorStars || [];
+      var others = (q.auxiliaryStars || []).concat(q.minorStars || []);
+      var starName = function (s) { return typeof s === 'string' ? s : s.name; };
+      // 生年四化挂在星上而不是宫上：宫位本身可能没有四化，必须按 palaceIndex 取全局表。
+      var palaceMut = zw.mutagens.filter(function (m) { return m.palaceIndex === q.palaceIndex; });
+      d.innerHTML =
+        '<div class=zwtop><span class=zwname>' + q.name + '</span>' +
+        '<span class=zwgz>' + q.stem + q.branch + '</span></div>' +
+        '<div class=zwstars>' + (majors.length ? majors.map(function (s) {
+          var name = starName(s);
+          var mu = palaceMut.filter(function (m) { return m.name === name; })[0];
+          return '<span class=maj>' + name + (mu ? '<i class=mg>' + mu.mutagen + '</i>' : '') + '</span>';
+        }).join('') : '<span class=zwnone>无主星</span>') + '</div>' +
+        (others.length ? '<div class=zwsmall>' + others.map(function (s) {
+          var name = starName(s);
+          var mu = palaceMut.filter(function (m) { return m.name === name; })[0];
+          return name + (mu ? '<i class=mg>' + mu.mutagen + '</i>' : '');
+        }).join(' · ') + '</div>' : '') +
+        '<div class=zwfoot>' + q.decadal.startAge + '–' + q.decadal.endAge + ' 岁 · ' + q.changsheng12 + ' · ' + q.boshi12 + '</div>';
+      grid.appendChild(d);
+    });
+    c5b.appendChild(grid);
+    c5b.appendChild(el('div', 'note',
+      '紫微以农历生日与时辰定命身十二宫，年界与日界各按本派口径，不与四柱互相换算。' +
+      '四化按年干起，显示为星后的禄/权/科/忌。宫位吉凶需结合三方四正与流年，此处只呈现结构，不做吉凶断语。'
+    ));
+    box.appendChild(c5b);
+
     /* --- 6. 命卦与八宅 --- */
     var c6 = el('div', 'card');
     c6.appendChild(el('h2', null, '命卦与八宅风水'));
@@ -310,6 +383,30 @@
       c8.appendChild(el('div', 'note', '合婚以年支关系与双方五行互补为主，属传统参考维度。感情走向更取决于相处方式与现实条件。'));
       box.appendChild(c8);
     }
+
+    /* --- 9. 计算口径与来源（可复核性） --- */
+    var eng = p.engine || (window.SuanmingEngine && window.SuanmingEngine.ENGINE_INFO) || {};
+    var c9 = el('div', 'card');
+    c9.appendChild(el('h2', null, '计算口径与来源'));
+    var e1 = el('div', 'grid2');
+    e1.innerHTML =
+      '<div>' + kv('引擎版本', eng.version || '—') +
+      kv('星历模型', eng.ephemeris || '—') + '</div>' +
+      '<div>' + kv('四柱规则集', eng.ruleSetId || '—') +
+      kv('紫微规则集', eng.ziweiRuleSetId || '—') + '</div>';
+    c9.appendChild(e1);
+    var e2 = el('div', 'grid2');
+    e2.style.marginTop = '10px';
+    e2.innerHTML =
+      '<div>' + kv('五行口径', (p.wx && p.wx.method) || '—') + '</div>' +
+      '<div>' + kv('旺衰阈值口径', (p.ws && p.ws.method) || '—') + '</div>';
+    c9.appendChild(e2);
+    c9.appendChild(el('div', 'note',
+      '网页端的四柱与紫微共用同一份引擎产物（' + (eng.sourceFiles || '—') + ' 个源文件打包），' +
+      '内容指纹 <b style=color:var(--gold2)>' + (eng.sourceHash || '—') + '</b>。' +
+      '同输入 + 同版本 + 同规则集，必得同一结果；换规则集只换取值口径，不换计算代码。'
+    ));
+    box.appendChild(c9);
 
     box.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }

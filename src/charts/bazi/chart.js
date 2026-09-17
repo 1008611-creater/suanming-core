@@ -25,7 +25,13 @@ export function castBazi(input, options = {}) {
   const zone = input.timezone ?? 'Asia/Shanghai';
   const utc = civilToUTC(input, zone);
   const longitude = input.longitude ?? 120;
-  const shi = shichenOfCivil(input, longitude, { timePrecision: input.timePrecision ?? 'exact' });
+  // 真太阳时含经度修正与均时差，两者都在 shichenOfCivil 内部完成。
+  // options.equationOfTimeMinutes 仅用于对比研究：显式给出时覆盖自动计算。
+  const shi = shichenOfCivil(input, longitude, {
+    timePrecision: input.timePrecision ?? 'exact',
+    timezone: zone,
+    equationOfTimeMinutes: options.equationOfTimeMinutes
+  });
 
   // 日柱：先取出生地民用日的日期序号（不是 UTC 时刻的日序），再按流派换日基准判定。
   const civilDayNumber = julianDayFromGregorian(input.year, input.month, input.day);

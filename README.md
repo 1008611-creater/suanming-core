@@ -108,6 +108,10 @@ result.agreement;    // 两派取值相同的字段
 
 ## 文档
 
+- [产品规格](docs/product-spec.md)
+- [工程约束红线](CONSTRAINTS.md)
+- [验收标准](docs/acceptance.md)
+- [实施计划](docs/implementation-plan.md)
 - [架构与核心不变量](docs/architecture.md)
 - [规则集与证据分级](docs/rule-sets.md)
 - [API 快速参考](docs/api.md)
@@ -121,11 +125,19 @@ result.agreement;    // 两派取值相同的字段
 ## 开发
 
 ```bash
-npm test          # 必需文件检查 + tests/ 下全部测试
+npm run verify    # 交付质量门：重建网页引擎 → 全量测试 → 隐私扫描 → 交付物完整性
+npm test          # 只跑必需文件检查 + tests/ 下全部测试
 npm run example   # 运行示例
 ```
 
-自检会自动发现 `tests/` 下的全部测试，新增测试不会被静默跳过。GitHub Actions 在 push 与 pull request 时运行 `npm test`。
+自检会自动发现 `tests/` 下的全部测试，新增测试不会被静默跳过。GitHub Actions 在 push 与 pull request 时运行 `npm run verify`。
+
+## 网页端
+
+`web/` 是排盘页面。网页端**不维护第二套算法**：`web/engine.js` 由 `scripts/build-web-engine.mjs`
+从 `src/` 与 `rules/` 打包生成，产物带内容指纹与源文件数；`web/engine-adapter.js` 只做
+「引擎契约输出 → 页面视图模型」的翻译，`web/analysis.js` 只做解释与评分，不参与历法计算。
+`tests/web-engine-sync-smoke.js` 会在指纹与源文件对不上时直接失败，防止页面与核心算法悄悄分叉。
 
 ## 状态
 

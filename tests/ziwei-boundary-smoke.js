@@ -73,10 +73,21 @@ assert.equal(leap16.lunar.day, 16, '闰二月十六');
 assert.equal(leap16.lunar.monthIndex, 2, '闰月十六起按下月起宫');
 
 // 真太阳时：同一钟表时刻，经度不同则时辰可能不同 —— 时柱与紫微都必须跟随。
-const east = castZiwei({ ...BASE, hour: 9, minute: 5, longitude: 120 });
-const west = castZiwei({ ...BASE, hour: 9, minute: 5, longitude: 75 });
-assert.equal(east.time.timeIndex, 5, '东经 120° 的 09:05 是巳时');
+// 样本刻意避开时辰分界（09:30 离巳时两端各 30 分钟），这样断言的是经度修正本身，
+// 不会因为均时差的季节变化而变得脆弱。
+const east = castZiwei({ ...BASE, hour: 9, minute: 30, longitude: 120 });
+const west = castZiwei({ ...BASE, hour: 9, minute: 30, longitude: 75 });
+assert.equal(east.time.timeIndex, 5, '东经 120° 的 09:30 是巳时');
+assert.equal(west.time.timeIndex, 3, '东经 75° 同刻是卯时');
 assert.notEqual(west.time.timeIndex, east.time.timeIndex, '西经修正后时辰必须不同');
+
+// 均时差必须参与真太阳时，而不是只做经度修正。
+// 2005-07-13 的均时差约 −5.7 分钟，正好把 09:05 从巳时压回辰时。
+// 若有人把均时差改回默认 0，这条断言会立刻失败。
+const eotCase = castZiwei({ ...BASE, hour: 9, minute: 5, longitude: 120 });
+assert.equal(eotCase.time.shichen.equationOfTimeMinutes.toFixed(1), '-5.7', '均时差必须被计算');
+assert.equal(eotCase.time.timeIndex, 4, '计入均时差后 09:05 应为辰时');
+assert.equal(eotCase.time.trueSolarMinutes.toFixed(1), '539.3', '真太阳时 = 平太阳时 + 经度修正 + 均时差');
 
 // 规则集自洽。
 assert.deepEqual(auditRuleSet(getRuleSet(DEFAULT_ZIWEI_RULE_SET)).errors, [], '紫微规则集必须通过审计');

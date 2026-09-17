@@ -14,6 +14,13 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const required = [
   'README.md',
   'CHANGELOG.md',
+  'CONSTRAINTS.md',
+  'docs/product-spec.md',
+  'docs/acceptance.md',
+  'docs/implementation-plan.md',
+  'docs/decisions/ADR-0006-web-single-engine-source.md',
+  'docs/decisions/ADR-0007-wangshuai-thresholds.md',
+  'docs/decisions/ADR-0008-equation-of-time.md',
   'docs/architecture.md',
   'docs/api.md',
   'docs/rule-sets.md',
@@ -34,7 +41,12 @@ const required = [
   'src/derive/wuxing.js',
   'src/compare/schools.js',
   'schema/chart.schema.json',
-  'src/schema/chart.schema.json'
+  'src/schema/chart.schema.json',
+  'scripts/privacy-scan.mjs',
+  'scripts/verify.mjs',
+  'scripts/build-web-engine.mjs',
+  'web/engine.js',
+  'web/engine-adapter.js'
 ];
 const missing = required.filter(f => !existsSync(resolve(ROOT, f)));
 if (missing.length) throw new Error('missing required files: ' + missing.join(', '));

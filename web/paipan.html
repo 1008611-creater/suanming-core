@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>在线排盘 · 命理排盘工具</title>
+<meta name=description content=四柱八字与紫微斗数在线排盘：真太阳时、大运流年、十二宫星曜，每个结果都标明计算口径与来源。>
+<link rel=icon href=favicon.svg type=image/svg+xml>
 <style>
 :root{
   --bg:#0b0d12; --bg2:#12151d; --card:#161a24; --card2:#1c2130;
@@ -47,7 +49,18 @@ button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-si
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold2)}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:860px){.form{grid-template-columns:1fr 1fr}.f.wide{grid-column:span 2}.grid2{grid-template-columns:1fr}}
+@media(max-width:860px){
+  .form{grid-template-columns:1fr 1fr}
+  .f.wide{grid-column:span 2}
+  /* 按钮区必须跟着列数一起改：仍写 span 4 会生成两条隐式列，把整页撑出横向滚动 */
+  .actions{grid-column:span 2}
+  .grid2{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .form{grid-template-columns:1fr}
+  .f.wide{grid-column:span 1}
+  .actions{grid-column:span 1}
+}
 
 /* 四柱 */
 .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -105,6 +118,32 @@ tr.now td{color:var(--gold2);font-weight:600}
 .ge .n{font-size:11px;color:var(--dim2);letter-spacing:.1em}
 .ge .num{font-size:26px;font-weight:700;margin:5px 0}
 .ge .txt{font-size:11px;color:var(--dim);line-height:1.6}
+
+/* 紫微盘 */
+.zwgrid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,minmax(128px,auto));gap:8px}
+.zwcell{background:#0f131b;border:1px solid var(--line);border-radius:12px;padding:9px 10px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.zwcell.soul{border-color:rgba(200,164,92,.6);box-shadow:0 0 0 1px rgba(200,164,92,.2) inset}
+.zwcell.body{border-style:dashed}
+.zwtop{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.zwtop .zwname{font-size:12px;color:var(--gold2);letter-spacing:.1em}
+.zwtop .zwgz{font-size:11px;color:var(--dim2);font-variant-numeric:tabular-nums}
+.zwstars{display:flex;flex-wrap:wrap;gap:4px}
+.zwstars .maj{font-size:13px;font-weight:600;color:var(--ink)}
+.zwstars .zwnone{font-size:11px;color:var(--dim2)}
+.mg{font-style:normal;font-size:10px;color:#1a1408;background:var(--gold);border-radius:4px;padding:0 3px;margin-left:3px;vertical-align:middle}
+.zwsmall{font-size:10.5px;color:var(--dim);line-height:1.55;word-break:break-all}
+.zwfoot{margin-top:auto;font-size:10px;color:var(--dim2);font-variant-numeric:tabular-nums;border-top:1px dashed var(--line);padding-top:5px}
+.zwcenter{background:radial-gradient(circle at 50% 40%,rgba(200,164,92,.10),transparent 70%);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;text-align:center}
+.zwcenter .zwctitle{font-size:14px;color:var(--gold2);letter-spacing:.1em;font-weight:600}
+.zwcenter .zwcmeta{font-size:11px;color:var(--dim)}
+.zwcenter .zwcmut{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px}
+.zwcenter .zwcmut span{font-size:11px;color:var(--ink)}
+@media(max-width:860px){
+  .zwgrid{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,minmax(104px,auto));gap:6px}
+  .zwcell{padding:7px 7px;gap:4px}
+  .zwstars .maj{font-size:12px}
+  .zwsmall{display:none}
+}
 #result{display:none}
 .footer{text-align:center;color:var(--dim2);font-size:11px;margin-top:34px;letter-spacing:.1em;line-height:2}
 </style>
@@ -156,8 +195,9 @@ tr.now td{color:var(--gold2);font-weight:600}
     不构成医疗、法律、投资建议；健康问题请以执业医师意见为准
   </div>
 </div>
-<script src="bazi.js"></script>
+<!-- 算法源只有一份：engine.js（由 src/ + rules/ 打包）+ engine-adapter.js（视图模型）。
+     app.js 为 module，import adapter，因此这里不再加载任何手写算法脚本。 -->
 <script src="analysis.js"></script>
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

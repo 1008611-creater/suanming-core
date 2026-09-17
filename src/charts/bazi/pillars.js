@@ -59,12 +59,17 @@ export function yearPillar(y, m, d, o = {}) {
 /** 由太阳视黄经求月柱；边界黄经来自规则集的步长与偏移参数。 */
 export function monthPillar(yearOrStem, lon = 315, o = {}) {
   const ruleSet = o.ruleSet ?? DEFAULT;
-  const { monthBoundaryStepDegrees: step, monthBoundaryOffsetDegrees: offset } = ruleSet.parameters;
+  const { monthBoundaryStepDegrees: step } = ruleSet.parameters;
   const branches = branchesOf(ruleSet), stems = stemsOf(ruleSet);
   const b = (Math.floor((((lon - 315) + 360) % 360) / step) + 2) % 12;
   const ys = typeof yearOrStem === 'string' ? stems.indexOf(yearOrStem) : ((yearOrStem - 4) % 10 + 10) % 10;
   const s = ((ys % 5) * 2 + 2) % 10;
-  return stems[(s + b - 2 + 10) % 10] + branches[b];
+  // 五虎遁：寅月起于年干推得的月干，此后按「节气序列位置」顺行。
+  // 位置必须从寅月（立春，黄经 315°）起算并跨过地支环的接缝：子月与丑月排在亥月之后，
+  // 若直接用地支序号减二当地支偏移，子、丑会落到地支环的另一侧，月干整整少进两位
+  // —— 甲年子月会被算成「甲子」，而正确值是「丙子」。
+  const position = ((b - 2) % 12 + 12) % 12;
+  return stems[(s + position) % 10] + branches[b];
 }
 
 export function dayPillar(jd, ruleSet = DEFAULT) { return sexagenaryDay(jd, ruleSet); }

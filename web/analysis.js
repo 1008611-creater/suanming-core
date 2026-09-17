@@ -2,7 +2,9 @@
 /* ============================================================
  *  analysis.js —— 命理分析层
  *  旺衰/用神、十神解读、大运流年评分、八宅命卦、姓名五格、合婚
- *  依赖 bazi.js（通过参数传入，或全局 BaZi）
+ *  本层只做解释与评分，不做任何历法/干支计算。
+ *  输入 p 由 engine-adapter.js 提供（engine.js 的契约输出）。
+ *  旺衰阈值口径见 docs/decisions/ADR-0007-wangshuai-thresholds.md
  * ============================================================ */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -18,20 +20,36 @@
   var GAN_WX = ['木','木','火','火','土','土','金','金','水','水'];
 
   /* ---------- 1. 旺衰 & 用神 ---------- */
+  /* 旺衰阈值按「同党占比」 tong/(tong+yi) 分档。
+   * 不同计权口径取值粒度不同，阈值必须随口径走，否则分档会失真：
+   *  - element-count（藏干只取本气，权重 [1,0,0]）取值只有 8 档，0.125 步长；
+   *  - element-weighted（权重 [1,0.5,0.3]）取值连续。
+   * 标定过程见 docs/decisions/ADR-0007-wangshuai-thresholds.md */
+  var WANG_SHUAI_THRESHOLDS = {
+    'bazi.wuxing.element-count':    { strong: 0.6875, slightlyStrong: 0.5625, slightlyWeak: 0.4375 },
+    'bazi.wuxing.element-weighted': { strong: 0.62,   slightlyStrong: 0.52,   slightlyWeak: 0.44 },
+    default:                        { strong: 0.62,   slightlyStrong: 0.52,   slightlyWeak: 0.44 }
+  };
+  function thresholdsFor(method) {
+    return WANG_SHUAI_THRESHOLDS[method] || WANG_SHUAI_THRESHOLDS.default;
+  }
+
   function wangShuai(p) {
     var dayWx = p.dayGanWx;
     var s = p.wx.score;
     var tong = s[dayWx] + s[BEI_SHENG[dayWx]];          // 比劫 + 印
     var yi  = s[SHENG[dayWx]] + s[KE[dayWx]] + s[BEI_KE[dayWx]]; // 食伤 + 财 + 官杀
-    var ratio = tong / (tong + yi);
+    var denom = tong + yi;
+    var ratio = denom > 0 ? tong / denom : 0;
+    var th = thresholdsFor(p.wx && p.wx.method);
     var strong;
-    if (ratio >= 0.62) strong = '身强';
-    else if (ratio >= 0.52) strong = '偏强';
-    else if (ratio >= 0.44) strong = '中和偏弱';
+    if (ratio >= th.strong) strong = '身强';
+    else if (ratio >= th.slightlyStrong) strong = '偏强';
+    else if (ratio >= th.slightlyWeak) strong = '中和偏弱';
     else strong = '身弱';
 
     var yong, ji, xi;
-    if (ratio >= 0.52) {           // 身强：喜克泄耗
+    if (ratio >= th.slightlyStrong) { // 身强：喜克泄耗
       yong = [BEI_KE[dayWx], SHENG[dayWx], KE[dayWx]];
       ji   = [dayWx, BEI_SHENG[dayWx]];
       xi   = yong[0];
@@ -43,6 +61,10 @@
     return {
       dayWx: dayWx, tong: round(tong), yi: round(yi), ratio: round(ratio, 3),
       strong: strong, yong: yong, xi: xi, ji: ji,
+      method: (p.wx && p.wx.method) || null,
+      ruleSet: (p.wx && p.wx.ruleSet) || null,
+      weights: (p.wx && p.wx.weights) || null,
+      thresholds: th,
       score: { 木:round(s.木), 火:round(s.火), 土:round(s.土), 金:round(s.金), 水:round(s.水) },
       missing: WX.filter(function (w) { return s[w] < 0.35; }),
       most: WX.slice().sort(function (a,b) { return s[b]-s[a]; })[0],

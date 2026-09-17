@@ -1,0 +1,195 @@
+/**
+ * engine-adapter.js —— 引擎输出 → 页面视图模型
+ * ---------------------------------------------------------------------------
+ * 为什么需要这一层：
+ *   网页曾经自带一份手写八字实现（web/bazi.js），与 src/ 各自演化，
+ *   结果页面上的盘和引擎算出的盘是两份东西。现在网页只保留一条算法源：
+ *   src/ + rules/ 打包成 engine.js，本文件负责把引擎的「契约输出」
+ *   翻译成渲染层要用的「视图模型」。
+ *
+ * 分层原则：
+ *   engine.js 只负责算，输出带 manifest / facts 的可追溯结构；
+ *   本文件只做形状转换与展示所需的少量派生（旬空、生肖、流年表），
+ *   不重新实现任何历法或干支算法 —— 一旦在这里重算，就又会出现两份口径。
+ *
+ * 单位与命名对照（引擎 → 页面）：
+ *   input.longitude      → input.lng
+ *   gender 'male'/'female' → '男'/'女'
+ *   pillars.year '己巳'  → pillars[0].gan = 5, pillars[0].zhi = 5（索引）
+ */
+import * as Engine from './engine.js';
+
+/* ---------- 引擎常量（唯一来源：rules/ 规则集表） ---------- */
+export const GAN = [...Engine.STEMS];
+export const ZHI = [...Engine.BRANCHES];
+export const CANG = Engine.hiddenStems;
+export const SHENGXIAO = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+
+/** 旬空表：六十甲子按十干分六旬，每旬空两支。 */
+const XUN_KONG = [['戌','亥'],['申','酉'],['午','未'],['辰','巳'],['寅','卯'],['子','丑']];
+
+const GENDER_TO_ENGINE = { 男: 'male', 女: 'female' };
+const GENDER_TO_VIEW = { male: '男', female: '女' };
+
+/** 引擎身份信息，供页面标注口径与来源（首页承诺「每个结果都标明计算口径」）。 */
+export const ENGINE_INFO = Object.freeze({
+  version: Engine.ENGINE_VERSION,
+  ephemeris: Engine.EPHEMERIS_MODEL,
+  ruleSetId: Engine.DEFAULT_BAZI_RULE_SET,
+  ziweiRuleSetId: Engine.DEFAULT_ZIWEI_RULE_SET,
+  sourceHash: Engine.WEB_ENGINE_SOURCE_HASH,
+  sourceFiles: Engine.WEB_ENGINE_SOURCE_FILES
+});
+
+/** 由干支名反查六十甲子序号（0=甲子）。 */
+function sexagenaryIndex(gan, zhi) {
+  const gi = GAN.indexOf(gan), zi = ZHI.indexOf(zhi);
+  for (let i = 0; i < 60; i++) if (i % 10 === gi && i % 12 === zi) return i;
+  throw new Error('不是合法干支组合：' + gan + zhi);
+}
+
+function pillarToIndex(pillar) {
+  return { gan: GAN.indexOf(pillar[0]), zhi: ZHI.indexOf(pillar[1]) };
+}
+
+/**
+ * 排一份四柱盘，输出渲染层直接可用的视图模型。
+ *
+ * @param {object} opt
+ *   name 姓名（仅展示）
+ *   gender '男' | '女'
+ *   year month day hour minute 民用（钟表）时间
+ *   lng 出生地东经度数
+ *   useTrueSolar 是否启用真太阳时（经度差 + 均时差）
+ * @returns {object} 视图模型；数值一律为引擎原值，不做二次四舍五入之外的加工
+ */
+export function paipan(opt) {
+  const gender = opt.gender === '女' ? '女' : '男';
+  const lng = Number.isFinite(Number(opt.lng)) && opt.lng !== '' && opt.lng !== null
+    ? Number(opt.lng) : 120;
+  const useTrueSolar = opt.useTrueSolar !== false;
+
+  const input = {
+    year: opt.year, month: opt.month, day: opt.day,
+    hour: opt.hour, minute: opt.minute || 0,
+    // 「钟表时间」= 不做经度修正也不做均时差修正，等价于把出生地当作东经 120° 的标准时。
+    longitude: useTrueSolar ? lng : 120,
+    timezone: 'Asia/Shanghai',
+    gender: GENDER_TO_ENGINE[gender]
+  };
+  const options = useTrueSolar ? {} : { equationOfTimeMinutes: 0 };
+
+  const chart = Engine.castBazi(input, options);
+  const ruleSet = Engine.getRuleSet(chart.manifest.ruleSetId);
+  const pillars = [chart.pillars.year, chart.pillars.month, chart.pillars.day, chart.pillars.hour];
+  const dayStem = chart.pillars.day[0];
+  const shi = chart.time.shichen;
+
+  /* ---------- 真太阳时明细（页面展示用） ---------- */
+  let trueSolar = null;
+  if (useTrueSolar) {
+    const lonFix = (lng - 120) * 4;
+    const eqt = shi.equationOfTimeMinutes;
+    const total = opt.hour * 60 + (opt.minute || 0) + lonFix + eqt;
+    const dayShift = Math.floor(total / 1440);
+    const wrapped = ((total % 1440) + 1440) % 1440;
+    // 日期用 UTC 字段承载民用日，避免本地时区把跨日样本算错。
+    const base = new Date(Date.UTC(opt.year, opt.month - 1, opt.day));
+    base.setUTCDate(base.getUTCDate() + dayShift);
+    trueSolar = {
+      y: base.getUTCFullYear(), m: base.getUTCMonth() + 1, d: base.getUTCDate(),
+      h: Math.floor(wrapped / 60), mi: Math.floor(wrapped % 60),
+      lonFix, eqt, dayShift
+    };
+  }
+
+  /* ---------- 五行力量：口径与权重全部来自规则集 ---------- */
+  const strength = Engine.elementStrength(chart.pillars, ruleSet);
+
+  /* ---------- 大运：干支序列由引擎给出，页面只补十神与年份 ---------- */
+  const daYun = chart.luck ? {
+    forward: chart.luck.direction === 1,
+    startAge: chart.luck.startAgeYears,
+    method: chart.luck.method,
+    ruleId: chart.luck.ruleId,
+    list: chart.luck.pillars.map((gz, i) => ({
+      gan: GAN.indexOf(gz[0]), zhi: ZHI.indexOf(gz[1]), gz,
+      shiShen: Engine.tenGod(dayStem, gz[0], ruleSet),
+      startAge: chart.luck.startAgeYears + i * 10,
+      startYear: input.year + Math.floor(chart.luck.startAgeYears) + i * 10
+    }))
+  } : null;
+
+  /* ---------- 流年：年柱由引擎的年柱规则给出，不在这里另写一套 ---------- */
+  const nowYear = new Date().getFullYear();
+  const fromYear = Math.min(input.year, nowYear - 1);
+  const liuNian = [];
+  for (let y = fromYear; y <= nowYear + 11; y++) {
+    const gz = Engine.yearPillar(y, 6, 1, { yearBoundary: 'calendar', ruleSet });
+    liuNian.push({
+      year: y, gan: GAN.indexOf(gz[0]), zhi: ZHI.indexOf(gz[1]), gz,
+      shiShen: Engine.tenGod(dayStem, gz[0], ruleSet)
+    });
+  }
+
+  const dayIndex = sexagenaryIndex(chart.pillars.day[0], chart.pillars.day[1]);
+
+  return {
+    name: opt.name || '无名',
+    gender,
+    input: { year: input.year, month: input.month, day: input.day, hour: input.hour, minute: input.minute, lng, useTrueSolar },
+    trueSolar,
+    solarUsed: trueSolar
+      ? { y: trueSolar.y, m: trueSolar.m, d: trueSolar.d, h: trueSolar.h, mi: trueSolar.mi }
+      : { y: input.year, m: input.month, d: input.day, h: input.hour, mi: input.minute },
+    pillars: pillars.map(pillarToIndex),
+    gz: pillars,
+    gan: pillars.map((p) => p[0]),
+    zhi: pillars.map((p) => p[1]),
+    shiShen: {
+      year: Engine.tenGod(dayStem, chart.pillars.year[0], ruleSet),
+      month: Engine.tenGod(dayStem, chart.pillars.month[0], ruleSet),
+      day: '日主',
+      hour: Engine.tenGod(dayStem, chart.pillars.hour[0], ruleSet)
+    },
+    zhiShiShen: pillars.map((p) => Engine.tenGod(dayStem, CANG[p[1]][0], ruleSet)),
+    dayGan: GAN.indexOf(dayStem),
+    dayGanWx: Engine.elementOfStem(dayStem, ruleSet),
+    zodiac: SHENGXIAO[ZHI.indexOf(chart.pillars.year[1])],
+    xunKong: XUN_KONG[Math.floor(dayIndex / 10)],
+    monthTerm: Engine.currentMonthBoundary(chart.time.jdUTC)?.name ?? '',
+    wx: { score: { ...strength.totals }, weights: [...strength.weights], method: strength.method, ruleSet: strength.ruleSet },
+    daYun,
+    liuNian,
+    chart,
+    engine: ENGINE_INFO
+  };
+}
+
+/**
+ * 排一份紫微斗数盘（原样返回引擎结构，另附引擎身份信息）。
+ * 紫微与四柱共用同一套时间层与农历层，但年界、日界各按自己的口径，两者不互相换算。
+ */
+export function ziwei(opt) {
+  const useTrueSolar = opt.useTrueSolar !== false;
+  const lng = Number.isFinite(Number(opt.lng)) && opt.lng !== '' && opt.lng !== null ? Number(opt.lng) : 120;
+  const input = {
+    year: opt.year, month: opt.month, day: opt.day,
+    hour: opt.hour, minute: opt.minute || 0,
+    // 与四柱同一口径：关闭真太阳时即按东经 120° 的钟表时间处理，两盘不会各用一套时间。
+    longitude: useTrueSolar ? lng : 120,
+    timezone: 'Asia/Shanghai',
+    gender: GENDER_TO_ENGINE[opt.gender === '女' ? '女' : '男']
+  };
+  const options = useTrueSolar ? {} : { equationOfTimeMinutes: 0 };
+  const chart = Engine.castZiwei(input, options);
+  return { ...chart, gender: GENDER_TO_VIEW[input.gender], useTrueSolar, engine: ENGINE_INFO };
+}
+
+export const API = {
+  paipan, ziwei, GAN, ZHI, CANG, SHENGXIAO, ENGINE_INFO,
+  engine: Engine
+};
+
+// 浏览器里挂到全局，供 app.js 使用；Node 下（测试）不做任何全局写入。
+if (typeof window !== 'undefined') window.SuanmingEngine = API;

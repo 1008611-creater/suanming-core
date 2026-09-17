@@ -43,7 +43,7 @@ assert.equal(castBazi({ year: 2024, month: 2, day: 4, hour: 16, minute: 0, longi
 assert.equal(castBazi({ year: 2024, month: 2, day: 4, hour: 17, minute: 0, longitude: 120 }).pillars.year, '甲辰');
 
 // ---- 月柱：节为界 ----
-assert.equal(castBazi({ year: 2024, month: 2, day: 4, hour: 16, minute: 0, longitude: 120 }).pillars.month, '癸丑');
+assert.equal(castBazi({ year: 2024, month: 2, day: 4, hour: 16, minute: 0, longitude: 120 }).pillars.month, '乙丑');
 assert.equal(castBazi({ year: 2024, month: 2, day: 4, hour: 17, minute: 0, longitude: 120 }).pillars.month, '丙寅');
 
 // ---- 五虎遁：年干定正月月干 ----

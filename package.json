@@ -1,6 +1,6 @@
 {
   "name": "suanming-core",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Deterministic Chinese metaphysics calculation core: astronomical time, calendar, chart casting, multi-school rule engine. Interpretation is downstream and never computes.",
   "type": "module",
   "license": "MIT",
@@ -30,6 +30,7 @@
     "test:property": "node tests/chart-smoke.js",
     "test:coverage": "node scripts/check.js",
     "check": "node scripts/check.js",
+    "verify": "node scripts/verify.mjs",
     "example": "node examples/basic.mjs"
   },
   "keywords": [
