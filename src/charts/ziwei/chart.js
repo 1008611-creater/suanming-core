@@ -21,6 +21,7 @@ import { lunarDateOf, lunarYearOf } from '../../calendar/lunar.js';
 import { createManifest } from '../../manifest.js';
 import { factGraph, factFromRule } from '../../derive/facts.js';
 import { getRuleSet, DEFAULT_ZIWEI_RULE_SET } from '../../../rules/index.js';
+import { validateCivilInput } from '../../input/validate.js';
 import {
   fixIndex, stemsOf, branchesOf, timeIndexOf, timeBranch, monthIndexFor, soulBodyIndex,
   palaceStems, fiveElementsClass, palaceNames, decadalLimits, xiaoxian, palaceBranch
@@ -39,6 +40,7 @@ const MINOR_RULE_KEYS = ['yearMinorRule', 'monthMinorRule', 'dayMinorRule', 'hou
  * @param {object} options { ruleSet?, ruleSetId?, timePrecision? }
  */
 export function castZiwei(input, options = {}) {
+  input = validateCivilInput(input);
   const ruleSet = options.ruleSet ?? getRuleSet(options.ruleSetId ?? DEFAULT_ZIWEI_RULE_SET);
   const zone = input.timezone ?? 'Asia/Shanghai';
   const longitude = input.longitude ?? 120;

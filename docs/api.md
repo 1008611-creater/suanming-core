@@ -23,6 +23,10 @@ const chart = castBazi({
 | `facts` | 事实图，每条事实带 `rule_id` / `source` / `confidence` / `evidence` |
 | `manifest` | 版本清单 |
 
+输入契约由 `validateCivilInput()` 统一执行：月份、日期、时分秒和经度越界会在进入天文计算前抛出
+`code === 'INVALID_INPUT'` 的错误，并带有 `field` 字段。页面可以把同一错误映射为表单提示，
+不会因为 JavaScript 日期自动进位而悄悄换成另一张盘。
+
 第二个参数可指定规则集：`castBazi(input, { ruleSetId: 'bazi-zichu-0.1.0' })`（默认 `bazi-core-0.1.0`）。
 
 ## 紫微斗数

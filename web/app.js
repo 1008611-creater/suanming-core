@@ -51,6 +51,11 @@ import { API } from './engine-adapter.js';
     return '';
   }
   function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function esc(v) {
+    return String(v).replace(/[&<>\"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
 
   /* ---------- 初始化表单 ---------- */
   var $ = function (id) { return document.getElementById(id); };
@@ -110,7 +115,8 @@ import { API } from './engine-adapter.js';
   }
 
   function calc(opt) {
-    var p = B.paipan(opt);
+    // 当前年份只属于页面展示层，显式传入适配层；核心 API 本身保持可复现。
+    var p = B.paipan(Object.assign({}, opt, { asOfYear: new Date().getFullYear() }));
     p.ws = A.wangShuai(p);
     // 命卦按立春换年，与年柱同口径；用公历年会让 1 月初出生者算错。
     p.gua = A.mingGua(p.guaYear, opt.gender);
@@ -133,7 +139,7 @@ import { API } from './engine-adapter.js';
     var ts = p.trueSolar;
     function kv(k, v) { return '<div class="kv"><span class="k">' + k + '</span><span class="v">' + v + '</span></div>'; }
     left.innerHTML =
-      kv('姓名', p.name + '（' + p.gender + '）') +
+      kv('姓名', esc(p.name) + '（' + esc(p.gender) + '）') +
       kv('公历生日', p.input.year + '年' + p.input.month + '月' + p.input.day + '日 ' + pad(p.input.hour) + ':' + pad(p.input.minute)) +
       kv('出生地经度', p.input.lng.toFixed(2) + '°E') +
       kv('真太阳时', ts ? (ts.y + '-' + pad(ts.m) + '-' + pad(ts.d) + ' ' + pad(ts.h) + ':' + pad(ts.mi)) : '未启用');
@@ -379,7 +385,7 @@ import { API } from './engine-adapter.js';
         c7.appendChild(el('div', 'note', '本页五格按 2–4 字姓名计算，当前是 ' + n5.length + ' 字，暂不支持。'));
       } else {
         c7.appendChild(el('div', 'note',
-          '以下字未收录康熙笔画：' + (n5.unknown || []).join('、') +
+          '以下字未收录康熙笔画：' + esc((n5.unknown || []).join('、')) +
           '。五格剖象法要求逐字给出康熙字典笔画，缺字时结果会整体偏移，因此这里不给出五格。'));
       }
     } else {
@@ -398,7 +404,7 @@ import { API } from './engine-adapter.js';
         '<div>' + kv('总格', n5.ge['总格'] + '（' + n5.detail['总格'].ji + '）') +
         kv('人格', n5.ge['人格'] + '（' + n5.detail['人格'].ji + '）') + '</div>';
       c7.appendChild(g3);
-      if (n5.notes && n5.notes.length) c7.appendChild(el('div', 'note', n5.notes.join('<br>')));
+      if (n5.notes && n5.notes.length) c7.appendChild(el('div', 'note', n5.notes.map(esc).join('<br>')));
       c7.appendChild(el('div', 'note', '五格剖象法为近代姓名学流派之一，以康熙字典笔画为准。改名属个人选择，建议结合本人意愿与户籍规定。'));
     }
     box.appendChild(c7);

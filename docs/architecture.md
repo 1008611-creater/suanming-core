@@ -2,6 +2,10 @@
 
 ## 分层
 
+部署入口 `app/` 位于仓库工作区根目录，是 `web/` 的同步镜像，不是新的代码层。由
+`scripts/sync-deployment-mirror.mjs` 统一生成；修改网页必须先改 `web/`，再通过
+`npm run verify` 同步，避免实际部署入口与仓库内网页漂移。
+
 | 层 | 职责 | 关键约束 |
 | --- | --- | --- |
 | L0 时间 | 公历、UTC、IANA 时区、中国历史夏令时、真太阳时 | 全部用儒略日运算，不用 JS `Date` 做算术 |
@@ -23,6 +27,7 @@
    `compareSchools()` 把分歧逐字段列出并附两侧 `ruleId` 与 `source`；**返回结构里没有 `answer` / `winner` / `recommended`**，
    测试会断言这一点。分歧用规则集的 `parameters` 表达，计算代码不分叉。详见 [ADR-0004](decisions/ADR-0004-multi-school-parallel.md)。
 5. **隐私边界**：真实出生资料、地址、私人命盘不进入版本库。`.gitignore` 与 `SECURITY.md` 双重约束。
+6. **展示时间显式化**：流年窗口的「今年」只属于页面展示层。`paipan({ asOfYear })` 接收显式展示年份；未传时按出生年生成固定窗口，避免核心输出隐式依赖系统时钟。
 
 ## 为什么解读层不能反向计算
 

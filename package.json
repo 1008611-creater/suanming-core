@@ -26,11 +26,20 @@
   ],
   "scripts": {
     "test": "node scripts/check.js",
+    "typecheck": "node scripts/typecheck.mjs",
+    "lint": "node scripts/lint.mjs",
+    "test:accessibility": "node scripts/accessibility-smoke.mjs",
+    "test:performance": "node scripts/performance-smoke.mjs",
+    "package:release": "node scripts/package-release.mjs",
+    "build": "node scripts/build-web-engine.mjs",
+    "security": "node scripts/privacy-scan.mjs",
     "test:golden": "node tests/term-boundary-smoke.js",
     "test:property": "node tests/chart-smoke.js",
     "test:coverage": "node scripts/check.js",
     "check": "node scripts/check.js",
     "verify": "node scripts/verify.mjs",
+    "sync:app": "node scripts/sync-deployment-mirror.mjs",
+    "check:architecture": "node scripts/architecture-scan.mjs",
     "example": "node examples/basic.mjs"
   },
   "keywords": [

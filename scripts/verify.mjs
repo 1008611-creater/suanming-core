@@ -3,10 +3,11 @@
  * ---------------------------------------------------------------------------
  * 一条命令跑完所有必须全绿才算完成的检查，任何一步失败即整体失败：
  *
- *   1. 重建网页引擎产物（保证 web/engine.js 与 src/ + rules/ 同源）
- *   2. 全量测试（含网页引擎指纹同步、适配层契约、黄金盘、边界）
- *   3. 隐私扫描（不把个人生日、口令、私钥带进仓库）
- *   4. 交付物完整性（网页入口、引擎产物、关键文档齐全）
+ *   1. 类型/契约检查与语法/静态检查
+ *   2. 重建网页引擎产物（保证 web/engine.js 与 src/ + rules/ 同源）
+ *   3. 全量测试（含网页引擎指纹同步、适配层契约、黄金盘、边界）
+ *   4. 隐私扫描（不把个人生日、口令、私钥带进仓库）
+ *   5. 交付物完整性（网页入口、引擎产物、关键文档齐全）
  *
  * 退出码非零 = 未达到可交付状态。CI 与本地使用同一入口，避免本地绿、线上红。
  */
@@ -29,7 +30,13 @@ function run(label, script) {
   }
 }
 
+run('类型与公共契约检查', 'scripts/typecheck.mjs');
+run('语法与静态检查', 'scripts/lint.mjs');
 run('重建网页引擎产物', 'scripts/build-web-engine.mjs');
+run('同步部署镜像', 'scripts/sync-deployment-mirror.mjs');
+run('架构边界扫描', 'scripts/architecture-scan.mjs');
+run('网页可访问性冒烟', 'scripts/accessibility-smoke.mjs');
+run('网页性能冒烟', 'scripts/performance-smoke.mjs');
 run('全量测试', 'scripts/check.js');
 run('隐私扫描', 'scripts/privacy-scan.mjs');
 
@@ -46,10 +53,24 @@ const artifacts = [
   'web/bihua-data.js',
   'web/app.js',
   'scripts/build-bihua-data.mjs',
+  'scripts/architecture-scan.mjs',
+  'scripts/typecheck.mjs',
+  'scripts/lint.mjs',
+  'scripts/accessibility-smoke.mjs',
+  'scripts/performance-smoke.mjs',
+  'scripts/package-release.mjs',
   'CONSTRAINTS.md',
   'docs/product-spec.md',
   'docs/acceptance.md',
-  'docs/implementation-plan.md'
+  'docs/implementation-plan.md',
+  'AGENTS.md',
+  'PROJECT_CONTEXT.md',
+  'docs/INDEX.md'
+  ,'docs/release-checklist.md'
+  ,'docs/rollback.md'
+  ,'docs/risk-register.md'
+  ,'docs/adr/README.md'
+  ,'docs/reviews/2026-09-21-architecture-review.md'
 ];
 const missing = artifacts.filter(f => !existsSync(resolve(ROOT, f)));
 if (missing.length) {

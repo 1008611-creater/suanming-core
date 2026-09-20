@@ -14,4 +14,5 @@ export * from './manifest.js';
 export * from './calendar/lunar.js';
 export * from './calendar/lunar-facts.js';
 export * from './schema/validate.js';
+export * from './input/validate.js';
 export * from '../rules/index.js';

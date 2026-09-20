@@ -34,7 +34,8 @@ import { API } from './engine-adapter.js';
       name: '自检', gender: $('gender').value,
       year: +dp[0], month: +dp[1], day: +dp[2],
       hour: +tp[0], minute: +tp[1], lng: lng,
-      useTrueSolar: $('ts').value === '1'
+      useTrueSolar: $('ts').value === '1',
+      asOfYear: new Date().getFullYear()
     };
   }
 
@@ -123,7 +124,7 @@ import { API } from './engine-adapter.js';
         name: '自检', gender: opt.gender,
         year: base.getUTCFullYear(), month: base.getUTCMonth() + 1, day: base.getUTCDate(),
         hour: Math.floor(wrapped / 60), minute: Math.floor(wrapped % 60),
-        lng: opt.lng, useTrueSolar: opt.useTrueSolar
+        lng: opt.lng, useTrueSolar: opt.useTrueSolar, asOfYear: opt.asOfYear
       };
       var p = B.paipan(o);
       var z = B.ziwei(o);

@@ -64,6 +64,7 @@ function pillarToIndex(pillar) {
  * @returns {object} 视图模型；数值一律为引擎原值，不做二次四舍五入之外的加工
  */
 export function paipan(opt) {
+  const displayYear = Number.isInteger(Number(opt.asOfYear)) ? Number(opt.asOfYear) : Number(opt.year);
   const gender = opt.gender === '女' ? '女' : '男';
   const lng = Number.isFinite(Number(opt.lng)) && opt.lng !== '' && opt.lng !== null
     ? Number(opt.lng) : 120;
@@ -121,12 +122,11 @@ export function paipan(opt) {
   } : null;
 
   /* ---------- 流年：年柱由引擎的年柱规则给出，不在这里另写一套 ---------- */
-  const nowYear = new Date().getFullYear();
-  // 区间要同时覆盖「今年前后」与「出生年之后」：只按 nowYear 生成的话，
-  // 出生年份晚于 nowYear 的人（表单允许填未来日期）会拿到一整段出生前的年份，
+  // 区间要同时覆盖「展示年份前后」与「出生年之后」：只按展示年份生成的话，
+  // 出生年份晚于展示年份的人（表单允许填未来日期）会拿到一整段出生前的年份，
   // 流年卡片就会显示出生前的年份、虚岁为负。
-  const fromYear = Math.min(input.year, nowYear - 1);
-  const toYear = Math.max(nowYear + 11, input.year + 11);
+  const fromYear = Math.min(input.year, displayYear - 1);
+  const toYear = Math.max(displayYear + 11, input.year + 11);
   const liuNian = [];
   for (let y = fromYear; y <= toYear; y++) {
     const gz = Engine.yearPillar(y, 6, 1, { yearBoundary: 'calendar', ruleSet });
@@ -174,6 +174,8 @@ export function paipan(opt) {
     wx: { score: { ...strength.totals }, weights: [...strength.weights], method: strength.method, ruleSet: strength.ruleSet },
     daYun,
     liuNian,
+    displayYear,
+    displayYearSource: Number.isInteger(Number(opt.asOfYear)) ? 'explicit' : 'birth-year-default',
     chart,
     engine: ENGINE_INFO
   };

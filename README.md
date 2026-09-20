@@ -125,10 +125,16 @@ result.agreement;    // 两派取值相同的字段
 ## 开发
 
 ```bash
-npm run verify    # 交付质量门：重建网页引擎 → 全量测试 → 隐私扫描 → 交付物完整性
+npm run verify    # 类型/契约 → 语法/静态 → 重建引擎 → 同步 ../app 镜像 → 架构扫描 → 全量测试 → 安全 → 交付物
 npm test          # 只跑必需文件检查 + tests/ 下全部测试
+npm run typecheck # 检查公共 API、package exports 与 Schema 契约
+npm run lint      # 检查 JavaScript 语法并拦截动态执行
+npm run check:architecture # 检查单一算法源、生成物与部署镜像边界
 npm run example   # 运行示例
 ```
+
+`web/` 是唯一页面源目录，根目录的 `app/` 是部署镜像，不能手工维护第二份页面代码。
+`npm run verify` 会在每次验收前重建并同步镜像；展示其他年份的流年时，必须由页面层显式传入 `asOfYear`，核心计算层不读取当前时间。
 
 自检会自动发现 `tests/` 下的全部测试，新增测试不会被静默跳过。GitHub Actions 在 push 与 pull request 时运行 `npm run verify`。
 

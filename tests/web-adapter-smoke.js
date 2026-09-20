@@ -24,7 +24,8 @@ function eq(actual, expected, label) {
   if (a !== b) throw new Error('[web-adapter] ' + label + '：期望 ' + b + '，实际 ' + a);
 }
 
-const base = { name: '测试', gender: '男', year: 1990, month: 1, day: 1, hour: 12, minute: 0, lng: 118.18 };
+const nowYear = new Date().getFullYear();
+const base = { name: '测试', gender: '男', year: 1990, month: 1, day: 1, hour: 12, minute: 0, lng: 118.18, asOfYear: nowYear };
 const p = paipan(base);
 
 /* --- 1. 四柱与基本信息 --- */
@@ -38,6 +39,12 @@ eq(p.zodiac, '蛇', '生肖');
 eq(p.xunKong, ['戌', '亥'], '旬空');
 eq(p.monthTerm, '大雪', '月令节气');
 eq(p.shiShen.day, '日主', '日柱十神');
+eq(p.displayYear, nowYear, '展示年份显式传入');
+eq(p.displayYearSource, 'explicit', '展示年份来源');
+
+const deterministic = paipan({ ...base, asOfYear: 2000 });
+eq(deterministic.displayYear, 2000, '固定展示年份');
+eq(deterministic.liuNian[0].year, 1990, '固定展示年份下流年起点');
 
 /* --- 2. 常量与引擎同源 --- */
 eq(GAN.join(''), '甲乙丙丁戊己庚辛壬癸', '天干表');
@@ -130,7 +137,6 @@ eq(palaceTriad(0).trine, [4, 8], '三方四正回绕');
 /* --- 10. 未来出生年份：流年表不得整体落在出生之前 --- */
 // 反例：表单允许填未来日期。若流年表只按「今年」起算，2040 年出生者会拿到
 // 2025 起的年份，流年卡片显示出生前的年份、虚岁为负数。
-const nowYear = new Date().getFullYear();
 const future = paipan({ ...base, year: nowYear + 14, month: 5, day: 5 });
 const bornYear = future.input.year;
 assert(future.liuNian.some((x) => x.year >= bornYear), '未来出生者的流年表不含出生当年及以后');

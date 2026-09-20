@@ -7,6 +7,7 @@ import { buildLuck } from './luck.js';
 import { factGraph, factFromRule } from '../../derive/facts.js';
 import { currentMonthBoundary, nextMonthBoundary, solarTermInstant } from '../../astro/solar-terms.js';
 import { getRuleSet, DEFAULT_BAZI_RULE_SET } from '../../../rules/index.js';
+import { validateCivilInput } from '../../input/validate.js';
 
 /**
  * 排盘：输入经时间层与天文层，落到四柱与事实图。
@@ -21,6 +22,7 @@ import { getRuleSet, DEFAULT_BAZI_RULE_SET } from '../../../rules/index.js';
  *           子初换日后 23:00—24:00 的时干必须用次日日干，否则日柱与时干会自相矛盾。
  */
 export function castBazi(input, options = {}) {
+  input = validateCivilInput(input);
   const ruleSet = options.ruleSet ?? getRuleSet(options.ruleSetId ?? DEFAULT_BAZI_RULE_SET);
   const zone = input.timezone ?? 'Asia/Shanghai';
   const utc = civilToUTC(input, zone);

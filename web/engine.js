@@ -2570,8 +2570,60 @@ function buildLuck({ monthPillar: monthPillar2, yearStem, gender, daysToBoundary
   };
 }
 
+// src/input/validate.js
+function invalid(field, message) {
+  const error = new Error(`\u8F93\u5165\u5B57\u6BB5 ${field} \u65E0\u6548\uFF1A${message}`);
+  error.code = "INVALID_INPUT";
+  error.field = field;
+  return error;
+}
+function integer(value, field, min, max) {
+  if (!Number.isInteger(value) || value < min || value > max) {
+    throw invalid(field, `\u5FC5\u987B\u662F ${min}\u2013${max} \u7684\u6574\u6570`);
+  }
+}
+function daysInMonth(year, month) {
+  if (month === 2) {
+    const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    return leap ? 29 : 28;
+  }
+  return [4, 6, 9, 11].includes(month) ? 30 : 31;
+}
+function validateCivilInput(input, { requireGender = false } = {}) {
+  if (!input || typeof input !== "object") throw invalid("input", "\u5FC5\u987B\u662F\u5BF9\u8C61");
+  const year = Number(input.year);
+  const month = Number(input.month);
+  const day = Number(input.day);
+  const hour = Number(input.hour ?? 0);
+  const minute = Number(input.minute ?? 0);
+  const second = Number(input.second ?? 0);
+  integer(year, "year", 1, 9999);
+  integer(month, "month", 1, 12);
+  integer(day, "day", 1, daysInMonth(year, month));
+  integer(hour, "hour", 0, 23);
+  integer(minute, "minute", 0, 59);
+  integer(second, "second", 0, 59);
+  if (input.longitude !== void 0 && input.longitude !== null) {
+    const longitude = Number(input.longitude);
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      throw invalid("longitude", "\u5FC5\u987B\u662F -180\u2013180 \u4E4B\u95F4\u7684\u6570\u5B57");
+    }
+  }
+  if (input.timezone !== void 0 && (typeof input.timezone !== "string" || !input.timezone.trim())) {
+    throw invalid("timezone", "\u5FC5\u987B\u662F\u975E\u7A7A IANA \u65F6\u533A\u5B57\u7B26\u4E32");
+  }
+  if (input.gender !== void 0 && input.gender !== null && !["male", "female"].includes(input.gender)) {
+    throw invalid("gender", "\u53EA\u80FD\u662F male \u6216 female");
+  }
+  if (requireGender && !input.gender) throw invalid("gender", "\u6B64\u76D8\u7CFB\u9700\u8981\u6027\u522B");
+  const normalized = { ...input, year, month, day, hour, minute };
+  if (input.second !== void 0) normalized.second = second;
+  return normalized;
+}
+
 // src/charts/bazi/chart.js
 function castBazi(input, options = {}) {
+  input = validateCivilInput(input);
   const ruleSet = options.ruleSet ?? getRuleSet(options.ruleSetId ?? DEFAULT_BAZI_RULE_SET);
   const zone = input.timezone ?? "Asia/Shanghai";
   const utc = civilToUTC(input, zone);
@@ -3310,6 +3362,7 @@ function lunarDateOf(year, month, day) {
 // src/charts/ziwei/chart.js
 var MINOR_RULE_KEYS = ["yearMinorRule", "monthMinorRule", "dayMinorRule", "hourMinorRule", "hongluanTianxiRule"];
 function castZiwei(input, options = {}) {
+  input = validateCivilInput(input);
   const ruleSet = options.ruleSet ?? getRuleSet(options.ruleSetId ?? DEFAULT_ZIWEI_RULE_SET);
   const zone = input.timezone ?? "Asia/Shanghai";
   const longitude = input.longitude ?? 120;
@@ -3854,6 +3907,7 @@ export {
   utcToCivil,
   utcToTT,
   validateChart,
+  validateCivilInput,
   validateFactGraph,
   validateTraceability,
   validateZiweiChart,
@@ -3864,5 +3918,5 @@ export {
   zoneOffsetMinutes
 };
 
-export const WEB_ENGINE_SOURCE_HASH = "b67524e5cf35fcbc";
-export const WEB_ENGINE_SOURCE_FILES = 37;
+export const WEB_ENGINE_SOURCE_HASH = "df4bcf80acfc899b";
+export const WEB_ENGINE_SOURCE_FILES = 38;
