@@ -75,6 +75,21 @@ const artifacts = [
   ,'docs/risk-register.md'
   ,'docs/adr/README.md'
   ,'docs/reviews/2026-09-21-architecture-review.md'
+  // 业务文档公开入仓：模板、SOP、上架文案、合成示例与物料成品。
+  // 真实案例与客户资料只留本地，由 .gitignore 与隐私扫描共同拦截。
+  ,'docs/business/README.md'
+  ,'docs/business/master-plan.md'
+  ,'docs/business/report-template.md'
+  ,'docs/business/intake-questionnaire.md'
+  ,'docs/business/content-library.md'
+  ,'docs/business/pricing-and-delivery-sop.md'
+  ,'docs/business/listing-copy.md'
+  ,'docs/business/materials.md'
+  ,'docs/business/samples/sample-a-career-marriage.md'
+  ,'docs/business/samples/sample-b-marriage-grade.md'
+  ,'docs/business/materials/img1-xianyu-verify-past.jpg'
+  ,'docs/business/materials/img2-xianyu-own-up.jpg'
+  ,'docs/business/materials/img3-xiaohongshu-cover.jpg'
 ];
 const missing = artifacts.filter(f => !existsSync(resolve(ROOT, f)));
 if (missing.length) {

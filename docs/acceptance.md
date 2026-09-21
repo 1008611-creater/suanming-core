@@ -8,7 +8,7 @@
 
 | 组 | 结果 | 说明 |
 | --- | --- | --- |
-| A 自动化质量门 | 通过 | `npm run verify` 退出码 0；42 项测试全绿 |
+| A 自动化质量门 | 通过 | `npm run verify` 退出码 0；43 项测试全绿 |
 | B 真实浏览器（本地） | 通过 | 真实 Chromium 走通首页、排盘页、前事验证页；375px 不溢出；恶意脚本按纯文本渲染；前事清单可打标且汇总只写条数；控制台零错误 |
 | C 线上验收 | 通过（2026-09-21） | 提交 `5cf70d3` 已发布到 `https://suanming.cauai.fun/`；线上 11 个静态文件与本地逐一致（MD5 相同），线上指纹 `0f0ce3aaaa4aa0d8`；真实 Chromium 复核 C1–C11 共 34 项断言全绿 |
 | D 交付验收 | 待确认 | 本地提交 `5cf70d3` 已完成；推送后需确认 GitHub Actions 全绿 |
@@ -80,6 +80,7 @@
 | A14 | 前事清单 | `tests/past-events-smoke.js` | 条数 5–8、每条 `ruleId` 可解析、程度档合法、缺 `asOfYear` 时无流年条目、文本无百分比与「准确率」 |
 | A15 | 四柱交叉验证 | `tests/bazi-cross-reference-smoke.js` | 随机抽 10 份盘与独立实现比对，四柱一致率 100% |
 | A16 | 前事页合规 | `tests/check-page-smoke.js` | 前事区块可打标、汇总只写条数、页面展示文本无百分比与「准确率」 |
+| A17 | 业务文案合规 | `tests/business-copy-compliance-smoke.js` | `docs/business/` 全部文档无百分比、无「准确率」「命中率」；两篇样稿标「合成示例（非真实客户）」；无真实客户姓名与真实案例引用 |
 
 ## 发布与回滚
 

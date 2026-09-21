@@ -12,9 +12,9 @@
 | 紫微未完成能力被误认为已实现 | L1 | 产品规格、README 和 review 明确标注后续范围；未登记能力整组跳过 | `docs/product-spec.md`、`docs/architecture.md` |
 | 第三方数据许可证或供应链变化 | L2 | 生成脚本记录来源与许可证；运行时无外部依赖 | 依赖变更时补依赖审计 |
 | 解释层判词超出盘面依据（说了盘上没有的事） | L2 | 前事清单只读已算出的结构；每条必须带可解析的 `ruleId`，解析不到就不输出并记入 `skipped` | `tests/past-events-smoke.js`、`tests/relations-missing-table-smoke.js` |
-| 面向用户的位置出现比例承诺（百分比、「准确率」） | L2 | 打标只汇总条数；页面文本与业务文档机械扫描禁用词 | `tests/check-page-smoke.js`、`docs/business/` 合规扫描 |
+| 面向用户的位置出现比例承诺（百分比、「准确率」） | L2 | 打标只汇总条数；页面文本与业务文档机械扫描禁用词 | `tests/check-page-smoke.js`、`tests/business-copy-compliance-smoke.js` |
 | 流年类判词隐含当前时间，破坏复现 | L2 | `asOfYear` 必须由调用方显式传入；缺省即省略流年条目，绝不用「现在」兜底 | `tests/past-events-smoke.js`、`npm run check:architecture` |
-| 真实客户案例随业务文档入库 | L3 | 业务文档与真实案例分离；`.gitignore` 排除私有业务目录与报告输出目录；两篇样稿统一标「合成示例（非真实客户）」 | `npm run security`、提交前人工复核 |
+| 真实客户案例随业务文档入库 | L3 | 业务文档与真实案例分离；`.gitignore` 排除私有业务目录与报告输出目录；两篇样稿统一标「合成示例（非真实客户）」 | `tests/business-copy-compliance-smoke.js`、`npm run security`、提交前人工复核 |
 | 报告工具把客户数据带出本机 | L3 | 出报告页复用同一份本地引擎产物，无网络请求；客户数据不出本机 | 报告页无 `fetch` 断言 + 真实浏览器复核 |
 
 任何 L3 风险未关闭时，不得把版本标记为已发布；可以完成代码实现，但必须保留“待发布验证”状态。
