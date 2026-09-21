@@ -71,7 +71,9 @@ for (const rel of listedFiles()) {
     for (const rule of SECRET_PATTERNS) {
       if (rule.re.test(line)) findings.push({ rel: norm, line: i + 1, why: rule.why });
     }
-    if (norm.startsWith('web/') || norm.startsWith('examples/')) {
+    // 表单预填检查同样覆盖本地出报告工具：它也会被真实客户资料填满，
+    // 一旦把某个具体生日写进模板就会被扫出来。
+    if (norm.startsWith('web/') || norm.startsWith('examples/') || norm.startsWith('tools/')) {
       for (const rule of PROFILE_PATTERNS) {
         if (rule.re.test(line)) findings.push({ rel: norm, line: i + 1, why: rule.why });
       }

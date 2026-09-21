@@ -4,7 +4,8 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const pages = ['web/index.html', 'web/paipan.html', 'web/check.html'];
+// 本地出报告工具不进 web/（线上站点产物保持原样），但它同样要过可访问性冒烟。
+const pages = ['web/index.html', 'web/paipan.html', 'web/check.html', 'tools/report/report.html'];
 const findings = [];
 
 for (const rel of pages) {

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>详批报告 · 本地生成</title>
+<meta name="description" content="本地出报告工具：复用同一份引擎产物，按详批模板 18 节填坑，填完在浏览器里直接打印成 PDF。客户资料只在本机内存里，不上传、不保存。">
+<link rel=icon href="/favicon.svg" type=image/svg+xml>
+<link rel="stylesheet" href="/style.css">
+<style>
+.rep .sec{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+.rep h3{font-size:15px;letter-spacing:.12em;color:var(--gold2);font-weight:600;margin-bottom:14px}
+.rep h3 .no{color:var(--dim2);font-size:12px;letter-spacing:.16em;margin-right:8px}
+.rep table{width:100%;border-collapse:collapse;font-size:12.5px}
+.rep th,.rep td{border:1px solid var(--line);padding:7px 9px;text-align:center;vertical-align:top;line-height:1.75}
+.rep th{background:#0f131b;color:var(--dim);font-weight:500}
+.rep .p{font-size:13px;line-height:1.95;color:var(--ink)}
+.rep .mut{font-size:12.5px;line-height:1.9;color:var(--dim)}
+.rep .p b,.rep .mut b{color:var(--gold2)}
+.rep ul{margin:8px 0 0 18px}
+.rep li{font-size:13px;line-height:1.95}
+.rep .stamp{margin-top:4px;font-size:12px;color:var(--dim2)}
+.frow{display:grid;gap:10px;grid-template-columns:repeat(3,1fr)}
+.fwrow{display:grid;gap:8px;grid-template-columns:1.1fr .9fr 1fr 1.7fr auto;align-items:start;margin-bottom:8px}
+textarea{background:#0e1219;border:1px solid var(--line);color:var(--ink);border-radius:10px;
+  padding:10px 12px;font:inherit;font-size:13px;width:100%;resize:vertical;min-height:70px;outline:none}
+textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,164,92,.13)}
+.miss{background:rgba(224,96,92,.10);border:1px solid rgba(224,96,92,.45);border-radius:12px;
+  padding:14px 16px;color:#ffb4b1;font-size:13px;line-height:1.9;margin-bottom:16px}
+.miss ul{margin:8px 0 0 18px}
+.okline{background:rgba(79,179,163,.10);border:1px solid rgba(79,179,163,.4);border-radius:12px;
+  padding:12px 16px;color:#9fe4d9;font-size:13px;margin-bottom:16px}
+.pill{display:inline-block;font-size:11.5px;color:var(--dim);border:1px solid var(--line);
+  border-radius:20px;padding:2px 10px;margin-left:8px}
+.pill.req{border-color:rgba(200,164,92,.5);color:var(--gold2)}
+@media(max-width:860px){
+  .frow{grid-template-columns:1fr}
+  .fwrow{grid-template-columns:1fr;border:1px solid var(--line);border-radius:10px;padding:10px}
+}
+@media print{
+  body{background:#fff;color:#111;padding:0}
+  .no-print{display:none!important}
+  .wrap{max-width:none}
+  .rep .sec{border:1px solid #c9c9c9;background:#fff;box-shadow:none;border-radius:0;
+    break-inside:avoid;page-break-inside:avoid;margin-bottom:12px;padding:14px 16px}
+  .rep h3{color:#6f5316}
+  .rep h3 .no{color:#777}
+  .rep th{background:#f1f1f1;color:#333}
+  .rep th,.rep td{border:1px solid #b9b9b9;color:#111}
+  .rep .p,.rep .mut,.rep li,.rep .stamp{color:#111}
+  .rep .p b,.rep .mut b{color:#111}
+  /* 填写框要跟着上纸面：切成白底黑字、去掉缩放柄与滚动条，
+     高度由脚本按内容撑开（见 report.js 的 autoGrow），占位提示不印。 */
+  textarea{background:#fff;color:#111;border:1px solid #b9b9b9;border-radius:0;
+    min-height:0;resize:none;overflow:hidden;box-shadow:none}
+  textarea::placeholder{color:transparent}
+  /* 缺项警告可能落在纸面上，深色主题的浅色文字在白纸上几乎看不清，改成红字白底。 */
+  .miss{background:#fff5f5;border:1px solid #b03a33;color:#8a1f1a}
+  .miss ul{margin-top:6px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero no-print">
+    <h1>详批报告 · 本地生成</h1>
+    <div class="sub">同一份引擎产物 · 模板 18 节 · 浏览器直接打印成 PDF</div>
+    <div class="rule"></div>
+  </div>
+
+  <div class="card no-print">
+    <h2>这一步做什么</h2>
+    <div class="hint">
+      这一页把已经算好的盘面结构摊成一份可打印的详批底稿：四柱、十神、旺衰用神、大运、前事区、八宅、流年结构都由同一份引擎产物填好，
+      需要人工判断的章节留成空档由你写。所有计算与填写都只在这台机器的浏览器里，不联网、不上传、不写入本地存储。
+      打印前必须补齐两章：<b style="color:var(--gold2)">〇 验证结果与认账</b> 与 <b style="color:var(--gold2)">十六 可核验前瞻</b>。
+    </div>
+  </div>
+
+  <div class="card no-print">
+    <h2>客户与盘面</h2>
+    <div class="form">
+      <div class="f"><label for="name">客户姓名</label><input id="name" placeholder="用于报告抬头" value=""></div>
+      <div class="f"><label for="gender">性别</label><select id="gender"><option>男</option><option>女</option></select></div>
+      <div class="f"><label for="date">出生日期（公历）</label><input id="date" type="date" value=""></div>
+      <div class="f"><label for="time">出生时间（钟表）</label><input id="time" type="time" value=""></div>
+      <div class="f"><label for="lng">出生地经度</label><input id="lng" inputmode="decimal" value=""></div>
+      <div class="f"><label for="ts">时制</label><select id="ts"><option value="1">真太阳时（推荐）</option><option value="0">钟表时间</option></select></div>
+      <div class="f"><label for="baseYear">流年基准年</label><input id="baseYear" inputmode="numeric" value=""></div>
+      <div class="f"><label for="reportDate">报告日期</label><input id="reportDate" type="date" value=""></div>
+      <div class="actions">
+        <button class="btn-main" id="go">生成报告底稿</button>
+        <button class="btn-ghost" id="back">返回排盘</button>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:14px">经度按出生地填；记不清就填出生地所在市，误差一般不影响时辰判断。报告日期与流年基准年由你显式给出，工具不替你假定「现在是哪一年」。</div>
+  </div>
+
+  <div id="fill"></div>
+  <div id="report"></div>
+
+  <div class="footer no-print">
+    本页只把盘面结构与规则依据摊开，判词与结论由你判断并负责<br>
+    命理适合作为传统文化与自我观察的参考，不替代医疗、法律、投资等专业意见
+  </div>
+</div>
+<script src="/bihua-data.js"></script>
+<script src="/analysis.js"></script>
+<script type="module" src="report.js"></script>
+</body>
+</html>

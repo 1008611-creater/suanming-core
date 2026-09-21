@@ -66,6 +66,7 @@ const required = [
   'tests/relations-missing-table-smoke.js',
   'tests/bazi-cross-reference-smoke.js',
   'tests/past-events-smoke.js',
+  'tests/report-page-smoke.js',
   'tests/business-copy-compliance-smoke.js',
   'scripts/privacy-scan.mjs',
   'scripts/verify.mjs',
@@ -84,6 +85,8 @@ const required = [
   'web/paipan.html',
   'web/check.html',
   'web/check.js',
+  'tools/report/report.html',
+  'tools/report/report.js',
   'web/analysis.js',
   'web/app.js',
   'web/style.css'

@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const DIRECTORIES = ['src', 'rules', 'web', 'scripts'];
+const DIRECTORIES = ['src', 'rules', 'web', 'scripts', 'tools'];
 const files = [];
 
 function walk(dir) {

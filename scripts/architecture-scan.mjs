@@ -55,7 +55,7 @@ for (const dir of ['src', 'rules']) {
   }
 }
 
-for (const rel of ['web/app.js', 'web/check.js', 'web/engine-adapter.js']) {
+for (const rel of ['web/app.js', 'web/check.js', 'web/engine-adapter.js', 'tools/report/report.js']) {
   forbid(rel, [
     [/Math\.random|Date\.now/, '页面适配层使用随机数或 Date.now'],
     [/from ['"]\.\/bazi|require\(['"]\.\/bazi/, '页面重新引入旧算法入口']

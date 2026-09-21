@@ -40,6 +40,7 @@
     "verify": "node scripts/verify.mjs",
     "sync:app": "node scripts/sync-deployment-mirror.mjs",
     "check:architecture": "node scripts/architecture-scan.mjs",
+    "report": "node scripts/serve-report.mjs",
     "example": "node examples/basic.mjs"
   },
   "keywords": [

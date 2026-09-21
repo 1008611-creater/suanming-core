@@ -132,7 +132,11 @@
 
 - D4：业务文档脱敏入仓（`docs/business/`）；3 张物料与上架文案定稿。**已完成**。
 - D5：闲鱼 3 个 SKU 上架、小红书首篇发布（用户操作，agent 备料）。
-- D6：本地出报告工具一键启动 + 模板 18 节自动填充 + 打印成 PDF。
+- D6：本地出报告工具一键启动 + 模板 18 节自动填充 + 打印成 PDF。**已完成**。
+  工具位于 `tools/report/`（`report.html` + `report.js`），由 `scripts/serve-report.mjs`
+  提供本机回环服务（`npm run report`）；它复用线上同一份引擎产物（`/analysis.js`、
+  `/bihua-data.js`、`/engine-adapter.js`），**不进 `web/`、不进线上站点**，
+  因此线上包与 0.6.0 发布时逐字节一致。
 - D7：接单、陪验、交付、回访；收盘对账并记录结果。
 
 D7 成功标准：线上前事页可给出并打标清单（无任何百分比字样）；`npm run verify` 全绿；
