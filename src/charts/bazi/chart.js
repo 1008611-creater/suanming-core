@@ -5,6 +5,7 @@ import { createManifest } from '../../manifest.js';
 import { yearPillar, monthPillar, dayPillar, hourPillar, pillarDetail, luckDirection, dayNumberForBoundary } from './pillars.js';
 import { buildLuck } from './luck.js';
 import { factGraph, factFromRule } from '../../derive/facts.js';
+import { deriveRelations, RELATION_GROUPS } from '../../derive/relations.js';
 import { currentMonthBoundary, nextMonthBoundary, solarTermInstant } from '../../astro/solar-terms.js';
 import { getRuleSet, DEFAULT_BAZI_RULE_SET } from '../../../rules/index.js';
 import { validateCivilInput } from '../../input/validate.js';
@@ -57,12 +58,27 @@ export function castBazi(input, options = {}) {
 
   const manifest = createManifest({ timezone: zone, longitude, ruleSetId: ruleSet.id, ruleSetVersion: ruleSet.version });
   const pillars = { year, month, day, hour };
+
+  // 地支关系（六冲／六合／三合与半合／相刑／六害／空亡）是四柱的确定性派生：
+  // 它只依赖已算出的四柱与规则集表格，因此与四柱同一次计算产出，不单独成层。
+  // 规则集缺表时该组进 skipped，这里对应的事实也不生成 —— 缺表就是缺能力，
+  // 不能用「没有命中」冒充「已经检查过」。
+  const relations = deriveRelations(pillars, ruleSet);
+
   const facts = factGraph([
     factFromRule(ruleSet.conventions.yearBoundary.ruleId, { id: 'pillar.year', value: year, ruleSet }),
     factFromRule(ruleSet.conventions.monthBoundary.ruleId, { id: 'pillar.month', value: month, ruleSet }),
     factFromRule(ruleSet.tables.dayPillarRule.ruleId, { id: 'pillar.day', value: day, ruleSet }),
     factFromRule(ruleSet.conventions.hourBoundary.ruleId, { id: 'pillar.hour', value: hour, ruleSet }),
     factFromRule(ruleSet.tables.hiddenStemsRule.ruleId, { id: 'pillars.detail', value: pillarDetail(pillars, ruleSet), ruleSet }),
+    ...RELATION_GROUPS
+      .filter((group) => relations.groups[group])
+      .map((group) => factFromRule(relations.groups[group].ruleId, {
+        id: 'relations.' + group,
+        value: relations.groups[group].hits,
+        ruleSet,
+        extra: group === 'void' && relations.xun ? { xun: relations.xun } : {}
+      })),
     ...(luck ? [factFromRule(ruleSet.conventions.luckStart.ruleId, { id: 'luck.start-age', value: luck.startAgeYears, ruleSet })] : [])
   ], manifest);
 
@@ -70,6 +86,7 @@ export function castBazi(input, options = {}) {
     schemaVersion: '1.0.0',
     input: { ...input, timezone: zone },
     pillars,
+    relations,
     time: { ...utc, civilDayNumber, dayNumber, dayBoundaryMode: ruleSet.parameters.dayBoundaryMode ?? 'civil-midnight', shichen: shi },
     luck,
     facts,

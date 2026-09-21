@@ -6,6 +6,7 @@
  * 3. 页面不得再出现写死的流年区间；标题必须由数据推导。
  * 4. 经度非法必须显式报错，不能静默按 120 度算。
  * 5. 城市表不得出现两个城市共用同一经度的可疑重复。
+ * 6. 前事清单区块必须完整：可打标、只汇总条数、文本里不得出现百分比或「准确率」。
  */
 import { readFileSync } from 'node:fs';
 
@@ -65,5 +66,28 @@ assert(html.includes('lng') && html.includes('go'), '自检页缺少必要表单
 /* --- 7. 自检页只呈现结构，不下吉凶断语 --- */
 assert(!/大吉|大凶|必发|必定/.test(js), '自检页出现吉凶断语');
 assert(html.includes('不替代医疗'), '自检页缺少免责声明');
+
+/* --- 8. 前事清单区块 --- */
+assert(js.includes('data-pe-mark'), '自检页缺少前事打标按钮');
+assert(js.includes('pastEvents'), '自检页未读取前事清单');
+assert(js.includes('像') && js.includes('不像') && js.includes('不确定'), '自检页缺少三档打标文案');
+// 汇总只写条数：出现「条像 / 条不像 / 条不确定」三处计数即可，
+// 且任何位置都不得把条数折算成比例。
+assert(/条像/.test(js) && /条不像/.test(js) && /条不确定/.test(js), '前事汇总未按条数呈现');
+// 只检查会展示给用户的文本：取模运算的 % 不算。
+function literals(source) {
+  return (source.match(/'[^'\n]*'|"[^"\n]*"|`[^`]*`/g) || []).join('\n');
+}
+for (const [name, source] of [['check.js', js], ['check.html', html]]) {
+  assert(literals(source).indexOf('%') < 0, name + ' 的展示文本出现百分号（合规红线）');
+  assert(source.indexOf('准确率') < 0, name + ' 出现「准确率」（合规红线）');
+  assert(!/命中率|精准度/.test(source), name + ' 出现比例类表述');
+}
+// 前事区块必须落在流年回看之前，且原有区块一个都不能少。
+const peIndex = js.indexOf('data-pe-mark');
+assert(peIndex > 0 && js.indexOf('前事验证') > 0, '自检页缺少前事验证区块');
+for (const kept of ['三方四正', '时辰对照', '流年']) {
+  assert(js.includes(kept), '自检页丢失原有区块：' + kept);
+}
 
 console.log('[check-page] ok  城市 ' + seen.size + ' 条经度无重复，自检页与红线检查通过');

@@ -797,7 +797,7 @@ var ruleset_default = {
   school: "common",
   locale: "zh-Hans",
   system: "bazi",
-  engineCompatibility: ">=0.3.0 <0.6.0",
+  engineCompatibility: ">=0.3.0 <0.7.0",
   conventions: {
     yearBoundary: {
       ruleId: "bazi.year.solar-term-boundary",
@@ -870,6 +870,30 @@ var ruleset_default = {
       evidence: "traditional",
       source: ["yuan-hai-zi-ping"],
       confidence: 0.8
+    },
+    palaceOfPillar: {
+      ruleId: "bazi.interpret.palace-of-pillar",
+      value: "year-ancestor-month-parents-day-spouse-hour-children",
+      label: "\u56DB\u67F1\u5BAB\u4F4D\uFF1A\u5E74\u67F1\u4E3A\u7956\u4E0A\u5BAB\uFF0C\u6708\u67F1\u4E3A\u7236\u6BCD\u5BAB\uFF0C\u65E5\u652F\u4E3A\u592B\u59BB\u5BAB\uFF0C\u65F6\u67F1\u4E3A\u5B50\u5973\u5BAB",
+      evidence: "traditional",
+      source: ["san-ming-tong-hui"],
+      confidence: 0.75
+    },
+    pastEventTiering: {
+      ruleId: "bazi.interpret.past-event-tiering",
+      value: "three-tier-structural",
+      label: "\u524D\u4E8B\u7A0B\u5EA6\u6309\u8F7B\uFF0F\u4E2D\uFF0F\u91CD\u4E09\u6863\uFF1A\u7236\u6BCD\u5BAB\uFF08\u6708\u652F\uFF09\u89C1\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1\u4EFB\u4E00\u6309\u7ED3\u6784\u6027\u8BB0\u4E2D\u6863\uFF1B\u7A7A\u4EA1\u4E4B\u5BAB\u518D\u9022\u5211\u51B2\u6309\u6700\u91CD\u4E00\u6863\uFF1B\u65E0\u51B2\u51FB\u8BB0\u8F7B\u6863\u3002\u7981\u6B62\u53EA\u7ED9\u5355\u70B9\u6E29\u548C\u89E3\u8BFB",
+      evidence: "traditional",
+      source: ["san-ming-tong-hui", "r-01-correction"],
+      confidence: 0.7
+    },
+    pastEventUncertainty: {
+      ruleId: "bazi.interpret.past-event-uncertainty",
+      value: "direction-and-band-only",
+      label: "\u524D\u4E8B\u5224\u8BCD\u53EA\u5199\u65B9\u5411\u4E0E\u7A0B\u5EA6\u533A\u95F4\uFF0C\u4E0D\u505A\u4E8B\u540E\u5938\u529F\uFF1B\u5BF9\u672A\u53D1\u751F\u4E4B\u4E8B\u7981\u7528\u6050\u5413\u6027\u8868\u8FF0\uFF0C\u4E0D\u786E\u5B9A\u5904\u987B\u6807\u6CE8\u4E0D\u786E\u5B9A\u6027\u6765\u6E90",
+      evidence: "convention",
+      source: ["r-02-correction"],
+      confidence: 0.8
     }
   },
   tables: {
@@ -927,6 +951,93 @@ var ruleset_default = {
       evidence: "convention",
       source: ["jdn-anchor"],
       confidence: 0.92
+    },
+    /* ---- 地支关系表（L4 派生层读取；缺表即整组跳过，代码内不设备用表） ----
+     * 这些是「固定组合表」而不是算法：冲、合、刑、害的组合自古一致，
+     * 真正因流派而异的是「见之为吉为凶」与「程度轻重」，那属于解释层。
+     * 因此本表在通用派与子初派之间保持同一取值，只有出处与置信度按各派文献登记。
+     */
+    branchClashRule: {
+      ruleId: "bazi.relation.branch-clash",
+      label: "\u516D\u51B2\uFF1A\u5B50\u5348\u3001\u4E11\u672A\u3001\u5BC5\u7533\u3001\u536F\u9149\u3001\u8FB0\u620C\u3001\u5DF3\u4EA5\uFF0C\u4E24\u67F1\u5730\u652F\u76F8\u89C1\u5373\u4E3A\u51B2",
+      evidence: "traditional",
+      source: ["branch-relations"],
+      confidence: 0.78,
+      pairs: [
+        { branches: ["\u5B50", "\u5348"] },
+        { branches: ["\u4E11", "\u672A"] },
+        { branches: ["\u5BC5", "\u7533"] },
+        { branches: ["\u536F", "\u9149"] },
+        { branches: ["\u8FB0", "\u620C"] },
+        { branches: ["\u5DF3", "\u4EA5"] }
+      ]
+    },
+    branchCombineRule: {
+      ruleId: "bazi.relation.branch-combine",
+      label: "\u516D\u5408\uFF1A\u5B50\u4E11\u5408\u571F\u3001\u5BC5\u4EA5\u5408\u6728\u3001\u536F\u620C\u5408\u706B\u3001\u8FB0\u9149\u5408\u91D1\u3001\u5DF3\u7533\u5408\u6C34\u3001\u5348\u672A\u5408\u571F",
+      evidence: "traditional",
+      source: ["branch-relations"],
+      confidence: 0.75,
+      pairs: [
+        { branches: ["\u5B50", "\u4E11"], element: "\u571F" },
+        { branches: ["\u5BC5", "\u4EA5"], element: "\u6728" },
+        { branches: ["\u536F", "\u620C"], element: "\u706B" },
+        { branches: ["\u8FB0", "\u9149"], element: "\u91D1" },
+        { branches: ["\u5DF3", "\u7533"], element: "\u6C34" },
+        { branches: ["\u5348", "\u672A"], element: "\u571F" }
+      ]
+    },
+    branchTrineRule: {
+      ruleId: "bazi.relation.branch-trine",
+      label: "\u4E09\u5408\uFF1A\u7533\u5B50\u8FB0\u5408\u6C34\u3001\u4EA5\u536F\u672A\u5408\u6728\u3001\u5BC5\u5348\u620C\u5408\u706B\u3001\u5DF3\u9149\u4E11\u5408\u91D1\uFF1B\u534A\u5408\u53D6\u300C\u751F+\u65FA\u300D\u6216\u300C\u65FA+\u5893\u300D\uFF0C\u751F+\u5893\u53EA\u4F5C\u62F1\u4E0D\u4F5C\u534A\u5408",
+      evidence: "traditional",
+      source: ["branch-relations"],
+      confidence: 0.72,
+      halfTrine: "requires-strong-branch",
+      groups: [
+        { branches: ["\u7533", "\u5B50", "\u8FB0"], element: "\u6C34" },
+        { branches: ["\u4EA5", "\u536F", "\u672A"], element: "\u6728" },
+        { branches: ["\u5BC5", "\u5348", "\u620C"], element: "\u706B" },
+        { branches: ["\u5DF3", "\u9149", "\u4E11"], element: "\u91D1" }
+      ]
+    },
+    branchPunishmentRule: {
+      ruleId: "bazi.relation.branch-punishment",
+      label: "\u76F8\u5211\uFF1A\u4E09\u5211\u5BC5\u5DF3\u7533\u3001\u4E11\u620C\u672A\uFF0C\u4E92\u5211\u5B50\u536F\uFF0C\u81EA\u5211\u8FB0\u5348\u9149\u4EA5\uFF08\u81EA\u5211\u987B\u843D\u4E24\u67F1\uFF09",
+      evidence: "traditional",
+      source: ["branch-relations"],
+      confidence: 0.65,
+      triads: [
+        { name: "\u5BC5\u5DF3\u7533\u4E09\u5211", branches: ["\u5BC5", "\u5DF3", "\u7533"] },
+        { name: "\u4E11\u620C\u672A\u4E09\u5211", branches: ["\u4E11", "\u620C", "\u672A"] }
+      ],
+      mutual: [
+        { branches: ["\u5B50", "\u536F"], name: "\u5B50\u536F\u65E0\u793C\u4E4B\u5211" }
+      ],
+      self: ["\u8FB0", "\u5348", "\u9149", "\u4EA5"]
+    },
+    branchHarmRule: {
+      ruleId: "bazi.relation.branch-harm",
+      label: "\u516D\u5BB3\uFF1A\u5B50\u672A\u3001\u4E11\u5348\u3001\u5BC5\u5DF3\u3001\u536F\u8FB0\u3001\u7533\u4EA5\u3001\u9149\u620C\uFF0C\u4E24\u67F1\u5730\u652F\u76F8\u89C1\u5373\u4E3A\u5BB3",
+      evidence: "traditional",
+      source: ["branch-relations"],
+      confidence: 0.68,
+      pairs: [
+        { branches: ["\u5B50", "\u672A"] },
+        { branches: ["\u4E11", "\u5348"] },
+        { branches: ["\u5BC5", "\u5DF3"] },
+        { branches: ["\u536F", "\u8FB0"] },
+        { branches: ["\u7533", "\u4EA5"] },
+        { branches: ["\u9149", "\u620C"] }
+      ]
+    },
+    xunVoidRule: {
+      ruleId: "bazi.relation.xun-void",
+      label: "\u65EC\u7A7A\uFF08\u7A7A\u4EA1\uFF09\uFF1A\u4EE5\u65E5\u67F1\u6240\u5728\u65EC\u6240\u7F3A\u7684\u4E24\u652F\u4E3A\u7A7A\u4EA1\uFF0C\u516D\u65EC\u4F9D\u6B21\u7A7A\u620C\u4EA5\u3001\u7533\u9149\u3001\u5348\u672A\u3001\u8FB0\u5DF3\u3001\u5BC5\u536F\u3001\u5B50\u4E11",
+      evidence: "traditional",
+      source: ["xun-kong"],
+      confidence: 0.7,
+      voidByXun: [["\u620C", "\u4EA5"], ["\u7533", "\u9149"], ["\u5348", "\u672A"], ["\u8FB0", "\u5DF3"], ["\u5BC5", "\u536F"], ["\u5B50", "\u4E11"]]
     }
   },
   parameters: {
@@ -968,6 +1079,22 @@ var ruleset_default = {
     "san-ming-tong-hui": {
       citation: "\u300A\u4E09\u547D\u901A\u4F1A\u300B\uFF1A\u5341\u795E\u4E0E\u5730\u652F\u85CF\u5E72\u4F53\u7CFB",
       kind: "traditional-text"
+    },
+    "branch-relations": {
+      citation: "\u300A\u4E09\u547D\u901A\u4F1A\u300B\u5730\u652F\u5173\u7CFB\u4F53\u7CFB\uFF1A\u516D\u51B2\u3001\u516D\u5408\u3001\u4E09\u5408\u3001\u76F8\u5211\u3001\u516D\u5BB3\u7684\u56FA\u5B9A\u7EC4\u5408\uFF08\u7EC4\u5408\u8868\u4E3A\u5386\u4EE3\u4E00\u81F4\u53E3\u5F84\uFF0C\u975E\u6D41\u6D3E\u53D6\u503C\uFF09",
+      kind: "traditional-text"
+    },
+    "xun-kong": {
+      citation: "\u516D\u7532\u65EC\u7A7A\u4F53\u7CFB\uFF1A\u4EE5\u65E5\u67F1\u6240\u5728\u65EC\u6240\u7F3A\u4E24\u652F\u4E3A\u65EC\u7A7A\uFF08\u300A\u4E09\u547D\u901A\u4F1A\u300B\u7A7A\u4EA1\u6761\uFF09",
+      kind: "traditional-text"
+    },
+    "r-01-correction": {
+      citation: "\u672C\u9879\u76EE codex-suanming.md \u4FEE\u6B63\u89C4\u5219 R-01\u300C\u51F6\u8C61\u4E0D\u5F97\u5F80\u8F7B\u91CC\u8BFB\u300D\uFF082026-09-13 \u7ACB\uFF09",
+      kind: "project-decision"
+    },
+    "r-02-correction": {
+      citation: "\u672C\u9879\u76EE codex-suanming.md \u4FEE\u6B63\u89C4\u5219 R-02\u300C\u547D\u7406\u5224\u8BCD\u7684\u8868\u8FF0\u7EAA\u5F8B\u300D\uFF082026-09-13 \u7ACB\uFF09",
+      kind: "project-decision"
     }
   }
 };
@@ -981,7 +1108,7 @@ var ruleset_default2 = {
   school: "zichu",
   locale: "zh-Hans",
   system: "bazi",
-  engineCompatibility: ">=0.3.0 <0.6.0",
+  engineCompatibility: ">=0.3.0 <0.7.0",
   conventions: {
     yearBoundary: {
       ruleId: "bazi.year.solar-term-boundary",
@@ -1054,6 +1181,30 @@ var ruleset_default2 = {
       evidence: "traditional",
       source: ["zi-ping-she-yi"],
       confidence: 0.65
+    },
+    palaceOfPillar: {
+      ruleId: "bazi.interpret.palace-of-pillar",
+      value: "year-ancestor-month-parents-day-spouse-hour-children",
+      label: "\u56DB\u67F1\u5BAB\u4F4D\uFF1A\u5E74\u67F1\u4E3A\u7956\u4E0A\u5BAB\uFF0C\u6708\u67F1\u4E3A\u7236\u6BCD\u5BAB\uFF0C\u65E5\u652F\u4E3A\u592B\u59BB\u5BAB\uFF0C\u65F6\u67F1\u4E3A\u5B50\u5973\u5BAB",
+      evidence: "traditional",
+      source: ["san-ming-tong-hui"],
+      confidence: 0.75
+    },
+    pastEventTiering: {
+      ruleId: "bazi.interpret.past-event-tiering",
+      value: "three-tier-structural",
+      label: "\u524D\u4E8B\u7A0B\u5EA6\u6309\u8F7B\uFF0F\u4E2D\uFF0F\u91CD\u4E09\u6863\uFF1A\u7236\u6BCD\u5BAB\uFF08\u6708\u652F\uFF09\u89C1\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1\u4EFB\u4E00\u6309\u7ED3\u6784\u6027\u8BB0\u4E2D\u6863\uFF1B\u7A7A\u4EA1\u4E4B\u5BAB\u518D\u9022\u5211\u51B2\u6309\u6700\u91CD\u4E00\u6863\uFF1B\u65E0\u51B2\u51FB\u8BB0\u8F7B\u6863\u3002\u7981\u6B62\u53EA\u7ED9\u5355\u70B9\u6E29\u548C\u89E3\u8BFB",
+      evidence: "traditional",
+      source: ["san-ming-tong-hui", "r-01-correction"],
+      confidence: 0.68
+    },
+    pastEventUncertainty: {
+      ruleId: "bazi.interpret.past-event-uncertainty",
+      value: "direction-and-band-only",
+      label: "\u524D\u4E8B\u5224\u8BCD\u53EA\u5199\u65B9\u5411\u4E0E\u7A0B\u5EA6\u533A\u95F4\uFF0C\u4E0D\u505A\u4E8B\u540E\u5938\u529F\uFF1B\u5BF9\u672A\u53D1\u751F\u4E4B\u4E8B\u7981\u7528\u6050\u5413\u6027\u8868\u8FF0\uFF0C\u4E0D\u786E\u5B9A\u5904\u987B\u6807\u6CE8\u4E0D\u786E\u5B9A\u6027\u6765\u6E90",
+      evidence: "convention",
+      source: ["r-02-correction"],
+      confidence: 0.78
     }
   },
   tables: {
@@ -1111,6 +1262,93 @@ var ruleset_default2 = {
       evidence: "convention",
       source: ["jdn-anchor"],
       confidence: 0.92
+    },
+    /* ---- 地支关系表 ----
+     * 与通用派同值：冲、合、刑、害的组合表是历代一致口径，不是流派分歧点。
+     * 两派真正的差异在换日基准与运程口径，那两处已分别登记为各自的 ruleId。
+     * 出处按本派文献单独登记，置信度不沿用通用派数值。
+     */
+    branchClashRule: {
+      ruleId: "bazi.relation.branch-clash",
+      label: "\u516D\u51B2\uFF1A\u5B50\u5348\u3001\u4E11\u672A\u3001\u5BC5\u7533\u3001\u536F\u9149\u3001\u8FB0\u620C\u3001\u5DF3\u4EA5\uFF0C\u4E24\u67F1\u5730\u652F\u76F8\u89C1\u5373\u4E3A\u51B2",
+      evidence: "traditional",
+      source: ["zi-chu-commentary"],
+      confidence: 0.75,
+      pairs: [
+        { branches: ["\u5B50", "\u5348"] },
+        { branches: ["\u4E11", "\u672A"] },
+        { branches: ["\u5BC5", "\u7533"] },
+        { branches: ["\u536F", "\u9149"] },
+        { branches: ["\u8FB0", "\u620C"] },
+        { branches: ["\u5DF3", "\u4EA5"] }
+      ]
+    },
+    branchCombineRule: {
+      ruleId: "bazi.relation.branch-combine",
+      label: "\u516D\u5408\uFF1A\u5B50\u4E11\u5408\u571F\u3001\u5BC5\u4EA5\u5408\u6728\u3001\u536F\u620C\u5408\u706B\u3001\u8FB0\u9149\u5408\u91D1\u3001\u5DF3\u7533\u5408\u6C34\u3001\u5348\u672A\u5408\u571F",
+      evidence: "traditional",
+      source: ["zi-chu-commentary"],
+      confidence: 0.72,
+      pairs: [
+        { branches: ["\u5B50", "\u4E11"], element: "\u571F" },
+        { branches: ["\u5BC5", "\u4EA5"], element: "\u6728" },
+        { branches: ["\u536F", "\u620C"], element: "\u706B" },
+        { branches: ["\u8FB0", "\u9149"], element: "\u91D1" },
+        { branches: ["\u5DF3", "\u7533"], element: "\u6C34" },
+        { branches: ["\u5348", "\u672A"], element: "\u571F" }
+      ]
+    },
+    branchTrineRule: {
+      ruleId: "bazi.relation.branch-trine",
+      label: "\u4E09\u5408\uFF1A\u7533\u5B50\u8FB0\u5408\u6C34\u3001\u4EA5\u536F\u672A\u5408\u6728\u3001\u5BC5\u5348\u620C\u5408\u706B\u3001\u5DF3\u9149\u4E11\u5408\u91D1\uFF1B\u534A\u5408\u53D6\u300C\u751F+\u65FA\u300D\u6216\u300C\u65FA+\u5893\u300D\uFF0C\u751F+\u5893\u53EA\u4F5C\u62F1\u4E0D\u4F5C\u534A\u5408",
+      evidence: "traditional",
+      source: ["zi-chu-commentary"],
+      confidence: 0.7,
+      halfTrine: "requires-strong-branch",
+      groups: [
+        { branches: ["\u7533", "\u5B50", "\u8FB0"], element: "\u6C34" },
+        { branches: ["\u4EA5", "\u536F", "\u672A"], element: "\u6728" },
+        { branches: ["\u5BC5", "\u5348", "\u620C"], element: "\u706B" },
+        { branches: ["\u5DF3", "\u9149", "\u4E11"], element: "\u91D1" }
+      ]
+    },
+    branchPunishmentRule: {
+      ruleId: "bazi.relation.branch-punishment",
+      label: "\u76F8\u5211\uFF1A\u4E09\u5211\u5BC5\u5DF3\u7533\u3001\u4E11\u620C\u672A\uFF0C\u4E92\u5211\u5B50\u536F\uFF0C\u81EA\u5211\u8FB0\u5348\u9149\u4EA5\uFF08\u81EA\u5211\u987B\u843D\u4E24\u67F1\uFF09",
+      evidence: "traditional",
+      source: ["zi-chu-commentary"],
+      confidence: 0.62,
+      triads: [
+        { name: "\u5BC5\u5DF3\u7533\u4E09\u5211", branches: ["\u5BC5", "\u5DF3", "\u7533"] },
+        { name: "\u4E11\u620C\u672A\u4E09\u5211", branches: ["\u4E11", "\u620C", "\u672A"] }
+      ],
+      mutual: [
+        { branches: ["\u5B50", "\u536F"], name: "\u5B50\u536F\u65E0\u793C\u4E4B\u5211" }
+      ],
+      self: ["\u8FB0", "\u5348", "\u9149", "\u4EA5"]
+    },
+    branchHarmRule: {
+      ruleId: "bazi.relation.branch-harm",
+      label: "\u516D\u5BB3\uFF1A\u5B50\u672A\u3001\u4E11\u5348\u3001\u5BC5\u5DF3\u3001\u536F\u8FB0\u3001\u7533\u4EA5\u3001\u9149\u620C\uFF0C\u4E24\u67F1\u5730\u652F\u76F8\u89C1\u5373\u4E3A\u5BB3",
+      evidence: "traditional",
+      source: ["zi-chu-commentary"],
+      confidence: 0.65,
+      pairs: [
+        { branches: ["\u5B50", "\u672A"] },
+        { branches: ["\u4E11", "\u5348"] },
+        { branches: ["\u5BC5", "\u5DF3"] },
+        { branches: ["\u536F", "\u8FB0"] },
+        { branches: ["\u7533", "\u4EA5"] },
+        { branches: ["\u9149", "\u620C"] }
+      ]
+    },
+    xunVoidRule: {
+      ruleId: "bazi.relation.xun-void",
+      label: "\u65EC\u7A7A\uFF08\u7A7A\u4EA1\uFF09\uFF1A\u4EE5\u65E5\u67F1\u6240\u5728\u65EC\u6240\u7F3A\u7684\u4E24\u652F\u4E3A\u7A7A\u4EA1\uFF0C\u516D\u65EC\u4F9D\u6B21\u7A7A\u620C\u4EA5\u3001\u7533\u9149\u3001\u5348\u672A\u3001\u8FB0\u5DF3\u3001\u5BC5\u536F\u3001\u5B50\u4E11",
+      evidence: "traditional",
+      source: ["xun-kong"],
+      confidence: 0.68,
+      voidByXun: [["\u620C", "\u4EA5"], ["\u7533", "\u9149"], ["\u5348", "\u672A"], ["\u8FB0", "\u5DF3"], ["\u5BC5", "\u536F"], ["\u5B50", "\u4E11"]]
     }
   },
   parameters: {
@@ -1162,6 +1400,22 @@ var ruleset_default2 = {
     "di-tian-sui": {
       citation: "\u300A\u6EF4\u5929\u9AD3\u300B\u4F53\u7CFB\u4E2D\u7684\u85CF\u5E72\u8F7B\u91CD\u6743\u8861\u601D\u8DEF\uFF1A\u672C\u6C14\u91CD\u4E8E\u4E2D\u6C14\uFF0C\u4E2D\u6C14\u91CD\u4E8E\u4F59\u6C14",
       kind: "traditional-text"
+    },
+    "branch-relations": {
+      citation: "\u300A\u4E09\u547D\u901A\u4F1A\u300B\u5730\u652F\u5173\u7CFB\u4F53\u7CFB\uFF1A\u516D\u51B2\u3001\u516D\u5408\u3001\u4E09\u5408\u3001\u76F8\u5211\u3001\u516D\u5BB3\u7684\u56FA\u5B9A\u7EC4\u5408\uFF08\u7EC4\u5408\u8868\u4E3A\u5386\u4EE3\u4E00\u81F4\u53E3\u5F84\uFF0C\u975E\u6D41\u6D3E\u53D6\u503C\uFF09",
+      kind: "traditional-text"
+    },
+    "xun-kong": {
+      citation: "\u516D\u7532\u65EC\u7A7A\u4F53\u7CFB\uFF1A\u4EE5\u65E5\u67F1\u6240\u5728\u65EC\u6240\u7F3A\u4E24\u652F\u4E3A\u65EC\u7A7A\uFF08\u300A\u4E09\u547D\u901A\u4F1A\u300B\u7A7A\u4EA1\u6761\uFF09",
+      kind: "traditional-text"
+    },
+    "r-01-correction": {
+      citation: "\u672C\u9879\u76EE codex-suanming.md \u4FEE\u6B63\u89C4\u5219 R-01\u300C\u51F6\u8C61\u4E0D\u5F97\u5F80\u8F7B\u91CC\u8BFB\u300D\uFF082026-09-13 \u7ACB\uFF09",
+      kind: "project-decision"
+    },
+    "r-02-correction": {
+      citation: "\u672C\u9879\u76EE codex-suanming.md \u4FEE\u6B63\u89C4\u5219 R-02\u300C\u547D\u7406\u5224\u8BCD\u7684\u8868\u8FF0\u7EAA\u5F8B\u300D\uFF082026-09-13 \u7ACB\uFF09",
+      kind: "project-decision"
     }
   }
 };
@@ -1175,7 +1429,7 @@ var ruleset_default3 = {
   school: "common",
   system: "ziwei",
   locale: "zh-Hans",
-  engineCompatibility: ">=0.4.0 <0.6.0",
+  engineCompatibility: ">=0.4.0 <0.7.0",
   conventions: {
     yearBoundary: {
       ruleId: "ziwei.year.lunar-new-year",
@@ -1552,7 +1806,7 @@ var ruleset_default4 = {
   school: "common",
   system: "ziwei",
   locale: "zh-Hans",
-  engineCompatibility: ">=0.5.0 <0.6.0",
+  engineCompatibility: ">=0.5.0 <0.7.0",
   conventions: {
     yearBoundary: {
       ruleId: "ziwei.year.lunar-new-year",
@@ -2167,7 +2421,7 @@ function hashFacts(graph) {
 }
 
 // src/version.js
-var ENGINE_VERSION = "0.5.2";
+var ENGINE_VERSION = "0.6.0";
 var EPHEMERIS_MODEL = "VSOP87D+IAU1980+Meeus49";
 var SCHEMA_VERSION = "1.0.0";
 function parseVersion(value) {
@@ -2417,6 +2671,296 @@ function elementStrength(pillars, ruleSet = getRuleSet()) {
   });
 }
 
+// src/derive/relations.js
+var PILLAR_ORDER = ["year", "month", "day", "hour"];
+var PILLAR_LABELS = { year: "\u5E74\u67F1", month: "\u6708\u67F1", day: "\u65E5\u67F1", hour: "\u65F6\u67F1" };
+var RELATION_GROUPS = ["clash", "combine", "trine", "punishment", "harm", "void"];
+var RELATION_KINDS = [
+  "clash",
+  "combine",
+  "trine",
+  "half-trine",
+  "punishment",
+  "self-punishment",
+  "harm",
+  "void"
+];
+var GROUP_TABLE_KEYS = {
+  clash: "branchClashRule",
+  combine: "branchCombineRule",
+  trine: "branchTrineRule",
+  punishment: "branchPunishmentRule",
+  harm: "branchHarmRule",
+  void: "xunVoidRule"
+};
+var CYCLE = 60;
+var XUN_SIZE = 10;
+function pairKey(a, b) {
+  return a <= b ? a + b : b + a;
+}
+function ganzhiOf(index, stems, branches) {
+  const s = (index % stems.length + stems.length) % stems.length;
+  const b = (index % branches.length + branches.length) % branches.length;
+  return stems[s] + branches[b];
+}
+function normalizePillars(pillars, ruleSet) {
+  const branches = ruleSet.tables.branches.map(function(b) {
+    return b.name;
+  });
+  const out = {};
+  for (const position of PILLAR_ORDER) {
+    const value = pillars ? pillars[position] : void 0;
+    if (typeof value !== "string" || value.length !== 2) {
+      throw new Error("invalid pillar " + position + ": " + String(value));
+    }
+    if (branches.indexOf(value[1]) < 0) {
+      throw new Error("invalid pillar " + position + ": " + value);
+    }
+    out[position] = value;
+  }
+  return out;
+}
+function positionsByBranch(ordered) {
+  const map = /* @__PURE__ */ new Map();
+  for (const position of PILLAR_ORDER) {
+    const branch = ordered[position][1];
+    if (!map.has(branch)) map.set(branch, []);
+    map.get(branch).push(position);
+  }
+  return map;
+}
+function pairHits(ordered, table, kind) {
+  const index = /* @__PURE__ */ new Map();
+  const pairs = Array.isArray(table.pairs) ? table.pairs : [];
+  for (const entry of pairs) {
+    if (!entry || !Array.isArray(entry.branches) || entry.branches.length !== 2) continue;
+    index.set(pairKey(entry.branches[0], entry.branches[1]), entry);
+  }
+  const hits = [];
+  for (let i = 0; i < PILLAR_ORDER.length; i++) {
+    for (let j = i + 1; j < PILLAR_ORDER.length; j++) {
+      const left = PILLAR_ORDER[i];
+      const right = PILLAR_ORDER[j];
+      const a = ordered[left][1];
+      const b = ordered[right][1];
+      const entry = index.get(pairKey(a, b));
+      if (!entry) continue;
+      hits.push({
+        kind,
+        branches: [a, b],
+        positions: [left, right],
+        name: entry.name ? entry.name : a + b,
+        element: entry.element ? entry.element : null,
+        complete: true
+      });
+    }
+  }
+  return hits;
+}
+function trineHits(ordered, table) {
+  const positions = positionsByBranch(ordered);
+  const allowHalf = table.halfTrine === "requires-strong-branch";
+  const hits = [];
+  const groups = Array.isArray(table.groups) ? table.groups : [];
+  for (const group of groups) {
+    if (!group || !Array.isArray(group.branches) || group.branches.length !== 3) continue;
+    const birth = group.branches[0];
+    const peak = group.branches[1];
+    const tomb = group.branches[2];
+    const has = function(branch) {
+      return positions.has(branch);
+    };
+    const first = function(branch) {
+      return positions.get(branch)[0];
+    };
+    if (has(birth) && has(peak) && has(tomb)) {
+      hits.push({
+        kind: "trine",
+        branches: [birth, peak, tomb],
+        positions: [first(birth), first(peak), first(tomb)],
+        name: group.name ? group.name : group.branches.join("") + "\u4E09\u5408",
+        element: group.element ? group.element : null,
+        complete: true
+      });
+      continue;
+    }
+    if (!allowHalf) continue;
+    if (has(birth) && has(peak)) {
+      hits.push({
+        kind: "half-trine",
+        branches: [birth, peak],
+        positions: [first(birth), first(peak)],
+        name: birth + peak + "\u534A\u5408",
+        element: group.element ? group.element : null,
+        complete: false
+      });
+    } else if (has(peak) && has(tomb)) {
+      hits.push({
+        kind: "half-trine",
+        branches: [peak, tomb],
+        positions: [first(peak), first(tomb)],
+        name: peak + tomb + "\u534A\u5408",
+        element: group.element ? group.element : null,
+        complete: false
+      });
+    }
+  }
+  return hits;
+}
+function punishmentHits(ordered, table) {
+  const positions = positionsByBranch(ordered);
+  const hits = [];
+  const triads = Array.isArray(table.triads) ? table.triads : [];
+  for (const triad of triads) {
+    if (!triad || !Array.isArray(triad.branches)) continue;
+    const present = triad.branches.filter(function(b) {
+      return positions.has(b);
+    });
+    if (present.length < 2) continue;
+    hits.push({
+      kind: "punishment",
+      branches: present.slice(),
+      positions: present.map(function(b) {
+        return positions.get(b)[0];
+      }),
+      name: triad.name ? triad.name : present.join("") + "\u76F8\u5211",
+      element: null,
+      complete: present.length === triad.branches.length
+    });
+  }
+  const mutual = Array.isArray(table.mutual) ? table.mutual : [];
+  for (const hit of pairHits(ordered, { pairs: mutual }, "punishment")) hits.push(hit);
+  const self = Array.isArray(table.self) ? table.self : [];
+  for (const branch of self) {
+    const list = positions.get(branch);
+    if (!list || list.length < 2) continue;
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        hits.push({
+          kind: "self-punishment",
+          branches: [branch, branch],
+          positions: [list[i], list[j]],
+          name: branch + "\u81EA\u5211",
+          element: null,
+          complete: true
+        });
+      }
+    }
+  }
+  return hits;
+}
+function voidHits(ordered, table, ruleSet) {
+  const stems = ruleSet.tables.stems.map(function(s) {
+    return s.name;
+  });
+  const branches = ruleSet.tables.branches.map(function(b) {
+    return b.name;
+  });
+  const day = ordered.day;
+  const stemIndex = stems.indexOf(day[0]);
+  const branchIndex = branches.indexOf(day[1]);
+  let index = -1;
+  for (let i = 0; i < CYCLE; i++) {
+    if (i % 10 === stemIndex && i % 12 === branchIndex) {
+      index = i;
+      break;
+    }
+  }
+  if (index < 0) throw new Error("invalid day pillar: " + day);
+  const xunIndex = Math.floor(index / XUN_SIZE);
+  const voidByXun = Array.isArray(table.voidByXun) ? table.voidByXun : [];
+  const voidBranches = voidByXun[xunIndex];
+  if (!Array.isArray(voidBranches) || voidBranches.length === 0) return null;
+  const xun = {
+    index: xunIndex,
+    name: ganzhiOf(xunIndex * XUN_SIZE, stems, branches) + "\u65EC",
+    voidBranches: voidBranches.slice()
+  };
+  const hits = [];
+  for (const position of PILLAR_ORDER) {
+    const branch = ordered[position][1];
+    if (voidBranches.indexOf(branch) < 0) continue;
+    hits.push({
+      kind: "void",
+      branches: [branch],
+      positions: [position],
+      name: branch + "\u7A7A\u4EA1",
+      element: null,
+      complete: true
+    });
+  }
+  return { xun, hits };
+}
+function compareHits(a, b) {
+  const ka = RELATION_KINDS.indexOf(a.kind);
+  const kb = RELATION_KINDS.indexOf(b.kind);
+  if (ka !== kb) return ka - kb;
+  const n = Math.min(a.positions.length, b.positions.length);
+  for (let i = 0; i < n; i++) {
+    const pa = PILLAR_ORDER.indexOf(a.positions[i]);
+    const pb = PILLAR_ORDER.indexOf(b.positions[i]);
+    if (pa !== pb) return pa - pb;
+  }
+  return a.positions.length - b.positions.length;
+}
+function deriveRelations(pillars, ruleSet = getRuleSet()) {
+  const ordered = normalizePillars(pillars, ruleSet);
+  const tables = ruleSet.tables || {};
+  const groups = {};
+  const skipped = [];
+  const hits = [];
+  for (const group of RELATION_GROUPS) {
+    const table = tables[GROUP_TABLE_KEYS[group]];
+    if (!table || typeof table !== "object" || typeof table.ruleId !== "string") {
+      skipped.push(group);
+      continue;
+    }
+    let groupHits = [];
+    let extra = null;
+    if (group === "clash") groupHits = pairHits(ordered, table, "clash");
+    else if (group === "combine") groupHits = pairHits(ordered, table, "combine");
+    else if (group === "trine") groupHits = trineHits(ordered, table);
+    else if (group === "punishment") groupHits = punishmentHits(ordered, table);
+    else if (group === "harm") groupHits = pairHits(ordered, table, "harm");
+    else if (group === "void") {
+      const result = voidHits(ordered, table, ruleSet);
+      if (!result) {
+        skipped.push(group);
+        continue;
+      }
+      groupHits = result.hits;
+      extra = { xun: result.xun };
+    }
+    groups[group] = {
+      ruleId: table.ruleId,
+      label: table.label ? table.label : null,
+      evidence: table.evidence ? table.evidence : null,
+      hits: groupHits,
+      ...extra || {}
+    };
+    for (const hit of groupHits) hits.push(hit);
+  }
+  hits.sort(compareHits);
+  return Object.freeze({
+    ruleSet: ruleSet.id,
+    dayPillar: ordered.day,
+    pillarOrder: PILLAR_ORDER.slice(),
+    xun: groups.void && groups.void.xun ? groups.void.xun : null,
+    groups: Object.freeze(groups),
+    skipped: Object.freeze(skipped),
+    hits: Object.freeze(hits)
+  });
+}
+function relationHits(relations, options = {}) {
+  const kinds = options.kinds == null ? null : new Set(Array.isArray(options.kinds) ? options.kinds : [options.kinds]);
+  const position = options.position == null ? null : options.position;
+  return (relations && relations.hits ? relations.hits : []).filter(function(hit) {
+    if (kinds && !kinds.has(hit.kind)) return false;
+    if (position && hit.positions.indexOf(position) < 0) return false;
+    return true;
+  });
+}
+
 // src/manifest.js
 var DEFAULT_RULE_SET_ID = DEFAULT_BAZI_RULE_SET;
 var RULE_SET_VERSION = getRuleSet(DEFAULT_BAZI_RULE_SET).version;
@@ -2651,18 +3195,26 @@ function castBazi(input, options = {}) {
   const luck = input.gender ? buildLuck({ monthPillar: month, yearStem: year[0], gender: input.gender, daysToBoundary, options: { direction, ruleSet } }) : null;
   const manifest = createManifest({ timezone: zone, longitude, ruleSetId: ruleSet.id, ruleSetVersion: ruleSet.version });
   const pillars = { year, month, day, hour };
+  const relations = deriveRelations(pillars, ruleSet);
   const facts = factGraph([
     factFromRule(ruleSet.conventions.yearBoundary.ruleId, { id: "pillar.year", value: year, ruleSet }),
     factFromRule(ruleSet.conventions.monthBoundary.ruleId, { id: "pillar.month", value: month, ruleSet }),
     factFromRule(ruleSet.tables.dayPillarRule.ruleId, { id: "pillar.day", value: day, ruleSet }),
     factFromRule(ruleSet.conventions.hourBoundary.ruleId, { id: "pillar.hour", value: hour, ruleSet }),
     factFromRule(ruleSet.tables.hiddenStemsRule.ruleId, { id: "pillars.detail", value: pillarDetail(pillars, ruleSet), ruleSet }),
+    ...RELATION_GROUPS.filter((group) => relations.groups[group]).map((group) => factFromRule(relations.groups[group].ruleId, {
+      id: "relations." + group,
+      value: relations.groups[group].hits,
+      ruleSet,
+      extra: group === "void" && relations.xun ? { xun: relations.xun } : {}
+    })),
     ...luck ? [factFromRule(ruleSet.conventions.luckStart.ruleId, { id: "luck.start-age", value: luck.startAgeYears, ruleSet })] : []
   ], manifest);
   return {
     schemaVersion: "1.0.0",
     input: { ...input, timezone: zone },
     pillars,
+    relations,
     time: { ...utc, civilDayNumber, dayNumber, dayBoundaryMode: ruleSet.parameters.dayBoundaryMode ?? "civil-midnight", shichen: shi },
     luck,
     facts,
@@ -2785,6 +3337,353 @@ function explain(graph, claims) {
     return { ...c, evidence: refs.map((r) => r.fact_id), confidence: Math.min(...refs.map((r) => r.confidence)) };
   }).filter(Boolean);
 }
+
+// src/interpret/past-events.js
+var PALACE_NAMES = Object.freeze({
+  year: "\u7956\u4E0A\u5BAB",
+  month: "\u7236\u6BCD\u5BAB",
+  day: "\u592B\u59BB\u5BAB",
+  hour: "\u5B50\u5973\u5BAB"
+});
+var STRUCTURAL_KINDS = ["clash", "punishment", "self-punishment", "harm", "void"];
+var GROUP_OF_KIND = Object.freeze({
+  clash: "clash",
+  combine: "combine",
+  trine: "trine",
+  "half-trine": "trine",
+  punishment: "punishment",
+  "self-punishment": "punishment",
+  harm: "harm",
+  void: "void"
+});
+var TIER_LIGHT = "\u8F7B";
+var TIER_MEDIUM = "\u4E2D";
+var TIER_HEAVY = "\u91CD";
+var MIN_ITEMS = 5;
+var MAX_ITEMS = 8;
+var FLOW_LOOKBACK_YEARS = 12;
+var FLOW_REPEAT_THRESHOLD = 3;
+var TEN_GOD_CATEGORY_ORDER = ["\u8D22", "\u5B98", "\u5370", "\u98DF\u4F24", "\u6BD4\u52AB"];
+function tieringRuleId(ruleSet) {
+  return ruleSet.conventions.pastEventTiering.ruleId;
+}
+function tenGodRuleId(ruleSet) {
+  return ruleSet.tables.tenGodRule.ruleId;
+}
+function structuralHits(relations, position) {
+  return relationHits(relations, { kinds: STRUCTURAL_KINDS, position });
+}
+function tierOf(hits) {
+  if (!hits.length) return TIER_LIGHT;
+  const hasVoid = hits.some(function(h) {
+    return h.kind === "void";
+  });
+  const hasBreak = hits.some(function(h) {
+    return h.kind === "clash" || h.kind === "punishment";
+  });
+  if (hasVoid && hasBreak) return TIER_HEAVY;
+  return TIER_MEDIUM;
+}
+function describeHits(hits) {
+  return hits.map(function(h) {
+    const where = h.positions.map(function(p) {
+      return PILLAR_LABELS[p];
+    }).join("\u2014");
+    return h.name + "\uFF08" + where + "\uFF09";
+  }).join("\u3001");
+}
+function hitRuleId(relations, hits, ruleSet) {
+  if (!hits.length) return tieringRuleId(ruleSet);
+  const group = GROUP_OF_KIND[hits[0].kind];
+  const entry = group ? relations.groups[group] : null;
+  return entry && entry.ruleId ? entry.ruleId : tieringRuleId(ruleSet);
+}
+function uncertaintyFor(ruleSet, extra) {
+  const base = "\u672C\u6761\u53EA\u5224\u65AD\u65B9\u5411\u4E0E\u7A0B\u5EA6\u533A\u95F4\uFF0C\u4E0D\u6307\u8BA4\u5177\u4F53\u4E8B\u4EF6\u3001\u4E0D\u6307\u8BA4\u53D1\u751F\u65F6\u95F4\uFF1B\u82E5\u4E0E\u4F60\u7684\u5B9E\u9645\u7ECF\u5386\u4E0D\u7B26\uFF0C\u4F18\u5148\u590D\u6838\u51FA\u751F\u65F6\u8FB0\uFF08\u5C24\u5176\u9760\u8FD1\u65F6\u8FB0\u4EA4\u754C\uFF09\u4E0E\u51FA\u751F\u5730\u7ECF\u5EA6\u3002";
+  return extra ? base + extra : base;
+}
+function tenGodCategory(name) {
+  if (name === "\u6B63\u8D22" || name === "\u504F\u8D22") return "\u8D22";
+  if (name === "\u6B63\u5B98" || name === "\u4E03\u6740") return "\u5B98";
+  if (name === "\u6B63\u5370" || name === "\u504F\u5370") return "\u5370";
+  if (name === "\u98DF\u795E" || name === "\u4F24\u5B98") return "\u98DF\u4F24";
+  if (name === "\u6BD4\u80A9" || name === "\u52AB\u8D22") return "\u6BD4\u52AB";
+  return null;
+}
+var GENERATES = { \u6728: "\u706B", \u706B: "\u571F", \u571F: "\u91D1", \u91D1: "\u6C34", \u6C34: "\u6728" };
+var CONTROLS = { \u6728: "\u571F", \u571F: "\u6C34", \u6C34: "\u706B", \u706B: "\u91D1", \u91D1: "\u6728" };
+function dayMasterMonthRelation(dayElement, monthElement) {
+  if (!dayElement || !monthElement) return null;
+  if (dayElement === monthElement) return "\u540C\u6C14\u6BD4\u52A9";
+  if (GENERATES[monthElement] === dayElement) return "\u6708\u4EE4\u751F\u65E5\u4E3B";
+  if (GENERATES[dayElement] === monthElement) return "\u65E5\u4E3B\u751F\u6708\u4EE4";
+  if (CONTROLS[monthElement] === dayElement) return "\u6708\u4EE4\u514B\u65E5\u4E3B";
+  if (CONTROLS[dayElement] === monthElement) return "\u65E5\u4E3B\u514B\u6708\u4EE4";
+  return null;
+}
+function palaceItem(position, relations, ruleSet, wording) {
+  const hits = structuralHits(relations, position);
+  const tier = tierOf(hits);
+  const detail = hits.length ? describeHits(hits) : "\u65E0\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1";
+  const tail = tier === TIER_HEAVY ? "\u6309\u9879\u76EE\u4FEE\u6B63\u89C4\u5219 R-01\uFF0C\u7A7A\u4EA1\u4E4B\u5BAB\u518D\u9022\u5211\u51B2\u89C6\u4E3A\u5BAB\u4F4D\u88AB\u51FB\u7A7F\uFF0C\u8BB0\u6700\u91CD\u4E00\u6863\uFF1B\u8BF7\u6309\u7ED3\u6784\u6027\u53D8\u5316\u6838\u5BF9\uFF0C\u4E0D\u8981\u6309\u4E00\u65F6\u6469\u64E6\u7406\u89E3\u3002" : tier === TIER_MEDIUM ? "\u6309\u9879\u76EE\u4FEE\u6B63\u89C4\u5219 R-01\uFF0C\u8FD9\u4E00\u5BAB\u89C1\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1\u4EFB\u4E00\u5373\u6309\u7ED3\u6784\u6027\u5904\u7406\uFF0C\u8BB0\u4E2D\u6863\uFF0C\u4E0D\u6309\u6469\u64E6\u6027\u8BFB\u3002" : "\u8FD9\u4E00\u5BAB\u672A\u89C1\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1\uFF0C\u8BB0\u8F7B\u6863\uFF1B\u4ECD\u8BF7\u4EE5\u4F60\u81EA\u5DF1\u7684\u5B9E\u9645\u7ECF\u5386\u4E3A\u51C6\u3002";
+  return {
+    id: position + "-palace",
+    statement: wording + "\uFF1A" + detail + "\u3002" + tail,
+    basis: {
+      palace: PALACE_NAMES[position],
+      tenGod: null,
+      relation: hits.length ? hits.map(function(h) {
+        return h.kind;
+      }).join(",") : null,
+      ruleId: hitRuleId(relations, hits, ruleSet)
+    },
+    tier,
+    uncertainty: uncertaintyFor(ruleSet, hits.length ? "\u5173\u7CFB\u547D\u4E2D\u7684\u67F1\u4F4D\u56FA\u5B9A\uFF0C\u4F46\u300C\u5BB6\u91CC\u53D1\u751F\u4E86\u4EC0\u4E48\u300D\u7531\u73B0\u5B9E\u51B3\u5B9A\uFF0C\u6E05\u5355\u53EA\u7ED9\u65B9\u5411\u3002" : "\u672A\u89C1\u51B2\u51FB\u4E0D\u7B49\u4E8E\u8FD9\u4E00\u5BAB\u987A\u5229\uFF0C\u53EA\u8868\u793A\u7ED3\u6784\u4E0A\u6CA1\u6709\u53EF\u6307\u8BA4\u7684\u7834\u635F\u3002")
+  };
+}
+function spousePalaceItem(relations, ruleSet) {
+  const hits = structuralHits(relations, "day");
+  const bonds = relationHits(relations, { kinds: ["combine", "trine", "half-trine"], position: "day" });
+  const tier = tierOf(hits);
+  const parts = [];
+  parts.push(hits.length ? describeHits(hits) : "\u65E0\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1");
+  if (bonds.length) parts.push("\u53E6\u6709 " + describeHits(bonds));
+  const tail = tier === TIER_HEAVY ? "\u6309 R-01\uFF0C\u7A7A\u4EA1\u518D\u9022\u5211\u51B2\u8BB0\u6700\u91CD\u4E00\u6863\uFF0C\u8BF7\u6309\u7ED3\u6784\u6027\u53D8\u5316\u6838\u5BF9\u3002" : tier === TIER_MEDIUM ? "\u6309 R-01\uFF0C\u592B\u59BB\u5BAB\u89C1\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1\u4EFB\u4E00\u6309\u7ED3\u6784\u6027\u5904\u7406\uFF0C\u8BB0\u4E2D\u6863\u3002" : bonds.length ? "\u672A\u89C1\u51B2\u51FB\u800C\u89C1\u5408\uFF0C\u7ED3\u6784\u4E0A\u4EE5\u8054\u7ED3\u4E3A\u4E3B\uFF0C\u8BB0\u8F7B\u6863\u3002" : "\u672A\u89C1\u51B2\u51FB\uFF0C\u8BB0\u8F7B\u6863\u3002";
+  return {
+    id: "spouse-palace",
+    statement: "\u592B\u59BB\u5BAB\uFF08\u65E5\u652F " + relations.dayPillar[1] + "\uFF09\uFF1A" + parts.join("\uFF1B") + "\u3002" + tail,
+    basis: {
+      palace: PALACE_NAMES.day,
+      tenGod: null,
+      relation: (hits.length ? hits : bonds).map(function(h) {
+        return h.kind;
+      }).join(",") || null,
+      ruleId: hitRuleId(relations, hits.length ? hits : bonds, ruleSet)
+    },
+    tier,
+    uncertainty: uncertaintyFor(ruleSet, "\u5A5A\u59FB\u4E0E\u957F\u671F\u5173\u7CFB\u7684\u8D70\u5411\u53D7\u53CC\u65B9\u4E0E\u73AF\u5883\u5171\u540C\u5F71\u54CD\uFF0C\u672C\u6761\u53EA\u63CF\u8FF0\u76D8\u9762\u7ED3\u6784\u3002")
+  };
+}
+function monthTenGodItem(pillars, ruleSet) {
+  const dayStem = pillars.day[0];
+  const name = tenGod(dayStem, pillars.month[0], ruleSet);
+  return {
+    id: "month-ten-god",
+    statement: "\u7236\u6BCD\u5BAB\uFF08\u6708\u67F1 " + pillars.month + "\uFF09\u5929\u5E72\u4E3A " + name + "\uFF0C\u5373\u4EE5\u65E5\u4E3B " + dayStem + " \u8BBA\u6708\u5E72\u7684\u5341\u795E\u5173\u7CFB\u3002\u5341\u795E\u53EA\u63CF\u8FF0\u8FD9\u4E00\u5BAB\u7684\u7740\u529B\u65B9\u5411\uFF0C\u4E0D\u5355\u72EC\u5224\u5409\u51F6\uFF1B\u8BF7\u4E0E\u7236\u6BCD\u5BAB\u5730\u652F\u7ED3\u6784\u4E00\u6761\u5408\u770B\u3002",
+    basis: {
+      palace: PALACE_NAMES.month,
+      tenGod: name,
+      relation: null,
+      ruleId: tenGodRuleId(ruleSet)
+    },
+    tier: TIER_LIGHT,
+    uncertainty: uncertaintyFor(ruleSet, "\u540C\u4E00\u5341\u795E\u5728\u4E0D\u540C\u76D8\u4E2D\u7684\u5B9E\u9645\u8868\u73B0\u5DEE\u5F02\u5F88\u5927\uFF0C\u672C\u6761\u53EA\u7ED9\u65B9\u5411\u3002")
+  };
+}
+function monthQiItem(pillars, ruleSet) {
+  const stems = ruleSet.tables.stems;
+  const branches = ruleSet.tables.branches;
+  const dayElement = stems.find(function(s) {
+    return s.name === pillars.day[0];
+  })?.element ?? null;
+  const monthElement = branches.find(function(b) {
+    return b.name === pillars.month[1];
+  })?.element ?? null;
+  const relation = dayMasterMonthRelation(dayElement, monthElement);
+  return {
+    id: "month-qi",
+    statement: "\u65E5\u4E3B " + pillars.day[0] + "\uFF08" + (dayElement ?? "\u2014") + "\uFF09\u751F\u4E8E " + pillars.month[1] + " \u6708\uFF08" + (monthElement ?? "\u2014") + "\uFF09\uFF0C\u6708\u4EE4\u4E0E\u65E5\u4E3B\u4E3A\u300C" + (relation ?? "\u672A\u5224\u5B9A") + "\u300D\u3002\u8FD9\u4E00\u6761\u53EA\u8BF4\u660E\u6708\u4EE4\u5BF9\u65E5\u4E3B\u662F\u751F\u662F\u514B\uFF0C\u4E0D\u76F4\u63A5\u63A8\u51FA\u5F3A\u5F31\u7ED3\u8BBA\uFF1B\u6309\u9879\u76EE\u4FEE\u6B63\u89C4\u5219 R-01\uFF0C\u661F\u66DC\u4E0D\u900F\u5E72\u4E0D\u7B49\u4E8E\u529B\u91CF\u5F31\uFF0C\u987B\u5148\u770B\u5730\u652F\u6839\u6C14\u3002",
+    basis: {
+      palace: PALACE_NAMES.month,
+      tenGod: null,
+      relation: null,
+      ruleId: tieringRuleId(ruleSet)
+    },
+    tier: TIER_LIGHT,
+    uncertainty: uncertaintyFor(ruleSet, "\u5F3A\u5F31\u53E6\u9700\u6309\u89C4\u5219\u96C6\u7684\u85CF\u5E72\u6743\u91CD\u53E3\u5F84\u5355\u72EC\u8BA1\u7B97\uFF0C\u672C\u6761\u4E0D\u66FF\u4EE3\u90A3\u4E00\u6B65\u3002")
+  };
+}
+function tenGodStructureItem(pillars, relations, ruleSet) {
+  const dayStem = pillars.day[0];
+  const branches = ruleSet.tables.branches;
+  const counts = { \u8D22: 0, \u5B98: 0, \u5370: 0, \u98DF\u4F24: 0, \u6BD4\u52AB: 0 };
+  const seen = [];
+  for (const position of ["year", "month", "hour"]) {
+    const name = tenGod(dayStem, pillars[position][0], ruleSet);
+    const category = tenGodCategory(name);
+    if (category) counts[category] += 1;
+    seen.push(PILLAR_LABELS[position] + "\u5E72 " + name);
+  }
+  for (const position of ["year", "month", "day", "hour"]) {
+    const branch = pillars[position][1];
+    const hidden = branches.find(function(b) {
+      return b.name === branch;
+    })?.hiddenStems ?? [];
+    if (!hidden.length) continue;
+    const name = tenGod(dayStem, hidden[0], ruleSet);
+    const category = tenGodCategory(name);
+    if (category) counts[category] += 1;
+    seen.push(PILLAR_LABELS[position] + "\u652F\u672C\u6C14 " + name);
+  }
+  const present = Object.keys(counts).filter(function(k) {
+    return counts[k] > 0;
+  });
+  const absent = Object.keys(counts).filter(function(k) {
+    return counts[k] === 0;
+  });
+  const tally = Object.keys(counts).map(function(k) {
+    return k + " " + counts[k] + " \u5904";
+  }).join("\u3001");
+  return {
+    id: "ten-god-structure",
+    statement: "\u5341\u795E\u5206\u5E03\uFF08\u6309\u56DB\u67F1\u5929\u5E72\u4E0E\u5730\u652F\u672C\u6C14\u8BA1\uFF09\uFF1A" + tally + "\u3002\u5176\u4E2D" + (present.length ? present.join("\u3001") + " \u6709\u89C1" : "\u65E0\u4EFB\u4F55\u7C7B\u522B\u6709\u89C1") + (absent.length ? "\uFF0C" + absent.join("\u3001") + " \u672A\u89C1" : "") + "\u3002\u672A\u89C1\u67D0\u4E00\u7C7B\u4E0D\u7B49\u4E8E\u4EBA\u751F\u91CC\u6CA1\u6709\u5BF9\u5E94\u7684\u4E8B\uFF0C\u53EA\u8868\u793A\u8FD9\u4E00\u5C42\u7ED3\u6784\u4E0A\u6CA1\u6709\u76F4\u63A5\u843D\u70B9\uFF1B\u8BF7\u5BF9\u7167\u4F60\u5B9E\u9645\u7684\u6536\u5165\u65B9\u5F0F\u3001\u804C\u4E1A\u7EA6\u675F\u4E0E\u5B66\u4E60\u7ECF\u5386\u6765\u6838\u5BF9\u3002",
+    basis: {
+      palace: null,
+      tenGod: present.join("\u3001") || null,
+      relation: null,
+      ruleId: tenGodRuleId(ruleSet)
+    },
+    tier: TIER_LIGHT,
+    uncertainty: uncertaintyFor(ruleSet, "\u5341\u795E\u5206\u5E03\u53D7\u85CF\u5E72\u53E3\u5F84\u5F71\u54CD\uFF0C\u6362\u4E00\u5957\u89C4\u5219\u96C6\u7684\u6743\u91CD\u4F1A\u6539\u53D8\u8BA1\u6570\u3002")
+  };
+}
+function luckStartItem(chart, ruleSet) {
+  const luck = chart.luck;
+  if (!luck) return null;
+  const startAge = luck.startAgeYears;
+  const startYear = Number(chart.input.year) + Math.floor(startAge);
+  const first = luck.pillars[0];
+  const direction = luck.direction === 1 ? "\u987A\u884C" : "\u9006\u884C";
+  return {
+    id: "luck-start",
+    statement: "\u5927\u8FD0" + direction + "\uFF0C\u8D77\u8FD0 " + startAge.toFixed(2) + " \u5C81\uFF0C\u7EA6\u5728 " + startYear + " \u5E74\u524D\u540E\u4EA4\u5165\u7B2C\u4E00\u6B65\u5927\u8FD0 " + first + "\u3002\u4F20\u7EDF\u4E0A\u4EA4\u8FD0\u524D\u540E\u4E00\u4E24\u5E74\u5E38\u6709\u73AF\u5883\u53D8\u52A8\uFF08\u5347\u5B66\u3001\u79BB\u5BB6\u3001\u6362\u57CE\u5E02\u3001\u6362\u884C\u4E1A\uFF09\u3002\u8BF7\u56DE\u60F3\u90A3\u4E2A\u5E74\u4EFD\u524D\u540E\uFF0C\u4F60\u7684\u751F\u6D3B\u8282\u594F\u662F\u5426\u771F\u7684\u6362\u8FC7\u4E00\u6B21\u8F68\u3002",
+    basis: {
+      palace: null,
+      tenGod: null,
+      relation: null,
+      ruleId: luck.ruleId
+    },
+    tier: TIER_LIGHT,
+    uncertainty: uncertaintyFor(ruleSet, "\u8D77\u8FD0\u5E74\u9F84\u6309\u300C\u5929\u6570 \xF7 3\u300D\u6362\u7B97\uFF0C\u6D41\u6D3E\u95F4\u6709\u53D6\u6574\u5DEE\u5F02\uFF1B\u6362\u4E00\u5957\u89C4\u5219\u96C6\u4F1A\u5F97\u5230\u4E0D\u540C\u7684\u4EA4\u8FD0\u5E74\u4EFD\u3002")
+  };
+}
+function flowRepeatItem(chart, ruleSet, asOfYear) {
+  if (!Number.isInteger(asOfYear)) return null;
+  const birthYear = Number(chart.input.year);
+  if (asOfYear <= birthYear) return null;
+  const dayStem = chart.pillars.day[0];
+  const from = Math.max(birthYear + 1, asOfYear - FLOW_LOOKBACK_YEARS + 1);
+  const byCategory = /* @__PURE__ */ new Map();
+  for (let year = from; year <= asOfYear; year++) {
+    const gz = yearPillar(year, 6, 1, { yearBoundary: "calendar", ruleSet });
+    const name = tenGod(dayStem, gz[0], ruleSet);
+    const category = tenGodCategory(name);
+    if (!category) continue;
+    if (!byCategory.has(category)) byCategory.set(category, { names: /* @__PURE__ */ new Set(), years: [] });
+    const bucket = byCategory.get(category);
+    bucket.names.add(name);
+    bucket.years.push(year);
+  }
+  const repeated = [...byCategory.entries()].filter(function(entry) {
+    return entry[1].years.length >= FLOW_REPEAT_THRESHOLD;
+  }).sort(function(a, b) {
+    return b[1].years.length - a[1].years.length || TEN_GOD_CATEGORY_ORDER.indexOf(a[0]) - TEN_GOD_CATEGORY_ORDER.indexOf(b[0]);
+  });
+  if (!repeated.length) return null;
+  const top = repeated[0];
+  const years = top[1].years;
+  const names = [...top[1].names].join("\u3001");
+  return {
+    id: "flow-repeat",
+    statement: "\u4ECE " + from + " \u5230 " + asOfYear + " \u7684\u6D41\u5E74\u91CC\uFF0C" + top[0] + "\u7C7B\uFF08" + names + "\uFF09\u53CD\u590D\u51FA\u73B0 " + years.length + " \u6B21\uFF08" + years.join("\u3001") + "\uFF09\u3002\u540C\u4E00\u7C7B\u5341\u795E\u53CD\u590D\u51FA\u73B0\uFF0C\u901A\u5E38\u5BF9\u5E94\u540C\u4E00\u7C7B\u4E8B\u88AB\u53CD\u590D\u63A8\u5230\u53F0\u9762\u4E0A\u3002\u8BF7\u56DE\u60F3\u8FD9\u51E0\u5E74\u91CC\u662F\u5426\u771F\u6709\u4E00\u4EF6\u540C\u7C7B\u578B\u7684\u4E8B\u4E00\u518D\u53D1\u751F\uFF1B\u82E5\u540C\u7C7B\u5E74\u4EFD\u4F60\u7684\u611F\u53D7\u5B8C\u5168\u76F8\u53CD\uFF0C\u901A\u5E38\u8981\u5148\u6000\u7591\u51FA\u751F\u65F6\u8FB0\u3002",
+    basis: {
+      palace: null,
+      tenGod: names,
+      relation: null,
+      ruleId: tenGodRuleId(ruleSet)
+    },
+    tier: TIER_LIGHT,
+    uncertainty: uncertaintyFor(ruleSet, "\u672C\u6761\u53EA\u7EDF\u8BA1\u5341\u795E\u51FA\u73B0\u6B21\u6570\uFF0C\u4E0D\u5224\u65AD\u8FD9\u4E9B\u5E74\u4EFD\u7684\u597D\u574F\u3002")
+  };
+}
+function pastEvents(chart, options = {}) {
+  if (!chart || typeof chart !== "object") throw new Error("pastEvents: chart is required");
+  if (!chart.pillars || !chart.relations) {
+    throw new Error("pastEvents: chart must carry pillars and relations (castBazi output)");
+  }
+  const ruleSet = options.ruleSet ?? getRuleSet(chart.manifest?.ruleSetId);
+  const pillars = chart.pillars;
+  const relations = chart.relations;
+  const asOfYear = Number.isInteger(options.asOfYear) ? options.asOfYear : null;
+  const skipped = [];
+  const builders = [
+    function() {
+      return palaceItem(
+        "month",
+        relations,
+        ruleSet,
+        "\u7236\u6BCD\u5BAB\uFF08\u6708\u67F1 " + pillars.month + "\uFF09\u5730\u652F " + pillars.month[1] + " \u7684\u7ED3\u6784"
+      );
+    },
+    function() {
+      return monthTenGodItem(pillars, ruleSet);
+    },
+    function() {
+      return monthQiItem(pillars, ruleSet);
+    },
+    function() {
+      return spousePalaceItem(relations, ruleSet);
+    },
+    function() {
+      return tenGodStructureItem(pillars, relations, ruleSet);
+    },
+    function() {
+      return luckStartItem(chart, ruleSet);
+    },
+    function() {
+      return flowRepeatItem(chart, ruleSet, asOfYear);
+    },
+    function() {
+      return palaceItem(
+        "hour",
+        relations,
+        ruleSet,
+        "\u5B50\u5973\u5BAB\uFF08\u65F6\u67F1 " + pillars.hour + "\uFF09\u5730\u652F " + pillars.hour[1] + " \u7684\u7ED3\u6784"
+      );
+    }
+  ];
+  const items = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const build of builders) {
+    if (items.length >= MAX_ITEMS) break;
+    let item;
+    try {
+      item = build();
+    } catch (error) {
+      skipped.push({ id: null, reason: String(error?.message ?? error) });
+      continue;
+    }
+    if (!item) continue;
+    if (seen.has(item.id)) continue;
+    const rule = resolveRule(item.basis.ruleId, ruleSet);
+    if (!rule) {
+      skipped.push({ id: item.id, reason: "unregistered ruleId: " + item.basis.ruleId });
+      continue;
+    }
+    seen.add(item.id);
+    items.push(Object.freeze({
+      id: item.id,
+      statement: item.statement,
+      basis: Object.freeze({ ...item.basis }),
+      tier: item.tier,
+      uncertainty: item.uncertainty
+    }));
+  }
+  Object.defineProperty(items, "skipped", { value: Object.freeze(skipped), enumerable: false });
+  Object.defineProperty(items, "ruleSet", { value: ruleSet.id, enumerable: false });
+  return Object.freeze(items);
+}
+var PAST_EVENT_BOUNDS = Object.freeze({ min: MIN_ITEMS, max: MAX_ITEMS });
 
 // src/charts/ziwei/palace.js
 function fixIndex(i, max = 12) {
@@ -3766,6 +4665,11 @@ export {
   MEAN_MOTION_DEG_PER_DAY,
   MEASURED_UNTIL,
   MONTHS_PER_YEAR,
+  PAST_EVENT_BOUNDS,
+  PILLAR_LABELS,
+  PILLAR_ORDER,
+  RELATION_GROUPS,
+  RELATION_KINDS,
   RULE_SET,
   RULE_SETS,
   RULE_SET_VERSION,
@@ -3804,6 +4708,7 @@ export {
   deltaTDays,
   deltaTSeconds,
   deltaTUncertaintySeconds,
+  deriveRelations,
   divergenceKeys,
   elementOfBranch,
   elementOfStem,
@@ -3871,7 +4776,9 @@ export {
   palaceNames,
   palaceStems,
   parseVersion,
+  pastEvents,
   pillarDetail,
+  relationHits,
   requireFacts,
   resolveRule,
   ruleEntries,
@@ -3918,5 +4825,5 @@ export {
   zoneOffsetMinutes
 };
 
-export const WEB_ENGINE_SOURCE_HASH = "df4bcf80acfc899b";
-export const WEB_ENGINE_SOURCE_FILES = 38;
+export const WEB_ENGINE_SOURCE_HASH = "0f0ce3aaaa4aa0d8";
+export const WEB_ENGINE_SOURCE_FILES = 40;

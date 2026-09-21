@@ -25,9 +25,6 @@ export const ZHI = [...Engine.BRANCHES];
 export const CANG = Engine.hiddenStems;
 export const SHENGXIAO = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
 
-/** 旬空表：六十甲子按十干分六旬，每旬空两支。 */
-const XUN_KONG = [['戌','亥'],['申','酉'],['午','未'],['辰','巳'],['寅','卯'],['子','丑']];
-
 const GENDER_TO_ENGINE = { 男: 'male', 女: 'female' };
 const GENDER_TO_VIEW = { male: '男', female: '女' };
 
@@ -40,13 +37,6 @@ export const ENGINE_INFO = Object.freeze({
   sourceHash: Engine.WEB_ENGINE_SOURCE_HASH,
   sourceFiles: Engine.WEB_ENGINE_SOURCE_FILES
 });
-
-/** 由干支名反查六十甲子序号（0=甲子）。 */
-function sexagenaryIndex(gan, zhi) {
-  const gi = GAN.indexOf(gan), zi = ZHI.indexOf(zhi);
-  for (let i = 0; i < 60; i++) if (i % 10 === gi && i % 12 === zi) return i;
-  throw new Error('不是合法干支组合：' + gan + zhi);
-}
 
 function pillarToIndex(pillar) {
   return { gan: GAN.indexOf(pillar[0]), zhi: ZHI.indexOf(pillar[1]) };
@@ -136,8 +126,6 @@ export function paipan(opt) {
     });
   }
 
-  const dayIndex = sexagenaryIndex(chart.pillars.day[0], chart.pillars.day[1]);
-
   /* ---------- 命卦用年：必须与年柱同口径（立春换年） ----------
    * 三元命卦按立春分年，而表单里的 year 是公历年。1 月 1 日出生者在立春前，
    * 年柱已退到上一年，命卦若仍用公历年就会与四柱自相矛盾。
@@ -145,6 +133,12 @@ export function paipan(opt) {
   const guaYear = Engine.yearPillar(input.year, input.month, input.day, {
     yearBoundary: 'calendar', ruleSet
   }) === chart.pillars.year ? input.year : input.year - 1;
+
+  /* ---------- 前事清单：由解释层产出，适配层只透传 ----------
+   * 年份必须显式：调用方给了 asOfYear 才带上「流年反复」类条目，
+   * 没给就省略那一条 —— 页面不替用户假定「现在是哪一年」。 */
+  const asOfYear = Number.isInteger(Number(opt.asOfYear)) ? Number(opt.asOfYear) : undefined;
+  const pastEventItems = Engine.pastEvents(chart, { ruleSet, asOfYear });
 
   return {
     name: opt.name || '无名',
@@ -168,12 +162,18 @@ export function paipan(opt) {
     dayGan: GAN.indexOf(dayStem),
     dayGanWx: Engine.elementOfStem(dayStem, ruleSet),
     zodiac: SHENGXIAO[ZHI.indexOf(chart.pillars.year[1])],
-    xunKong: XUN_KONG[Math.floor(dayIndex / 10)],
+    // 旬空来自引擎的 relations.xun（按日柱所在旬定），页面不再自带一张表：
+    // 表若与引擎口径分家，盘上标了空亡而旬空栏却写别的两支，两处会自相矛盾。
+    // 规则集缺空亡表时 relations.xun 为 null，此时返回空数组表示「未判定」，
+    // 而不是补一个默认值冒充已判定。
+    xunKong: chart.relations && chart.relations.xun ? [...chart.relations.xun.voidBranches] : [],
     guaYear,
     monthTerm: Engine.currentMonthBoundary(chart.time.jdUTC)?.name ?? '',
     wx: { score: { ...strength.totals }, weights: [...strength.weights], method: strength.method, ruleSet: strength.ruleSet },
     daYun,
     liuNian,
+    relations: chart.relations,
+    pastEvents: pastEventItems,
     displayYear,
     displayYearSource: Number.isInteger(Number(opt.asOfYear)) ? 'explicit' : 'birth-year-default',
     chart,

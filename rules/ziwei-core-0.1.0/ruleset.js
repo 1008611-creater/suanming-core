@@ -21,7 +21,7 @@ export default {
   school: 'common',
   system: 'ziwei',
   locale: 'zh-Hans',
-  engineCompatibility: '>=0.4.0 <0.6.0',
+  engineCompatibility: '>=0.4.0 <0.7.0',
 
   conventions: {
     yearBoundary: {

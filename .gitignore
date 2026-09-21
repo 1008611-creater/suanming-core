@@ -22,3 +22,12 @@ private/
 cases/private/
 *.private.json
 *.bundle
+
+# 本地出报告工具的输出目录：生成的报告含客户出生资料，只留本机。
+reports/out/
+report-output/
+
+# 私有业务目录：真实案例、客户往来、平台账号资料一律不入库。
+# 公开的业务文档（模板、文案、SOP）放在 docs/business/，不受此条影响。
+business/private/
+docs/business/private/

@@ -14,7 +14,19 @@ const limits = {
   'analysis.js': 40 * 1024,
   'app.js': 40 * 1024,
   'check.js': 30 * 1024,
-  total: 400 * 1024
+  // 适配层从引擎产物里带回关系派生与前事清单，体积随之上升；
+  // 它仍是单一转换点，不新增第二套算法，故给它单独额度。
+  'engine-adapter.js': 24 * 1024,
+  'style.css': 24 * 1024,
+  'index.html': 12 * 1024,
+  'paipan.html': 12 * 1024,
+  'check.html': 12 * 1024,
+  'favicon.svg': 4 * 1024,
+  // 总量从 400KB 上调到 440KB：新增关系派生与前事解释层后，
+  // 页面侧多了清单渲染与打标逻辑（check.js 约 18KB）。
+  // 上调部分全部来自新增功能，未放宽任何既有单项额度；
+  // 若后续再接近上限，应先拆包而不是继续抬总闸门。
+  total: 440 * 1024
 };
 const findings = [];
 for (const [name, limit] of Object.entries(limits)) {

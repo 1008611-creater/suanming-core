@@ -18,3 +18,4 @@
 - [ADR-0006：网页单一引擎源](../decisions/ADR-0006-web-single-engine-source.md)
 - [ADR-0007：旺衰阈值](../decisions/ADR-0007-wangshuai-thresholds.md)
 - [ADR-0008：均时差](../decisions/ADR-0008-equation-of-time.md)
+- [ADR-0009：地支关系派生与前事解释层的边界](../decisions/ADR-0009-地支关系派生与前事解释层边界.md)

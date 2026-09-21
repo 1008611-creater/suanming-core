@@ -21,6 +21,7 @@ const chart = castBazi({
 | `time` | UTC 儒略日与真太阳时时辰 |
 | `luck` | 大运：`direction`、`startAgeYears`、`pillars`、`method`、`ruleId` |
 | `facts` | 事实图，每条事实带 `rule_id` / `source` / `confidence` / `evidence` |
+| `relations` | 地支关系派生：`hits`（命中清单）、`groups`（六组关系各自的 `ruleId` 与证据类别）、`xun`（日柱所在旬、旬名、两个空亡地支）、`skipped`（缺表而整体跳过的分组） |
 | `manifest` | 版本清单 |
 
 输入契约由 `validateCivilInput()` 统一执行：月份、日期、时分秒和经度越界会在进入天文计算前抛出
@@ -116,6 +117,49 @@ const claims = explain(chart.facts, [
 ```
 
 只保留能引用到事实的结论，置信度取所引用事实的最小值。没有事实来源的结论被丢弃。
+
+## 地支关系派生
+
+```js
+import { deriveRelations, relationHits, RELATION_GROUPS, PILLAR_LABELS } from 'suanming-core';
+
+const rel = deriveRelations(chart.pillars, getRuleSet());
+// → {
+//     dayPillar: '丙寅',
+//     xun: { index: 0, name: '甲子旬', voidBranches: ['戌', '亥'] },
+//     hits: [{ kind, name, branches, positions, complete, element, ruleId }],
+//     groups: { clash: { ruleId, evidence }, combine: {...}, ... },
+//     skipped: []
+//   }
+```
+
+`kind` 取 `clash`（六冲）/ `combine`（六合）/ `trine`（三合）/ `half-trine`（半合）/
+`punishment`（相刑）/ `self-punishment`（自刑）/ `harm`（六害）/ `void`（旬空）。
+`positions` 是 `year` / `month` / `day` / `hour` 的子集，`complete` 表示三合、三刑是否三支全见。
+
+`relationHits(rel, { kinds, position })` 按类型与柱位筛选；两者都可省略。
+空亡按**日柱所在旬**判定，因此日柱自己永远不会落在自身旬空内。
+
+**缺表即整组跳过**：规则集没有登记某组关系时，该组不出现在 `groups` 里，
+分组名进入 `skipped`，不会回退到内置默认表。
+
+## 前事清单
+
+```js
+import { pastEvents, PAST_EVENT_BOUNDS } from 'suanming-core';
+
+const items = pastEvents(chart, { ruleSet, asOfYear: 2026 });
+// items: [{ id, statement, basis: { palace, tenGod, relation, ruleId }, tier, uncertainty }]
+// items.skipped  — 因规则集缺条目而整体跳过的清单项（非枚举）
+// items.ruleSet  — 本次使用的规则集 id（非枚举）
+```
+
+- 输出 5–8 条（`PAST_EVENT_BOUNDS` 为 `{ min: 5, max: 8 }`），只读 `castBazi` 的输出，
+  不碰历法、不排盘、不读当前时间。
+- `tier` 只有「轻 / 中 / 重」三档，按项目修正规则 R-01 分档。
+- `asOfYear` 必须由调用方显式传入；缺省时省略流年类条目 —— 不用「现在」当默认值，
+  否则同一份盘在不同日子会得出不同清单。
+- 每条 `basis.ruleId` 都能在传入的规则集里解析出来；解析不到的条目不输出，记入 `skipped`。
 
 ## 校验
 

@@ -12,6 +12,7 @@
 | API 或输出字段 | `api.md`、`../schema/chart.schema.json` |
 | 发布与交付 | `acceptance.md`、`implementation-plan.md`、`../SECURITY.md` |
 | 发布清单与回滚 | `release-checklist.md`、`rollback.md` |
+| 业务与交付 SOP | `business/README.md`、`business/pricing-and-delivery-sop.md` |
 | 风险与变更等级 | `risk-register.md`、`../AGENTS.md` |
 | 性能与可访问性 | `../CONSTRAINTS.md`、`acceptance.md`、`../scripts/performance-smoke.mjs` |
 | 代码审查 | `reviews/`、`decisions/` |

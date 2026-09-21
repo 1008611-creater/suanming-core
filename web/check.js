@@ -177,6 +177,66 @@ import { API } from './engine-adapter.js';
     c2.appendChild(list);
     box.appendChild(c2);
 
+    /* B2. 前事验证清单：条目与程度分档全部由解释层给出，页面只负责渲染与打标。
+     *     汇总只报条数 —— 用户标了几条像、几条不像、几条不确定，不折算成任何比例。 */
+    var c2b = el('div', 'card');
+    c2b.appendChild(el('h2', null, '前事验证（先对已经发生的事）'));
+    c2b.appendChild(el('div', 'hint',
+      '下面是这份盘结构上指得出来的几条前事方向，每条都写明推导依据与程度档（轻 / 中 / 重）。' +
+      '请按你的真实经历逐条点一下：像、不像、或不确定。判断权在你手里，页面只统计条数。'));
+    var pe = p.pastEvents || [];
+    if (!pe.length) {
+      c2b.appendChild(el('div', 'note', '当前规则集未登记前事解释层条目，本区块不出清单。'));
+    } else {
+      var pelist = el('div', 'cklist');
+      var peMarks = {};
+      pe.forEach(function (item, i) {
+        var row = el('div', 'ckrow');
+        row.setAttribute('data-pe', item.id);
+        var basis = [];
+        if (item.basis.palace) basis.push('宫位 ' + item.basis.palace);
+        if (item.basis.tenGod) basis.push('十神 ' + item.basis.tenGod);
+        if (item.basis.relation) basis.push('关系 ' + item.basis.relation);
+        basis.push('依据 ' + item.basis.ruleId);
+        row.innerHTML =
+          '<div class=q>' + esc(item.statement) + '</div>' +
+          '<div class=a>程度档 <b>' + esc(item.tier) + '</b>　' + esc(basis.join('　·　')) + '</div>' +
+          '<div class=a>' + esc(item.uncertainty) + '</div>' +
+          '<div class=pick>' +
+            '<button data-pe-mark=像>像</button>' +
+            '<button data-pe-mark=不像>不像</button>' +
+            '<button data-pe-mark=不确定>不确定</button>' +
+          '</div>';
+        pelist.appendChild(row);
+      });
+      c2b.appendChild(pelist);
+      var peSummary = el('div', 'hint');
+      peSummary.id = 'peSummary';
+      peSummary.style.marginTop = '16px';
+      peSummary.innerHTML = '还没有标记。按你的实际经历点一下上面的按钮。';
+      c2b.appendChild(peSummary);
+      c2b.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-pe-mark]');
+        if (!b) return;
+        var row = b.closest('[data-pe]');
+        var id = row.getAttribute('data-pe');
+        peMarks[id] = b.getAttribute('data-pe-mark');
+        row.querySelectorAll('button[data-pe-mark]').forEach(function (x) { x.classList.remove('on'); });
+        b.classList.add('on');
+        var like = 0, unlike = 0, unsure = 0;
+        Object.keys(peMarks).forEach(function (k) {
+          if (peMarks[k] === '像') like += 1;
+          else if (peMarks[k] === '不像') unlike += 1;
+          else unsure += 1;
+        });
+        peSummary.innerHTML = '你标了 ' + like + ' 条像、' + unlike + ' 条不像、' + unsure + ' 条不确定' +
+          '（共 ' + pe.length + ' 条，已标 ' + Object.keys(peMarks).length + ' 条）。' +
+          '标完「不像」的条目不要删掉，它们和「像」的条目一样有价值：' +
+          '哪几条最不像你，通常指向出生时辰或经度需要复核。';
+      });
+    }
+    box.appendChild(c2b);
+
     /* C. 流年回看：用户自己打标 */
     var c3 = el('div', 'card');
     c3.appendChild(el('h2', null, '流年回看（自己打标）'));

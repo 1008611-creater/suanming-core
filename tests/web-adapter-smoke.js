@@ -12,9 +12,12 @@
  *   5. 大运、流年条数与首步干支。
  *   6. 旺衰分档随口径切换（analysis.js 阈值表按 method 选档）。
  *   7. 紫微盘可用。
+ *   8. 关系派生与前事清单随适配层一并交付：旬空必须与引擎的 relations.xun
+ *      同源（页面不再自带第二张表），清单条数与 ruleId 必须在契约里。
  */
 import { readFileSync } from 'node:fs';
 import { paipan, ziwei, flowYear, palaceTriad, GAN, ZHI, CANG, ENGINE_INFO } from '../web/engine-adapter.js';
+import { PAST_EVENT_BOUNDS, resolveRule, getRuleSet } from '../src/index.js';
 
 function assert(condition, message) {
   if (!condition) throw new Error('[web-adapter] ' + message);
@@ -163,5 +166,32 @@ assert(shown[0].year === bornYear, '页面筛选后应从出生年开始：' + s
 const past = p.liuNian.filter((x) => x.year >= Math.max(nowYear - 1, p.input.year) && x.year <= Math.max(nowYear + 9, p.input.year + 9));
 assert(past.some((x) => x.year === nowYear), '已出生者的流年窗口未包含今年');
 assert(past[0].year === nowYear - 1, '已出生者的流年窗口起点应为去年：' + past[0].year);
+
+/* --- 11. 关系派生与前事清单的契约 --- */
+// 旬空必须与引擎同源：页面过去自带一张旬空表，两套口径迟早会分叉。
+eq(p.xunKong, p.relations.xun.voidBranches, '旬空与 relations.xun 同源');
+assert(p.relations.hits.length > 0, '适配层未带出关系命中');
+assert(Array.isArray(p.relations.groups) === false && typeof p.relations.groups === 'object',
+  '关系分组结构缺失');
+eq(p.relations.skipped, [], '默认规则集不得跳过任何关系分组');
+
+// 前事清单：条数、依据、程度档。
+assert(Array.isArray(p.pastEvents), '适配层未带出前事清单');
+assert(p.pastEvents.length >= PAST_EVENT_BOUNDS.min && p.pastEvents.length <= PAST_EVENT_BOUNDS.max,
+  '前事清单条数超出区间：' + p.pastEvents.length);
+const adapterRuleSet = getRuleSet(p.chart.manifest.ruleSet);
+for (const item of p.pastEvents) {
+  assert(item.basis && item.basis.ruleId, '前事条目缺少 ruleId：' + item.id);
+  assert(resolveRule(item.basis.ruleId, adapterRuleSet), '前事条目的 ruleId 无法解析：' + item.basis.ruleId);
+  assert(['轻', '中', '重'].indexOf(item.tier) >= 0, '前事条目程度档非法：' + item.tier);
+}
+// 页面展示的文本里不得出现百分比或「准确率」（合规红线）。
+const peText = JSON.stringify(p.pastEvents);
+assert(peText.indexOf('%') < 0 && peText.indexOf('准确率') < 0, '前事清单出现百分比或「准确率」');
+
+// 未显式给 asOfYear 时，展示年份退回出生年，清单里也不得出现流年反复条目。
+const noYear = paipan({ ...base, asOfYear: undefined });
+eq(noYear.displayYearSource, 'birth-year-default', '缺 asOfYear 时的展示年份来源');
+assert(!noYear.pastEvents.some((i) => i.id === 'flow-repeat'), '缺 asOfYear 时不应有流年反复条目');
 
 console.log('[web-adapter] ok  四柱=' + p.gz.join(' ') + '  大运=' + p.daYun.list[0].gz + '  紫微=' + z.fiveElements.name + '  命卦年=' + p.guaYear);

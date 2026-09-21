@@ -45,8 +45,14 @@ const required = [
   'src/version.js',
   'src/derive/wuxing.js',
   'src/compare/schools.js',
+  'src/derive/relations.js',
+  'src/interpret/past-events.js',
   'schema/chart.schema.json',
   'src/schema/chart.schema.json',
+  'tests/relations-smoke.js',
+  'tests/relations-missing-table-smoke.js',
+  'tests/bazi-cross-reference-smoke.js',
+  'tests/past-events-smoke.js',
   'scripts/privacy-scan.mjs',
   'scripts/verify.mjs',
   'scripts/build-web-engine.mjs',
@@ -59,7 +65,14 @@ const required = [
   'scripts/package-release.mjs',
   'web/engine.js',
   'web/bihua-data.js',
-  'web/engine-adapter.js'
+  'web/engine-adapter.js',
+  'web/index.html',
+  'web/paipan.html',
+  'web/check.html',
+  'web/check.js',
+  'web/analysis.js',
+  'web/app.js',
+  'web/style.css'
 ];
 const missing = required.filter(f => !existsSync(resolve(ROOT, f)));
 if (missing.length) throw new Error('missing required files: ' + missing.join(', '));
