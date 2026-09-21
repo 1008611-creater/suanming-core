@@ -43,6 +43,81 @@ const GROUP_OF_KIND = Object.freeze({
   void: 'void'
 });
 
+/**
+ * 关系类型 → 中文名。只作为规则表漏写 name 时的兜底：
+ * 判词与依据栏里**只能出现中文关系名**，英文枚举（clash / harm / void …）
+ * 是内部实现细节，一旦泄漏到页面上，用户看到的就是「关系 clash」这种半成品。
+ * 规则集里逐项写明的 name（子午冲、子丑合土、寅巳害）优先于这张表。
+ */
+const KIND_LABELS = Object.freeze({
+  clash: '六冲',
+  combine: '六合',
+  trine: '三合',
+  'half-trine': '半合',
+  punishment: '相刑',
+  'self-punishment': '自刑',
+  harm: '六害',
+  void: '空亡'
+});
+
+/**
+ * 宫位条目的先后顺序：跨柱关系由**最早一个在清单里有条目的宫位**展开，
+ * 其它相关宫位只以「共见」引用。年柱不进前事清单（祖上宫没有独立条目），
+ * 因此年柱参与的关系一律由月／日／时柱的条目承接。
+ *
+ * 为什么要有这条口径：一条跨柱关系（例如月支子与时支午相冲）在结构上确实
+ * 同时落在两个宫位，但若两个条目都把「子午冲（月柱—时柱）」当成自己的发现完整展开，
+ * 用户看到的就是同一句话写了两遍，清单立刻显得像在凑条数。
+ */
+const PALACE_ITEM_ORDER = ['month', 'day', 'hour'];
+
+function ownerPosition(hit) {
+  for (const position of PALACE_ITEM_ORDER) {
+    if (hit.positions.indexOf(position) >= 0) return position;
+  }
+  return hit.positions[0];
+}
+
+/** 按归属把命中拆成「本宫展开」与「别宫展开、本宫共见」两组。 */
+function splitByOwnership(hits, position) {
+  const owned = [];
+  const shared = [];
+  for (const hit of hits) {
+    if (ownerPosition(hit) === position) owned.push(hit);
+    else shared.push(hit);
+  }
+  return { owned: owned, shared: shared };
+}
+
+/** 命中 → 中文关系名；规则表漏写 name 时退回类型中文名，绝不外泄英文枚举。 */
+function relationLabel(hit) {
+  const name = hit && typeof hit.name === 'string' ? hit.name : '';
+  if (name && !/[A-Za-z]/.test(name)) return name;
+  return KIND_LABELS[hit && hit.kind] ?? '关系';
+}
+
+/** 命中清单 → 关系名串，供依据栏使用。 */
+function relationText(hits) {
+  return hits.map(relationLabel).join('、');
+}
+
+/**
+ * 依据栏里的关系名：本宫独立命中的排在前，别宫展开、本宫共见的排在后。
+ * 两段都为空（本宫只有别宫展开的关系）时，退回共见那一组，避免依据栏比判词还空。
+ */
+function basisRelations(primary, primarySplit, secondary, secondarySplit) {
+  const parts = [];
+  const own = primarySplit.owned.concat(secondarySplit.owned);
+  const shared = primarySplit.shared.concat(secondarySplit.shared);
+  if (own.length) parts.push(relationText(own));
+  if (shared.length) parts.push(relationText(shared));
+  if (!parts.length) {
+    const all = primary.concat(secondary);
+    if (all.length) parts.push(relationText(all));
+  }
+  return parts.join('；');
+}
+
 const TIER_LIGHT = '轻';
 const TIER_MEDIUM = '中';
 const TIER_HEAVY = '重';
@@ -103,7 +178,7 @@ function tierOf(hits) {
 function describeHits(hits) {
   return hits.map(function (h) {
     const where = h.positions.map(function (p) { return PILLAR_LABELS[p]; }).join('—');
-    return h.name + '（' + where + '）';
+    return relationLabel(h) + '（' + where + '）';
   }).join('、');
 }
 
@@ -149,7 +224,15 @@ function dayMasterMonthRelation(dayElement, monthElement) {
 function palaceItem(position, relations, ruleSet, wording) {
   const hits = structuralHits(relations, position);
   const tier = tierOf(hits);
-  const detail = hits.length ? describeHits(hits) : '无刑、冲、害、空亡';
+  const split = splitByOwnership(hits, position);
+  const detail = hits.length
+    ? (split.owned.length
+      ? describeHits(split.owned)
+      : '本宫未见独立命中的刑、冲、害、空亡')
+      + (split.shared.length
+        ? (split.owned.length ? '；另与别宫共见 ' : '，仅与别宫共见 ') + describeHits(split.shared)
+        : '')
+    : '无刑、冲、害、空亡';
   const tail = tier === TIER_HEAVY
     ? '按项目修正规则 R-01，空亡之宫再逢刑冲视为宫位被击穿，记最重一档；请按结构性变化核对，不要按一时摩擦理解。'
     : tier === TIER_MEDIUM
@@ -161,7 +244,7 @@ function palaceItem(position, relations, ruleSet, wording) {
     basis: {
       palace: PALACE_NAMES[position],
       tenGod: null,
-      relation: hits.length ? hits.map(function (h) { return h.kind; }).join(',') : null,
+      relation: hits.length ? basisRelations(hits, split, [], { owned: [], shared: [] }) : null,
       ruleId: hitRuleId(relations, hits, ruleSet)
     },
     tier: tier,
@@ -176,9 +259,19 @@ function spousePalaceItem(relations, ruleSet) {
   const hits = structuralHits(relations, 'day');
   const bonds = relationHits(relations, { kinds: ['combine', 'trine', 'half-trine'], position: 'day' });
   const tier = tierOf(hits);
+  const split = splitByOwnership(hits, 'day');
+  const bondSplit = splitByOwnership(bonds, 'day');
   const parts = [];
-  parts.push(hits.length ? describeHits(hits) : '无刑、冲、害、空亡');
-  if (bonds.length) parts.push('另有 ' + describeHits(bonds));
+  parts.push(hits.length
+    ? (split.owned.length ? describeHits(split.owned) : '本宫未见独立命中的刑、冲、害、空亡')
+      + (split.shared.length
+        ? (split.owned.length ? '；另与别宫共见 ' : '，仅与别宫共见 ') + describeHits(split.shared)
+        : '')
+    : '无刑、冲、害、空亡');
+  if (bonds.length) {
+    parts.push('另有 ' + (bondSplit.owned.length ? describeHits(bondSplit.owned) : '无独立命中')
+      + (bondSplit.shared.length ? '，与别宫共见 ' + describeHits(bondSplit.shared) : ''));
+  }
   const tail = tier === TIER_HEAVY
     ? '按 R-01，空亡再逢刑冲记最重一档，请按结构性变化核对。'
     : tier === TIER_MEDIUM
@@ -192,7 +285,7 @@ function spousePalaceItem(relations, ruleSet) {
     basis: {
       palace: PALACE_NAMES.day,
       tenGod: null,
-      relation: (hits.length ? hits : bonds).map(function (h) { return h.kind; }).join(',') || null,
+      relation: basisRelations(hits, split, bonds, bondSplit) || null,
       ruleId: hitRuleId(relations, hits.length ? hits : bonds, ruleSet)
     },
     tier: tier,

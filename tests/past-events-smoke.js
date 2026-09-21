@@ -85,6 +85,38 @@ function check(items, label) {
   assert.equal(text.indexOf('％'), -1, '清单文本出现全角百分号');
   assert.equal(text.indexOf('准确率'), -1, '清单文本出现「准确率」');
   assert.equal(/命中率|精准度|大吉|大凶|必发|必定/.test(text), false, '清单文本出现禁用表述');
+  // 内部枚举名（clash / combine / trine / punishment / harm / void …）是英文实现细节，
+  // 一旦随判词或依据栏泄漏到页面，用户看到的就是「关系 clash」这种半成品。
+  // 只扫展示字段：ruleId 本身就是给审计用的技术标识（bazi.relation.branch-clash），
+  // 它按设计要原样露出，不算泄漏。
+  const shown = pastEvents(chart, { ruleSet, asOfYear: 2026 }).map(function (i) {
+    return [i.id, i.statement, i.tier, i.uncertainty,
+      i.basis.palace, i.basis.tenGod, i.basis.relation].join('\u0001');
+  }).join('\n');
+  const enums = ['clash', 'combine', 'trine', 'punishment', 'harm', 'void', 'self-punishment'];
+  for (const word of enums) {
+    assert.equal(shown.indexOf(word), -1, '清单展示文本泄漏内部枚举名：' + word);
+  }
+}
+
+/* ---------- 4b. 关系名必须是中文，且同一条关系不在两个宫位重复展开 ---------- */
+{
+  const items = pastEvents(chart, { ruleSet, asOfYear: 2026 });
+  for (const item of items) {
+    if (!item.basis.relation) continue;
+    assert.equal(/[A-Za-z]/.test(item.basis.relation), false,
+      item.id + ' 的关系名含英文：' + item.basis.relation);
+    assert.ok(/冲|合|刑|害|空亡/.test(item.basis.relation),
+      item.id + ' 的关系名看不出关系类型：' + item.basis.relation);
+  }
+  // 一条跨柱关系在结构上落在两个宫位，但判词只能在一处展开，
+  // 另一处只作共见标注 —— 否则用户看到同一句话写两遍，清单像在凑条数。
+  const statements = items.map(function (i) { return i.statement; });
+  assert.equal(new Set(statements).size, statements.length, '清单里出现重复判词');
+  const palaceItems = items.filter(function (i) { return /-palace$|^spouse-palace$/.test(i.id); });
+  const expanded = palaceItems.filter(function (i) { return i.statement.indexOf('共见') < 0; });
+  const clashes = expanded.filter(function (i) { return i.statement.indexOf('子午冲') >= 0; });
+  assert.equal(clashes.length, 1, '子午冲应在且仅在一个宫位展开，实际 ' + clashes.length + ' 处');
 }
 
 /* ---------- 5. 规则集缺条目时整组跳过，不回退默认值 ---------- */

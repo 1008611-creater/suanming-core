@@ -83,4 +83,15 @@ assert(js.includes('sourceHash'), '报告页未带内容指纹');
 assert(html.includes('不替代医疗'), '报告页缺少免责声明');
 assert(html.includes('lang="zh-CN"'), '报告页缺少文档语言');
 
+/* --- 10. 关系名只走引擎的中文名，工具里不得自建英文枚举映射 --- */
+// 引擎内部把关系分成 clash / harm / void 等枚举，这是实现细节。
+// 一旦报告页自己拿枚举名拼展示文本，纸上就会出现「关系 clash」这种半成品，
+// 所以这里直接钉死：这些英文枚举名不允许出现在工具源码里。
+for (const kind of ['clash', 'combine', 'trine', 'half-trine', 'punishment', 'self-punishment', 'harm', 'void']) {
+  assert(js.indexOf(kind) < 0, 'report.js 出现内部关系枚举 ' + kind + '（应只展示引擎给出的中文关系名）');
+}
+// 命中清单与依据栏都必须取引擎已经译好的中文名。
+assert(js.includes("return h.name + '（'"), '报告页未使用引擎给出的关系名');
+assert(js.includes("parts.push('关系 ' + basis.relation)"), '报告页依据栏未使用引擎给出的关系名');
+
 console.log('[report-page] ok  18 节齐全，必填校验与合规红线检查通过');

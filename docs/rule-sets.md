@@ -83,6 +83,14 @@ CI 会跑这三项。人为把某个结论的置信度调到高于其规则，�
 表述纪律来自本项目修正规则 R-01／R-02（`r-01-correction` / `r-02-correction`，
 证据类别 `project-decision`，2026-09-13 立）。
 
+**关系表的 `name` 字段是必填项（0.6.1 起）**：`branchClashRule.pairs`、
+`branchCombineRule.pairs`、`branchHarmRule.pairs` 的每一项，以及
+`branchPunishmentRule` 的 `triads` / `mutual`，都必须逐项写明给人看的中文关系名
+（`子午冲`、`子丑合土`、`子未害`、`寅巳申三刑`）。判词与依据栏只展示这个名字，
+英文枚举（`clash` / `harm` / `void` …）是内部实现细节，不上页面。
+`tests/relations-smoke.js` 会遍历每一套四柱规则集逐项断言：`name` 是非空字符串、
+长度大于 2、不含英文字母、含对应关系字（冲／合／害）。
+
 **缺表即整组跳过**：规则集没有登记某组关系或某条解释层条目时，
 该组不出现在结果里并记入 `skipped`，不回退默认值。这是 0.1.0 紫微骨架版
 已经验证过的同一套机制。

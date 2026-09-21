@@ -964,12 +964,12 @@ var ruleset_default = {
       source: ["branch-relations"],
       confidence: 0.78,
       pairs: [
-        { branches: ["\u5B50", "\u5348"] },
-        { branches: ["\u4E11", "\u672A"] },
-        { branches: ["\u5BC5", "\u7533"] },
-        { branches: ["\u536F", "\u9149"] },
-        { branches: ["\u8FB0", "\u620C"] },
-        { branches: ["\u5DF3", "\u4EA5"] }
+        { branches: ["\u5B50", "\u5348"], name: "\u5B50\u5348\u51B2" },
+        { branches: ["\u4E11", "\u672A"], name: "\u4E11\u672A\u51B2" },
+        { branches: ["\u5BC5", "\u7533"], name: "\u5BC5\u7533\u51B2" },
+        { branches: ["\u536F", "\u9149"], name: "\u536F\u9149\u51B2" },
+        { branches: ["\u8FB0", "\u620C"], name: "\u8FB0\u620C\u51B2" },
+        { branches: ["\u5DF3", "\u4EA5"], name: "\u5DF3\u4EA5\u51B2" }
       ]
     },
     branchCombineRule: {
@@ -979,12 +979,12 @@ var ruleset_default = {
       source: ["branch-relations"],
       confidence: 0.75,
       pairs: [
-        { branches: ["\u5B50", "\u4E11"], element: "\u571F" },
-        { branches: ["\u5BC5", "\u4EA5"], element: "\u6728" },
-        { branches: ["\u536F", "\u620C"], element: "\u706B" },
-        { branches: ["\u8FB0", "\u9149"], element: "\u91D1" },
-        { branches: ["\u5DF3", "\u7533"], element: "\u6C34" },
-        { branches: ["\u5348", "\u672A"], element: "\u571F" }
+        { branches: ["\u5B50", "\u4E11"], element: "\u571F", name: "\u5B50\u4E11\u5408\u571F" },
+        { branches: ["\u5BC5", "\u4EA5"], element: "\u6728", name: "\u5BC5\u4EA5\u5408\u6728" },
+        { branches: ["\u536F", "\u620C"], element: "\u706B", name: "\u536F\u620C\u5408\u706B" },
+        { branches: ["\u8FB0", "\u9149"], element: "\u91D1", name: "\u8FB0\u9149\u5408\u91D1" },
+        { branches: ["\u5DF3", "\u7533"], element: "\u6C34", name: "\u5DF3\u7533\u5408\u6C34" },
+        { branches: ["\u5348", "\u672A"], element: "\u571F", name: "\u5348\u672A\u5408\u571F" }
       ]
     },
     branchTrineRule: {
@@ -1023,12 +1023,12 @@ var ruleset_default = {
       source: ["branch-relations"],
       confidence: 0.68,
       pairs: [
-        { branches: ["\u5B50", "\u672A"] },
-        { branches: ["\u4E11", "\u5348"] },
-        { branches: ["\u5BC5", "\u5DF3"] },
-        { branches: ["\u536F", "\u8FB0"] },
-        { branches: ["\u7533", "\u4EA5"] },
-        { branches: ["\u9149", "\u620C"] }
+        { branches: ["\u5B50", "\u672A"], name: "\u5B50\u672A\u5BB3" },
+        { branches: ["\u4E11", "\u5348"], name: "\u4E11\u5348\u5BB3" },
+        { branches: ["\u5BC5", "\u5DF3"], name: "\u5BC5\u5DF3\u5BB3" },
+        { branches: ["\u536F", "\u8FB0"], name: "\u536F\u8FB0\u5BB3" },
+        { branches: ["\u7533", "\u4EA5"], name: "\u7533\u4EA5\u5BB3" },
+        { branches: ["\u9149", "\u620C"], name: "\u9149\u620C\u5BB3" }
       ]
     },
     xunVoidRule: {
@@ -1275,12 +1275,12 @@ var ruleset_default2 = {
       source: ["zi-chu-commentary"],
       confidence: 0.75,
       pairs: [
-        { branches: ["\u5B50", "\u5348"] },
-        { branches: ["\u4E11", "\u672A"] },
-        { branches: ["\u5BC5", "\u7533"] },
-        { branches: ["\u536F", "\u9149"] },
-        { branches: ["\u8FB0", "\u620C"] },
-        { branches: ["\u5DF3", "\u4EA5"] }
+        { branches: ["\u5B50", "\u5348"], name: "\u5B50\u5348\u51B2" },
+        { branches: ["\u4E11", "\u672A"], name: "\u4E11\u672A\u51B2" },
+        { branches: ["\u5BC5", "\u7533"], name: "\u5BC5\u7533\u51B2" },
+        { branches: ["\u536F", "\u9149"], name: "\u536F\u9149\u51B2" },
+        { branches: ["\u8FB0", "\u620C"], name: "\u8FB0\u620C\u51B2" },
+        { branches: ["\u5DF3", "\u4EA5"], name: "\u5DF3\u4EA5\u51B2" }
       ]
     },
     branchCombineRule: {
@@ -1290,12 +1290,12 @@ var ruleset_default2 = {
       source: ["zi-chu-commentary"],
       confidence: 0.72,
       pairs: [
-        { branches: ["\u5B50", "\u4E11"], element: "\u571F" },
-        { branches: ["\u5BC5", "\u4EA5"], element: "\u6728" },
-        { branches: ["\u536F", "\u620C"], element: "\u706B" },
-        { branches: ["\u8FB0", "\u9149"], element: "\u91D1" },
-        { branches: ["\u5DF3", "\u7533"], element: "\u6C34" },
-        { branches: ["\u5348", "\u672A"], element: "\u571F" }
+        { branches: ["\u5B50", "\u4E11"], element: "\u571F", name: "\u5B50\u4E11\u5408\u571F" },
+        { branches: ["\u5BC5", "\u4EA5"], element: "\u6728", name: "\u5BC5\u4EA5\u5408\u6728" },
+        { branches: ["\u536F", "\u620C"], element: "\u706B", name: "\u536F\u620C\u5408\u706B" },
+        { branches: ["\u8FB0", "\u9149"], element: "\u91D1", name: "\u8FB0\u9149\u5408\u91D1" },
+        { branches: ["\u5DF3", "\u7533"], element: "\u6C34", name: "\u5DF3\u7533\u5408\u6C34" },
+        { branches: ["\u5348", "\u672A"], element: "\u571F", name: "\u5348\u672A\u5408\u571F" }
       ]
     },
     branchTrineRule: {
@@ -1334,12 +1334,12 @@ var ruleset_default2 = {
       source: ["zi-chu-commentary"],
       confidence: 0.65,
       pairs: [
-        { branches: ["\u5B50", "\u672A"] },
-        { branches: ["\u4E11", "\u5348"] },
-        { branches: ["\u5BC5", "\u5DF3"] },
-        { branches: ["\u536F", "\u8FB0"] },
-        { branches: ["\u7533", "\u4EA5"] },
-        { branches: ["\u9149", "\u620C"] }
+        { branches: ["\u5B50", "\u672A"], name: "\u5B50\u672A\u5BB3" },
+        { branches: ["\u4E11", "\u5348"], name: "\u4E11\u5348\u5BB3" },
+        { branches: ["\u5BC5", "\u5DF3"], name: "\u5BC5\u5DF3\u5BB3" },
+        { branches: ["\u536F", "\u8FB0"], name: "\u536F\u8FB0\u5BB3" },
+        { branches: ["\u7533", "\u4EA5"], name: "\u7533\u4EA5\u5BB3" },
+        { branches: ["\u9149", "\u620C"], name: "\u9149\u620C\u5BB3" }
       ]
     },
     xunVoidRule: {
@@ -2421,7 +2421,7 @@ function hashFacts(graph) {
 }
 
 // src/version.js
-var ENGINE_VERSION = "0.6.0";
+var ENGINE_VERSION = "0.6.1";
 var EPHEMERIS_MODEL = "VSOP87D+IAU1980+Meeus49";
 var SCHEMA_VERSION = "1.0.0";
 function parseVersion(value) {
@@ -2729,7 +2729,7 @@ function positionsByBranch(ordered) {
   }
   return map;
 }
-function pairHits(ordered, table, kind) {
+function pairHits(ordered, table, kind, fallbackSuffix) {
   const index = /* @__PURE__ */ new Map();
   const pairs = Array.isArray(table.pairs) ? table.pairs : [];
   for (const entry of pairs) {
@@ -2749,7 +2749,7 @@ function pairHits(ordered, table, kind) {
         kind,
         branches: [a, b],
         positions: [left, right],
-        name: entry.name ? entry.name : a + b,
+        name: entry.name ? entry.name : entry.branches[0] + entry.branches[1] + fallbackSuffix,
         element: entry.element ? entry.element : null,
         complete: true
       });
@@ -2829,7 +2829,7 @@ function punishmentHits(ordered, table) {
     });
   }
   const mutual = Array.isArray(table.mutual) ? table.mutual : [];
-  for (const hit of pairHits(ordered, { pairs: mutual }, "punishment")) hits.push(hit);
+  for (const hit of pairHits(ordered, { pairs: mutual }, "punishment", "\u5211")) hits.push(hit);
   const self = Array.isArray(table.self) ? table.self : [];
   for (const branch of self) {
     const list = positions.get(branch);
@@ -2917,11 +2917,11 @@ function deriveRelations(pillars, ruleSet = getRuleSet()) {
     }
     let groupHits = [];
     let extra = null;
-    if (group === "clash") groupHits = pairHits(ordered, table, "clash");
-    else if (group === "combine") groupHits = pairHits(ordered, table, "combine");
+    if (group === "clash") groupHits = pairHits(ordered, table, "clash", "\u51B2");
+    else if (group === "combine") groupHits = pairHits(ordered, table, "combine", "\u5408");
     else if (group === "trine") groupHits = trineHits(ordered, table);
     else if (group === "punishment") groupHits = punishmentHits(ordered, table);
-    else if (group === "harm") groupHits = pairHits(ordered, table, "harm");
+    else if (group === "harm") groupHits = pairHits(ordered, table, "harm", "\u5BB3");
     else if (group === "void") {
       const result = voidHits(ordered, table, ruleSet);
       if (!result) {
@@ -3356,6 +3356,52 @@ var GROUP_OF_KIND = Object.freeze({
   harm: "harm",
   void: "void"
 });
+var KIND_LABELS = Object.freeze({
+  clash: "\u516D\u51B2",
+  combine: "\u516D\u5408",
+  trine: "\u4E09\u5408",
+  "half-trine": "\u534A\u5408",
+  punishment: "\u76F8\u5211",
+  "self-punishment": "\u81EA\u5211",
+  harm: "\u516D\u5BB3",
+  void: "\u7A7A\u4EA1"
+});
+var PALACE_ITEM_ORDER = ["month", "day", "hour"];
+function ownerPosition(hit) {
+  for (const position of PALACE_ITEM_ORDER) {
+    if (hit.positions.indexOf(position) >= 0) return position;
+  }
+  return hit.positions[0];
+}
+function splitByOwnership(hits, position) {
+  const owned = [];
+  const shared = [];
+  for (const hit of hits) {
+    if (ownerPosition(hit) === position) owned.push(hit);
+    else shared.push(hit);
+  }
+  return { owned, shared };
+}
+function relationLabel(hit) {
+  const name = hit && typeof hit.name === "string" ? hit.name : "";
+  if (name && !/[A-Za-z]/.test(name)) return name;
+  return KIND_LABELS[hit && hit.kind] ?? "\u5173\u7CFB";
+}
+function relationText(hits) {
+  return hits.map(relationLabel).join("\u3001");
+}
+function basisRelations(primary, primarySplit, secondary, secondarySplit) {
+  const parts = [];
+  const own = primarySplit.owned.concat(secondarySplit.owned);
+  const shared = primarySplit.shared.concat(secondarySplit.shared);
+  if (own.length) parts.push(relationText(own));
+  if (shared.length) parts.push(relationText(shared));
+  if (!parts.length) {
+    const all = primary.concat(secondary);
+    if (all.length) parts.push(relationText(all));
+  }
+  return parts.join("\uFF1B");
+}
 var TIER_LIGHT = "\u8F7B";
 var TIER_MEDIUM = "\u4E2D";
 var TIER_HEAVY = "\u91CD";
@@ -3389,7 +3435,7 @@ function describeHits(hits) {
     const where = h.positions.map(function(p) {
       return PILLAR_LABELS[p];
     }).join("\u2014");
-    return h.name + "\uFF08" + where + "\uFF09";
+    return relationLabel(h) + "\uFF08" + where + "\uFF09";
   }).join("\u3001");
 }
 function hitRuleId(relations, hits, ruleSet) {
@@ -3424,7 +3470,8 @@ function dayMasterMonthRelation(dayElement, monthElement) {
 function palaceItem(position, relations, ruleSet, wording) {
   const hits = structuralHits(relations, position);
   const tier = tierOf(hits);
-  const detail = hits.length ? describeHits(hits) : "\u65E0\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1";
+  const split = splitByOwnership(hits, position);
+  const detail = hits.length ? (split.owned.length ? describeHits(split.owned) : "\u672C\u5BAB\u672A\u89C1\u72EC\u7ACB\u547D\u4E2D\u7684\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1") + (split.shared.length ? (split.owned.length ? "\uFF1B\u53E6\u4E0E\u522B\u5BAB\u5171\u89C1 " : "\uFF0C\u4EC5\u4E0E\u522B\u5BAB\u5171\u89C1 ") + describeHits(split.shared) : "") : "\u65E0\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1";
   const tail = tier === TIER_HEAVY ? "\u6309\u9879\u76EE\u4FEE\u6B63\u89C4\u5219 R-01\uFF0C\u7A7A\u4EA1\u4E4B\u5BAB\u518D\u9022\u5211\u51B2\u89C6\u4E3A\u5BAB\u4F4D\u88AB\u51FB\u7A7F\uFF0C\u8BB0\u6700\u91CD\u4E00\u6863\uFF1B\u8BF7\u6309\u7ED3\u6784\u6027\u53D8\u5316\u6838\u5BF9\uFF0C\u4E0D\u8981\u6309\u4E00\u65F6\u6469\u64E6\u7406\u89E3\u3002" : tier === TIER_MEDIUM ? "\u6309\u9879\u76EE\u4FEE\u6B63\u89C4\u5219 R-01\uFF0C\u8FD9\u4E00\u5BAB\u89C1\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1\u4EFB\u4E00\u5373\u6309\u7ED3\u6784\u6027\u5904\u7406\uFF0C\u8BB0\u4E2D\u6863\uFF0C\u4E0D\u6309\u6469\u64E6\u6027\u8BFB\u3002" : "\u8FD9\u4E00\u5BAB\u672A\u89C1\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1\uFF0C\u8BB0\u8F7B\u6863\uFF1B\u4ECD\u8BF7\u4EE5\u4F60\u81EA\u5DF1\u7684\u5B9E\u9645\u7ECF\u5386\u4E3A\u51C6\u3002";
   return {
     id: position + "-palace",
@@ -3432,9 +3479,7 @@ function palaceItem(position, relations, ruleSet, wording) {
     basis: {
       palace: PALACE_NAMES[position],
       tenGod: null,
-      relation: hits.length ? hits.map(function(h) {
-        return h.kind;
-      }).join(",") : null,
+      relation: hits.length ? basisRelations(hits, split, [], { owned: [], shared: [] }) : null,
       ruleId: hitRuleId(relations, hits, ruleSet)
     },
     tier,
@@ -3445,9 +3490,13 @@ function spousePalaceItem(relations, ruleSet) {
   const hits = structuralHits(relations, "day");
   const bonds = relationHits(relations, { kinds: ["combine", "trine", "half-trine"], position: "day" });
   const tier = tierOf(hits);
+  const split = splitByOwnership(hits, "day");
+  const bondSplit = splitByOwnership(bonds, "day");
   const parts = [];
-  parts.push(hits.length ? describeHits(hits) : "\u65E0\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1");
-  if (bonds.length) parts.push("\u53E6\u6709 " + describeHits(bonds));
+  parts.push(hits.length ? (split.owned.length ? describeHits(split.owned) : "\u672C\u5BAB\u672A\u89C1\u72EC\u7ACB\u547D\u4E2D\u7684\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1") + (split.shared.length ? (split.owned.length ? "\uFF1B\u53E6\u4E0E\u522B\u5BAB\u5171\u89C1 " : "\uFF0C\u4EC5\u4E0E\u522B\u5BAB\u5171\u89C1 ") + describeHits(split.shared) : "") : "\u65E0\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1");
+  if (bonds.length) {
+    parts.push("\u53E6\u6709 " + (bondSplit.owned.length ? describeHits(bondSplit.owned) : "\u65E0\u72EC\u7ACB\u547D\u4E2D") + (bondSplit.shared.length ? "\uFF0C\u4E0E\u522B\u5BAB\u5171\u89C1 " + describeHits(bondSplit.shared) : ""));
+  }
   const tail = tier === TIER_HEAVY ? "\u6309 R-01\uFF0C\u7A7A\u4EA1\u518D\u9022\u5211\u51B2\u8BB0\u6700\u91CD\u4E00\u6863\uFF0C\u8BF7\u6309\u7ED3\u6784\u6027\u53D8\u5316\u6838\u5BF9\u3002" : tier === TIER_MEDIUM ? "\u6309 R-01\uFF0C\u592B\u59BB\u5BAB\u89C1\u5211\u3001\u51B2\u3001\u5BB3\u3001\u7A7A\u4EA1\u4EFB\u4E00\u6309\u7ED3\u6784\u6027\u5904\u7406\uFF0C\u8BB0\u4E2D\u6863\u3002" : bonds.length ? "\u672A\u89C1\u51B2\u51FB\u800C\u89C1\u5408\uFF0C\u7ED3\u6784\u4E0A\u4EE5\u8054\u7ED3\u4E3A\u4E3B\uFF0C\u8BB0\u8F7B\u6863\u3002" : "\u672A\u89C1\u51B2\u51FB\uFF0C\u8BB0\u8F7B\u6863\u3002";
   return {
     id: "spouse-palace",
@@ -3455,9 +3504,7 @@ function spousePalaceItem(relations, ruleSet) {
     basis: {
       palace: PALACE_NAMES.day,
       tenGod: null,
-      relation: (hits.length ? hits : bonds).map(function(h) {
-        return h.kind;
-      }).join(",") || null,
+      relation: basisRelations(hits, split, bonds, bondSplit) || null,
       ruleId: hitRuleId(relations, hits.length ? hits : bonds, ruleSet)
     },
     tier,
@@ -4825,5 +4872,5 @@ export {
   zoneOffsetMinutes
 };
 
-export const WEB_ENGINE_SOURCE_HASH = "0f0ce3aaaa4aa0d8";
+export const WEB_ENGINE_SOURCE_HASH = "5125a0dd064f45d1";
 export const WEB_ENGINE_SOURCE_FILES = 40;

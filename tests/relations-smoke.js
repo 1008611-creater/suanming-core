@@ -9,7 +9,9 @@
  * 另断言纯确定性：同输入两次派生结果完全一致。
  */
 import assert from 'node:assert/strict';
-import { deriveRelations, relationHits, getRuleSet, castBazi, RELATION_GROUPS } from '../src/index.js';
+import {
+  deriveRelations, relationHits, getRuleSet, listRuleSets, castBazi, RELATION_GROUPS
+} from '../src/index.js';
 
 const ruleSet = getRuleSet();
 
@@ -27,7 +29,7 @@ function kindsOf(relations, kind) {
 {
   const r = deriveRelations({ year: '甲子', month: '丙午', day: '丁卯', hour: '辛酉' }, ruleSet);
   const clash = kindsOf(r, 'clash');
-  const ziWu = clash.filter(function (h) { return h.name === '子午'; });
+  const ziWu = clash.filter(function (h) { return h.name === '子午冲'; });
   assert.equal(ziWu.length, 1, '子午必须判为冲');
   assert.deepEqual(ziWu[0].positions, ['year', 'month']);
   assert.deepEqual(ziWu[0].branches, ['子', '午']);
@@ -41,6 +43,7 @@ function kindsOf(relations, kind) {
   const combine = kindsOf(r, 'combine');
   assert.equal(combine.length, 1, '子丑必须判为六合');
   assert.deepEqual(combine[0].positions, ['year', 'month']);
+  assert.equal(combine[0].name, '子丑合土', '六合必须带关系名，不能只给裸地支对');
   assert.equal(combine[0].element, '土', '子丑合土，五行由规则表给出');
   // 同一组地支不得被同时判为冲与合。
   assert.equal(kindsOf(r, 'clash').length, 0);
@@ -111,6 +114,7 @@ function kindsOf(relations, kind) {
   const harm = kindsOf(r, 'harm');
   assert.equal(harm.length, 1, '子未必须判为害');
   assert.deepEqual(harm[0].positions, ['year', 'month']);
+  assert.equal(harm[0].name, '子未害', '六害必须带关系名，不能只给裸地支对');
 }
 
 /* ---------- 6. 空亡 ---------- */
@@ -181,6 +185,37 @@ function kindsOf(relations, kind) {
   RELATION_GROUPS.forEach(function (group) {
     assert.ok(ids.indexOf('relations.' + group) >= 0, '事实图缺少 relations.' + group);
   });
+}
+
+/* ---------- 10. 规则表必须逐项给出关系名（英文枚举与裸地支对都不得外泄） ---------- */
+{
+  const groups = [['branchClashRule', '冲'], ['branchCombineRule', '合'], ['branchHarmRule', '害']];
+  for (const entry of listRuleSets({ system: 'bazi' })) {
+    const rs = getRuleSet(entry.id);
+    for (const [key, suffix] of groups) {
+      const table = rs.tables[key];
+      assert.ok(table, entry.id + ' 缺少 ' + key);
+      for (const pair of table.pairs) {
+        const where = entry.id + ' ' + key + ' ' + pair.branches.join('');
+        assert.equal(typeof pair.name, 'string', where + ' 缺少 name');
+        assert.ok(pair.name.length > 2, where + ' 的 name 过短：' + pair.name);
+        assert.equal(/[A-Za-z]/.test(pair.name), false, where + ' 的 name 含英文：' + pair.name);
+        assert.ok(pair.name.indexOf(suffix) > 0, where + ' 的 name 未标明关系类型：' + pair.name);
+      }
+    }
+    for (const triad of rs.tables.branchPunishmentRule.triads) {
+      assert.equal(typeof triad.name, 'string', entry.id + ' 三刑缺少 name');
+    }
+    for (const mutual of rs.tables.branchPunishmentRule.mutual) {
+      assert.equal(typeof mutual.name, 'string', entry.id + ' 互刑缺少 name');
+    }
+  }
+  // 命中里的 name 一律是中文关系名，不是裸地支对，也不是英文枚举。
+  const r = deriveRelations({ year: '己巳', month: '丙子', day: '丙寅', hour: '甲午' }, ruleSet);
+  for (const hit of r.hits) {
+    assert.equal(/[A-Za-z]/.test(hit.name), false, '命中 name 含英文：' + hit.name);
+    assert.ok(hit.name.length > 2, '命中 name 过短（疑似裸地支对）：' + hit.name);
+  }
 }
 
 console.log('relations smoke passed');

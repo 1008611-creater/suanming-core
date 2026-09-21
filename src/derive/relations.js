@@ -85,8 +85,13 @@ function positionsByBranch(ordered) {
  * 两两成对的关系：六冲、六合、相害、互刑共用这一条枚举路径。
  * 表结构：{ pairs: [{ branches:[a,b], element?, name? }] }
  * 只枚举「不同柱」的六种组合：同一柱的干与支之间不构成地支关系。
+ *
+ * name 是给人看的关系名（「子午冲」「子丑合」「寅巳害」），规则集里必须逐项写明。
+ * 万一规则集漏写 name，这里用「表内两支 + 关系后缀」兜底，绝不退回裸地支对：
+ * 「子午」看不出是冲还是合，用户没法拿它去核对自己的经历，等于把关系名丢了。
+ * 规则集的完整性由 tests/relations-smoke.js 的逐项断言钉住，兜底只是最后一道防线。
  */
-function pairHits(ordered, table, kind) {
+function pairHits(ordered, table, kind, fallbackSuffix) {
   const index = new Map();
   const pairs = Array.isArray(table.pairs) ? table.pairs : [];
   for (const entry of pairs) {
@@ -106,7 +111,7 @@ function pairHits(ordered, table, kind) {
         kind: kind,
         branches: [a, b],
         positions: [left, right],
-        name: entry.name ? entry.name : a + b,
+        name: entry.name ? entry.name : entry.branches[0] + entry.branches[1] + fallbackSuffix,
         element: entry.element ? entry.element : null,
         complete: true
       });
@@ -194,7 +199,7 @@ function punishmentHits(ordered, table) {
     });
   }
   const mutual = Array.isArray(table.mutual) ? table.mutual : [];
-  for (const hit of pairHits(ordered, { pairs: mutual }, 'punishment')) hits.push(hit);
+  for (const hit of pairHits(ordered, { pairs: mutual }, 'punishment', '刑')) hits.push(hit);
   const self = Array.isArray(table.self) ? table.self : [];
   for (const branch of self) {
     const list = positions.get(branch);
@@ -297,11 +302,11 @@ export function deriveRelations(pillars, ruleSet = getRuleSet()) {
     }
     let groupHits = [];
     let extra = null;
-    if (group === 'clash') groupHits = pairHits(ordered, table, 'clash');
-    else if (group === 'combine') groupHits = pairHits(ordered, table, 'combine');
+    if (group === 'clash') groupHits = pairHits(ordered, table, 'clash', '冲');
+    else if (group === 'combine') groupHits = pairHits(ordered, table, 'combine', '合');
     else if (group === 'trine') groupHits = trineHits(ordered, table);
     else if (group === 'punishment') groupHits = punishmentHits(ordered, table);
-    else if (group === 'harm') groupHits = pairHits(ordered, table, 'harm');
+    else if (group === 'harm') groupHits = pairHits(ordered, table, 'harm', '害');
     else if (group === 'void') {
       const result = voidHits(ordered, table, ruleSet);
       if (!result) { skipped.push(group); continue; }

@@ -192,12 +192,12 @@ export default {
       source: ['zi-chu-commentary'],
       confidence: 0.75,
       pairs: [
-        { branches: ['子', '午'] },
-        { branches: ['丑', '未'] },
-        { branches: ['寅', '申'] },
-        { branches: ['卯', '酉'] },
-        { branches: ['辰', '戌'] },
-        { branches: ['巳', '亥'] }
+        { branches: ['子', '午'], name: '子午冲' },
+        { branches: ['丑', '未'], name: '丑未冲' },
+        { branches: ['寅', '申'], name: '寅申冲' },
+        { branches: ['卯', '酉'], name: '卯酉冲' },
+        { branches: ['辰', '戌'], name: '辰戌冲' },
+        { branches: ['巳', '亥'], name: '巳亥冲' }
       ]
     },
     branchCombineRule: {
@@ -207,12 +207,12 @@ export default {
       source: ['zi-chu-commentary'],
       confidence: 0.72,
       pairs: [
-        { branches: ['子', '丑'], element: '土' },
-        { branches: ['寅', '亥'], element: '木' },
-        { branches: ['卯', '戌'], element: '火' },
-        { branches: ['辰', '酉'], element: '金' },
-        { branches: ['巳', '申'], element: '水' },
-        { branches: ['午', '未'], element: '土' }
+        { branches: ['子', '丑'], element: '土', name: '子丑合土' },
+        { branches: ['寅', '亥'], element: '木', name: '寅亥合木' },
+        { branches: ['卯', '戌'], element: '火', name: '卯戌合火' },
+        { branches: ['辰', '酉'], element: '金', name: '辰酉合金' },
+        { branches: ['巳', '申'], element: '水', name: '巳申合水' },
+        { branches: ['午', '未'], element: '土', name: '午未合土' }
       ]
     },
     branchTrineRule: {
@@ -251,12 +251,12 @@ export default {
       source: ['zi-chu-commentary'],
       confidence: 0.65,
       pairs: [
-        { branches: ['子', '未'] },
-        { branches: ['丑', '午'] },
-        { branches: ['寅', '巳'] },
-        { branches: ['卯', '辰'] },
-        { branches: ['申', '亥'] },
-        { branches: ['酉', '戌'] }
+        { branches: ['子', '未'], name: '子未害' },
+        { branches: ['丑', '午'], name: '丑午害' },
+        { branches: ['寅', '巳'], name: '寅巳害' },
+        { branches: ['卯', '辰'], name: '卯辰害' },
+        { branches: ['申', '亥'], name: '申亥害' },
+        { branches: ['酉', '戌'], name: '酉戌害' }
       ]
     },
     xunVoidRule: {
