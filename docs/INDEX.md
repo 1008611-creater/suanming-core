@@ -14,6 +14,7 @@
 | 发布清单与回滚 | `release-checklist.md`、`rollback.md` |
 | 业务与交付 SOP | `business/README.md`、`business/pricing-and-delivery-sop.md`、`business/report-template.md` |
 | 上架与内容文案 | `business/listing-copy.md`、`business/content-library.md`、`business/materials.md` |
+| 本地出报告工具 | `business/report-template.md`、`../tools/report/report.js`、`../scripts/serve-report.mjs` |
 | 业务合规边界 | `business/master-plan.md`（入仓边界）、`npm run security` |
 | 风险与变更等级 | `risk-register.md`、`../AGENTS.md` |
 | 性能与可访问性 | `../CONSTRAINTS.md`、`acceptance.md`、`../scripts/performance-smoke.mjs` |
