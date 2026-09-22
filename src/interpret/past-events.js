@@ -174,6 +174,24 @@ function tierOf(hits) {
   return TIER_MEDIUM;
 }
 
+/**
+ * 程度分档（非宫位条目）：把「结构有多极端」映射到三档。
+ *
+ * 宫位条目的分档看刑冲破害空亡（见 tierOf）；其余条目没有这些命中，
+ * 若一律记「轻」，程度档就变成摆设 —— 80 盘实测里月令生克、十神分布、
+ * 流年反复三条永远是「轻」，用户看到的档位完全不随盘而变。
+ *
+ * 这里按「偏离中性有多远」分三档，阈值都是确定性常量：
+ *   轻 —— 接近中性（生克相生、分布均衡、流年反复刚过门槛）
+ *   中 —— 明显偏向一侧
+ *   重 —— 极端（月令克日主、某一类十神压倒其余、流年同一类反复密集）
+ */
+function tierByDegree(degree) {
+  if (degree >= 2) return TIER_HEAVY;
+  if (degree >= 1) return TIER_MEDIUM;
+  return TIER_LIGHT;
+}
+
 /** 命中清单 → 依据里的一句话描述，例如「子午冲（月柱—时柱）」。 */
 function describeHits(hits) {
   return hits.map(function (h) {
@@ -320,6 +338,9 @@ function monthQiItem(pillars, ruleSet) {
   const dayElement = stems.find(function (s) { return s.name === pillars.day[0]; })?.element ?? null;
   const monthElement = branches.find(function (b) { return b.name === pillars.month[1]; })?.element ?? null;
   const relation = dayMasterMonthRelation(dayElement, monthElement);
+  // 月令克日主是结构性压制，记重；日主克月令是主动消耗，记中；
+  // 同气与相生接近中性，记轻。只描述生克方向，不判强弱吉凶。
+  const qiDegree = relation === '月令克日主' ? 2 : relation === '日主克月令' ? 1 : 0;
   return {
     id: 'month-qi',
     statement: '日主 ' + pillars.day[0] + '（' + (dayElement ?? '—') + '）生于 ' + pillars.month[1]
@@ -332,7 +353,7 @@ function monthQiItem(pillars, ruleSet) {
       relation: null,
       ruleId: tieringRuleId(ruleSet)
     },
-    tier: TIER_LIGHT,
+    tier: tierByDegree(qiDegree),
     uncertainty: uncertaintyFor(ruleSet, '强弱另需按规则集的藏干权重口径单独计算，本条不替代那一步。')
   };
 }
@@ -361,6 +382,10 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
   const present = Object.keys(counts).filter(function (k) { return counts[k] > 0; });
   const absent = Object.keys(counts).filter(function (k) { return counts[k] === 0; });
   const tally = Object.keys(counts).map(function (k) { return k + ' ' + counts[k] + ' 处'; }).join('、');
+  // 七处落点里某一类达到 4 处即过半，记重；达到 3 处记中；其余记轻。
+  // 只看集中程度，不判哪一类吉凶。
+  const peak = Math.max(...Object.keys(counts).map(function (k) { return counts[k]; }));
+  const structureDegree = peak >= 4 ? 2 : peak >= 3 ? 1 : 0;
   return {
     id: 'ten-god-structure',
     statement: '十神分布（按四柱天干与地支本气计）：' + tally + '。'
@@ -374,7 +399,7 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
       relation: null,
       ruleId: tenGodRuleId(ruleSet)
     },
-    tier: TIER_LIGHT,
+    tier: tierByDegree(structureDegree),
     uncertainty: uncertaintyFor(ruleSet, '十神分布受藏干口径影响，换一套规则集的权重会改变计数。')
   };
 }
@@ -437,6 +462,9 @@ function flowRepeatItem(chart, ruleSet, asOfYear) {
   const top = repeated[0];
   const years = top[1].years;
   const names = [...top[1].names].join('、');
+  // 门槛是 3 次（刚算「反复」），记轻；4 次记中；5 次及以上记重。
+  // 只统计出现密度，不判断这些年份的好坏。
+  const flowDegree = years.length >= 5 ? 2 : years.length >= 4 ? 1 : 0;
   return {
     id: 'flow-repeat',
     statement: '从 ' + from + ' 到 ' + asOfYear + ' 的流年里，'
@@ -450,7 +478,7 @@ function flowRepeatItem(chart, ruleSet, asOfYear) {
       relation: null,
       ruleId: tenGodRuleId(ruleSet)
     },
-    tier: TIER_LIGHT,
+    tier: tierByDegree(flowDegree),
     uncertainty: uncertaintyFor(ruleSet, '本条只统计十神出现次数，不判断这些年份的好坏。')
   };
 }

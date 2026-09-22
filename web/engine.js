@@ -2421,7 +2421,7 @@ function hashFacts(graph) {
 }
 
 // src/version.js
-var ENGINE_VERSION = "0.6.1";
+var ENGINE_VERSION = "0.6.2";
 var EPHEMERIS_MODEL = "VSOP87D+IAU1980+Meeus49";
 var SCHEMA_VERSION = "1.0.0";
 function parseVersion(value) {
@@ -3430,6 +3430,11 @@ function tierOf(hits) {
   if (hasVoid && hasBreak) return TIER_HEAVY;
   return TIER_MEDIUM;
 }
+function tierByDegree(degree) {
+  if (degree >= 2) return TIER_HEAVY;
+  if (degree >= 1) return TIER_MEDIUM;
+  return TIER_LIGHT;
+}
 function describeHits(hits) {
   return hits.map(function(h) {
     const where = h.positions.map(function(p) {
@@ -3537,6 +3542,7 @@ function monthQiItem(pillars, ruleSet) {
     return b.name === pillars.month[1];
   })?.element ?? null;
   const relation = dayMasterMonthRelation(dayElement, monthElement);
+  const qiDegree = relation === "\u6708\u4EE4\u514B\u65E5\u4E3B" ? 2 : relation === "\u65E5\u4E3B\u514B\u6708\u4EE4" ? 1 : 0;
   return {
     id: "month-qi",
     statement: "\u65E5\u4E3B " + pillars.day[0] + "\uFF08" + (dayElement ?? "\u2014") + "\uFF09\u751F\u4E8E " + pillars.month[1] + " \u6708\uFF08" + (monthElement ?? "\u2014") + "\uFF09\uFF0C\u6708\u4EE4\u4E0E\u65E5\u4E3B\u4E3A\u300C" + (relation ?? "\u672A\u5224\u5B9A") + "\u300D\u3002\u8FD9\u4E00\u6761\u53EA\u8BF4\u660E\u6708\u4EE4\u5BF9\u65E5\u4E3B\u662F\u751F\u662F\u514B\uFF0C\u4E0D\u76F4\u63A5\u63A8\u51FA\u5F3A\u5F31\u7ED3\u8BBA\uFF1B\u6309\u9879\u76EE\u4FEE\u6B63\u89C4\u5219 R-01\uFF0C\u661F\u66DC\u4E0D\u900F\u5E72\u4E0D\u7B49\u4E8E\u529B\u91CF\u5F31\uFF0C\u987B\u5148\u770B\u5730\u652F\u6839\u6C14\u3002",
@@ -3546,7 +3552,7 @@ function monthQiItem(pillars, ruleSet) {
       relation: null,
       ruleId: tieringRuleId(ruleSet)
     },
-    tier: TIER_LIGHT,
+    tier: tierByDegree(qiDegree),
     uncertainty: uncertaintyFor(ruleSet, "\u5F3A\u5F31\u53E6\u9700\u6309\u89C4\u5219\u96C6\u7684\u85CF\u5E72\u6743\u91CD\u53E3\u5F84\u5355\u72EC\u8BA1\u7B97\uFF0C\u672C\u6761\u4E0D\u66FF\u4EE3\u90A3\u4E00\u6B65\u3002")
   };
 }
@@ -3581,6 +3587,10 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
   const tally = Object.keys(counts).map(function(k) {
     return k + " " + counts[k] + " \u5904";
   }).join("\u3001");
+  const peak = Math.max(...Object.keys(counts).map(function(k) {
+    return counts[k];
+  }));
+  const structureDegree = peak >= 4 ? 2 : peak >= 3 ? 1 : 0;
   return {
     id: "ten-god-structure",
     statement: "\u5341\u795E\u5206\u5E03\uFF08\u6309\u56DB\u67F1\u5929\u5E72\u4E0E\u5730\u652F\u672C\u6C14\u8BA1\uFF09\uFF1A" + tally + "\u3002\u5176\u4E2D" + (present.length ? present.join("\u3001") + " \u6709\u89C1" : "\u65E0\u4EFB\u4F55\u7C7B\u522B\u6709\u89C1") + (absent.length ? "\uFF0C" + absent.join("\u3001") + " \u672A\u89C1" : "") + "\u3002\u672A\u89C1\u67D0\u4E00\u7C7B\u4E0D\u7B49\u4E8E\u4EBA\u751F\u91CC\u6CA1\u6709\u5BF9\u5E94\u7684\u4E8B\uFF0C\u53EA\u8868\u793A\u8FD9\u4E00\u5C42\u7ED3\u6784\u4E0A\u6CA1\u6709\u76F4\u63A5\u843D\u70B9\uFF1B\u8BF7\u5BF9\u7167\u4F60\u5B9E\u9645\u7684\u6536\u5165\u65B9\u5F0F\u3001\u804C\u4E1A\u7EA6\u675F\u4E0E\u5B66\u4E60\u7ECF\u5386\u6765\u6838\u5BF9\u3002",
@@ -3590,7 +3600,7 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
       relation: null,
       ruleId: tenGodRuleId(ruleSet)
     },
-    tier: TIER_LIGHT,
+    tier: tierByDegree(structureDegree),
     uncertainty: uncertaintyFor(ruleSet, "\u5341\u795E\u5206\u5E03\u53D7\u85CF\u5E72\u53E3\u5F84\u5F71\u54CD\uFF0C\u6362\u4E00\u5957\u89C4\u5219\u96C6\u7684\u6743\u91CD\u4F1A\u6539\u53D8\u8BA1\u6570\u3002")
   };
 }
@@ -3640,6 +3650,7 @@ function flowRepeatItem(chart, ruleSet, asOfYear) {
   const top = repeated[0];
   const years = top[1].years;
   const names = [...top[1].names].join("\u3001");
+  const flowDegree = years.length >= 5 ? 2 : years.length >= 4 ? 1 : 0;
   return {
     id: "flow-repeat",
     statement: "\u4ECE " + from + " \u5230 " + asOfYear + " \u7684\u6D41\u5E74\u91CC\uFF0C" + top[0] + "\u7C7B\uFF08" + names + "\uFF09\u53CD\u590D\u51FA\u73B0 " + years.length + " \u6B21\uFF08" + years.join("\u3001") + "\uFF09\u3002\u540C\u4E00\u7C7B\u5341\u795E\u53CD\u590D\u51FA\u73B0\uFF0C\u901A\u5E38\u5BF9\u5E94\u540C\u4E00\u7C7B\u4E8B\u88AB\u53CD\u590D\u63A8\u5230\u53F0\u9762\u4E0A\u3002\u8BF7\u56DE\u60F3\u8FD9\u51E0\u5E74\u91CC\u662F\u5426\u771F\u6709\u4E00\u4EF6\u540C\u7C7B\u578B\u7684\u4E8B\u4E00\u518D\u53D1\u751F\uFF1B\u82E5\u540C\u7C7B\u5E74\u4EFD\u4F60\u7684\u611F\u53D7\u5B8C\u5168\u76F8\u53CD\uFF0C\u901A\u5E38\u8981\u5148\u6000\u7591\u51FA\u751F\u65F6\u8FB0\u3002",
@@ -3649,7 +3660,7 @@ function flowRepeatItem(chart, ruleSet, asOfYear) {
       relation: null,
       ruleId: tenGodRuleId(ruleSet)
     },
-    tier: TIER_LIGHT,
+    tier: tierByDegree(flowDegree),
     uncertainty: uncertaintyFor(ruleSet, "\u672C\u6761\u53EA\u7EDF\u8BA1\u5341\u795E\u51FA\u73B0\u6B21\u6570\uFF0C\u4E0D\u5224\u65AD\u8FD9\u4E9B\u5E74\u4EFD\u7684\u597D\u574F\u3002")
   };
 }
@@ -4872,5 +4883,5 @@ export {
   zoneOffsetMinutes
 };
 
-export const WEB_ENGINE_SOURCE_HASH = "5125a0dd064f45d1";
+export const WEB_ENGINE_SOURCE_HASH = "40b9c12e2d4ad15e";
 export const WEB_ENGINE_SOURCE_FILES = 40;

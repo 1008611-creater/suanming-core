@@ -141,5 +141,28 @@ function check(items, label) {
     '缺少 relations 时必须报错，而不是静默给出无依据的清单');
 }
 
+/* ---------- 7. 程度档必须随结构变化，不能写死同一档 ----------
+ * 0.6.1 之前月令生克、十神分布、流年反复三条被写死为「轻」，80 盘实测档位完全不动。
+ * 这里用极端盘钉住分档：月令克日主记重、日主克月令记中、相生记轻；
+ * 十神某一类占七处落点 4 处记重；流年同一类反复 4 次记中。
+ */
+{
+  function tier(input, id, year) {
+    const items = pastEvents(castBazi(input), { ruleSet, asOfYear: year });
+    const item = items.find(function (i) { return i.id === id; });
+    assert.ok(item, id + ' 缺失：' + JSON.stringify(input));
+    return item.tier;
+  }
+  const base = { day: 6, hour: 12, minute: 0, longitude: 118.18, gender: 'male' };
+  // 月令生克：戊土生卯月，月令克日主 → 重；丁火生申月，日主克月令 → 中；癸水生子月，同气 → 轻。
+  assert.equal(tier(Object.assign({ year: 1961, month: 3 }, base), 'month-qi', 2026), '重', '月令克日主应记重');
+  assert.equal(tier(Object.assign({ year: 1960, month: 9 }, base), 'month-qi', 2026), '中', '日主克月令应记中');
+  assert.equal(tier(Object.assign({ year: 1960, month: 1 }, base), 'month-qi', 2026), '轻', '同气比助应记轻');
+  // 十神分布：七处落点里某一类达到 4 处 → 重。
+  assert.equal(tier(Object.assign({ year: 1961, month: 1 }, base), 'ten-god-structure', 2026), '重', '十神某一类占 4 处应记重');
+  // 流年反复：同一类出现 4 次 → 中（3 次是门槛，记轻）。
+  assert.equal(tier(Object.assign({ year: 1960, month: 1 }, base), 'flow-repeat', 2026), '中', '流年同一类反复 4 次应记中');
+}
+
 console.log('[past-events] ok  条数 ' + pastEvents(chart, { ruleSet, asOfYear: 2026 }).length
   + '  区间 ' + PAST_EVENT_BOUNDS.min + '–' + PAST_EVENT_BOUNDS.max);
