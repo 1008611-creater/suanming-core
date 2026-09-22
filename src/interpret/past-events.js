@@ -28,7 +28,7 @@ const PALACE_NAMES = Object.freeze({
   hour: '子女宫'
 });
 
-/** 造成结构性冲击的关系类型（R-01 的适用范围）：刑、冲、害、空亡。 */
+/** 造成结构性冲击的关系类型：刑、冲、害、空亡。 */
 const STRUCTURAL_KINDS = ['clash', 'punishment', 'self-punishment', 'harm', 'void'];
 
 /** 关系类型 → 关系分组，用于反查该组在规则集里的 ruleId。 */
@@ -161,7 +161,7 @@ function structuralHits(relations, position) {
 }
 
 /**
- * 程度分档（R-01）：
+ * 程度分档（宫位条目）：
  *   空亡之宫再逢刑或冲 → 重（宫位被击穿）
  *   见刑／冲／害／空亡任一 → 中（结构性，不按摩擦性读）
  *   无冲击 → 轻
@@ -243,19 +243,8 @@ function palaceItem(position, relations, ruleSet, wording) {
   const hits = structuralHits(relations, position);
   const tier = tierOf(hits);
   const split = splitByOwnership(hits, position);
-  const detail = hits.length
-    ? (split.owned.length
-      ? describeHits(split.owned)
-      : '本宫未见独立命中的刑、冲、害、空亡')
-      + (split.shared.length
-        ? (split.owned.length ? '；另与别宫共见 ' : '，仅与别宫共见 ') + describeHits(split.shared)
-        : '')
-    : '无刑、冲、害、空亡';
-  const tail = tier === TIER_HEAVY
-    ? '按项目修正规则 R-01，空亡之宫再逢刑冲视为宫位被击穿，记最重一档；请按结构性变化核对，不要按一时摩擦理解。'
-    : tier === TIER_MEDIUM
-      ? '按项目修正规则 R-01，这一宫见刑、冲、害、空亡任一即按结构性处理，记中档，不按摩擦性读。'
-      : '这一宫未见刑、冲、害、空亡，记轻档；仍请以你自己的实际经历为准。';
+  const detail = describePalaceHits(split);
+  const tail = palaceTail(position, tier, split);
   return {
     id: position + '-palace',
     statement: wording + '：' + detail + '。' + tail,
@@ -272,6 +261,49 @@ function palaceItem(position, relations, ruleSet, wording) {
   };
 }
 
+/**
+ * 宫位命中 → 人话。
+ *
+ * 跨柱关系只在归属宫完整展开，别的宫写作「共见」。共见不是「没有这回事」，
+ * 而是这宫本身没有独立的刑冲害空亡，但和别的宫之间有一处，影响会传过来。
+ * 以前写成「未见……记中档」，用户读起来像自相矛盾。
+ */
+function describePalaceHits(split) {
+  if (!split.owned.length && !split.shared.length) return '无刑、冲、害、空亡';
+  if (split.owned.length && split.shared.length) {
+    return describeHits(split.owned) + '；另与别宫共见 ' + describeHits(split.shared);
+  }
+  if (split.owned.length) return describeHits(split.owned);
+  return '本宫本身没有独立的刑、冲、害、空亡，但与别宫共见 ' + describeHits(split.shared)
+    + '，影响会从那一宫传过来';
+}
+
+/**
+ * 宫位判词的后半句：告诉用户该回想哪一类事，不念规则编号，也不重复程度档。
+ * 程度档由条目的 tier 字段单独展示。
+ */
+function palaceTail(position, tier, split) {
+  const topic = position === 'month'
+    ? '父母、长辈，以及你从小长大的那个家'
+    : position === 'hour'
+      ? '子女、晚辈、下属，以及你自己做出来的成果和投出去的钱'
+      : '这一宫对应的人与事';
+  if (tier === TIER_HEAVY) {
+    return '这一宫既逢空亡又逢刑冲，变动往往不是吵一架就过去的。'
+      + '请回想' + topic + '，有没有一次搬家、分开、换人接手，或职责被整个换掉。';
+  }
+  if (!split.owned.length && split.shared.length) {
+    return '请顺着这处共见的关系，回想' + topic + '是否跟着另一宫一起动过，'
+      + '而不是只在这一宫里找一件独立的事。';
+  }
+  if (tier === TIER_MEDIUM) {
+    return '请回想' + topic + '，有没有一次说得清年份的变动：分开、搬家、换人，或职责换手。'
+      + '一时拌嘴、过两天就和好的，不算这一条。';
+  }
+  return '这一宫没有刑、冲、害、空亡。请回想' + topic
+    + '是否大体按原来的方式延续，没有一次被整个换掉。没有冲击，也不等于这段关系顺利。';
+}
+
 /** 夫妻宫（日支）条目：除了刑冲破害空亡，也把六合／三合／半合作为结构一并列出。 */
 function spousePalaceItem(relations, ruleSet) {
   const hits = structuralHits(relations, 'day');
@@ -280,23 +312,12 @@ function spousePalaceItem(relations, ruleSet) {
   const split = splitByOwnership(hits, 'day');
   const bondSplit = splitByOwnership(bonds, 'day');
   const parts = [];
-  parts.push(hits.length
-    ? (split.owned.length ? describeHits(split.owned) : '本宫未见独立命中的刑、冲、害、空亡')
-      + (split.shared.length
-        ? (split.owned.length ? '；另与别宫共见 ' : '，仅与别宫共见 ') + describeHits(split.shared)
-        : '')
-    : '无刑、冲、害、空亡');
+  parts.push(describePalaceHits(split));
   if (bonds.length) {
     parts.push('另有 ' + (bondSplit.owned.length ? describeHits(bondSplit.owned) : '无独立命中')
       + (bondSplit.shared.length ? '，与别宫共见 ' + describeHits(bondSplit.shared) : ''));
   }
-  const tail = tier === TIER_HEAVY
-    ? '按 R-01，空亡再逢刑冲记最重一档，请按结构性变化核对。'
-    : tier === TIER_MEDIUM
-      ? '按 R-01，夫妻宫见刑、冲、害、空亡任一按结构性处理，记中档。'
-      : bonds.length
-        ? '未见冲击而见合，结构上以联结为主，记轻档。'
-        : '未见冲击，记轻档。';
+  const tail = spouseTail(tier, split, bonds);
   return {
     id: 'spouse-palace',
     statement: '夫妻宫（日支 ' + relations.dayPillar[1] + '）：' + parts.join('；') + '。' + tail,
@@ -311,15 +332,53 @@ function spousePalaceItem(relations, ruleSet) {
   };
 }
 
+/** 夫妻宫核对方向：婚姻、长期伴侣、一起做事的合作关系。 */
+function spouseTail(tier, split, bonds) {
+  const topic = '婚姻、长期伴侣，或一起做事、一起担责任的合作关系';
+  if (tier === TIER_HEAVY) {
+    return '这一宫既逢空亡又逢刑冲。请回想' + topic + '里，有没有一次分开、名分变化，或合作被整个拆掉。';
+  }
+  if (!split.owned.length && split.shared.length) {
+    return '请顺着这处共见的关系，回想' + topic + '是否跟着另一宫一起动过。';
+  }
+  if (tier === TIER_MEDIUM) {
+    return '请回想' + topic + '里，有没有一次说得清时间的分开、冷淡变长期，或合作换人。'
+      + '吵完就和好的，不算这一条。';
+  }
+  if (bonds.length) {
+    return '这一宫没有刑、冲、害、空亡，看到的是合。请回想' + topic
+      + '是否更像长期绑在一起，而不是一次被拆开。合在一起，也不等于这段关系顺利。';
+  }
+  return '这一宫没有刑、冲、害、空亡。请回想' + topic + '是否大体按原来的方式延续。没有冲击，也不等于顺利。';
+}
+
+/**
+ * 十神类别 → 你可以核对的事。
+ * 只给方向，不判吉凶，不指认具体的人和年份。
+ */
+const CATEGORY_TOPICS = Object.freeze({
+  财: '钱从哪来、收入是否稳定、你靠什么吃饭',
+  官: '职位、考核、上司与规矩、你被别人管到什么程度',
+  印: '学习、证件、长辈照应，以及有没有人在背后托你',
+  食伤: '你做出来的东西、说出去的话、手艺和表达有没有人接',
+  比劫: '同辈、同事、兄弟姐妹之间的比较，以及钱或机会被分走'
+});
+
+function categoryTopic(category) {
+  return CATEGORY_TOPICS[category] ?? '这一类对应的事';
+}
+
 /** 父母宫天干十神：月干相对日干。 */
 function monthTenGodItem(pillars, ruleSet) {
   const dayStem = pillars.day[0];
   const name = tenGod(dayStem, pillars.month[0], ruleSet);
+  const category = tenGodCategory(name);
   return {
     id: 'month-ten-god',
-    statement: '父母宫（月柱 ' + pillars.month + '）天干为 ' + name + '，'
-      + '即以日主 ' + dayStem + ' 论月干的十神关系。十神只描述这一宫的着力方向，'
-      + '不单独判吉凶；请与父母宫地支结构一条合看。',
+    statement: '父母宫（月柱 ' + pillars.month + '）天干是 ' + name + '，落在' + (category ?? '十神') + '这一类。'
+      + '请回想父母和长辈，是不是更多从「' + categoryTopic(category) + '」这件事上影响你：'
+      + '帮你、压你，或让你不得不跟着做。这一条只看方向，不判断这段关系好不好；'
+      + '地支那一条看的是有没有一次被换掉，两条合在一起读。',
     basis: {
       palace: PALACE_NAMES.month,
       tenGod: name,
@@ -341,12 +400,23 @@ function monthQiItem(pillars, ruleSet) {
   // 月令克日主是结构性压制，记重；日主克月令是主动消耗，记中；
   // 同气与相生接近中性，记轻。只描述生克方向，不判强弱吉凶。
   const qiDegree = relation === '月令克日主' ? 2 : relation === '日主克月令' ? 1 : 0;
+  const qiTail = relation === '月令克日主'
+    ? '请回想：是不是常常先被环境压住，得扛过一段，事情才开始按你的方式走。'
+    : relation === '日主克月令'
+      ? '请回想：是不是常常得自己先动手把局面撑开，环境不会自动让出位置。'
+      : relation === '月令生日主'
+        ? '请回想：成长环境里，是不是常有现成的条件或人在托你，你不用从零开始争。'
+        : relation === '日主生月令'
+          ? '请回想：是不是常常先把自己的时间、钱或精力交出去，事情才转得动。'
+          : relation === '同气比助'
+            ? '请回想：身边是不是常有和你站在同一边的人，事情靠互相帮衬往前走。'
+            : '这一条的生克方向未能判定，请不要用它核对具体经历。';
   return {
     id: 'month-qi',
     statement: '日主 ' + pillars.day[0] + '（' + (dayElement ?? '—') + '）生于 ' + pillars.month[1]
       + ' 月（' + (monthElement ?? '—') + '），月令与日主为「' + (relation ?? '未判定') + '」。'
-      + '这一条只说明月令对日主是生是克，不直接推出强弱结论；'
-      + '按项目修正规则 R-01，星曜不透干不等于力量弱，须先看地支根气。',
+      + qiTail
+      + '这一条只说明你和成长环境谁在推、谁在压，不判断你强还是弱。',
     basis: {
       palace: PALACE_NAMES.month,
       tenGod: null,
@@ -386,13 +456,17 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
   // 只看集中程度，不判哪一类吉凶。
   const peak = Math.max(...Object.keys(counts).map(function (k) { return counts[k]; }));
   const structureDegree = peak >= 4 ? 2 : peak >= 3 ? 1 : 0;
+  const leaders = Object.keys(counts).filter(function (k) { return counts[k] === peak && peak > 0; });
+  const focus = leaders.length
+    ? '核对时先看最密的一类：' + leaders.map(function (k) { return k + '（' + categoryTopic(k) + '）'; }).join('、') + '。'
+    : '五类都没有落点，这一条先不要用来核对具体经历。';
   return {
     id: 'ten-god-structure',
     statement: '十神分布（按四柱天干与地支本气计）：' + tally + '。'
-      + '其中' + (present.length ? present.join('、') + ' 有见' : '无任何类别有见')
-      + (absent.length ? '，' + absent.join('、') + ' 未见' : '') + '。'
-      + '未见某一类不等于人生里没有对应的事，只表示这一层结构上没有直接落点；'
-      + '请对照你实际的收入方式、职业约束与学习经历来核对。',
+      + focus
+      + (absent.length
+        ? '盘面上没直接落到' + absent.join('、') + '，核对时别拿缺的这一类当主线；不是说你人生里没有这些事。'
+        : '五类都有落点。'),
     basis: {
       palace: null,
       tenGod: present.join('、') || null,
@@ -417,7 +491,7 @@ function luckStartItem(chart, ruleSet) {
     statement: '大运' + direction + '，起运 ' + startAge.toFixed(2) + ' 岁，'
       + '约在 ' + startYear + ' 年前后交入第一步大运 ' + first + '。'
       + '传统上交运前后一两年常有环境变动（升学、离家、换城市、换行业）。'
-      + '请回想那个年份前后，你的生活节奏是否真的换过一次轨。',
+      + '请回想 ' + startYear + ' 年前后一两年：有没有一次升学、离家、换城市或换行业，生活节奏整个换过一轨。',
     basis: {
       palace: null,
       tenGod: null,
@@ -467,11 +541,10 @@ function flowRepeatItem(chart, ruleSet, asOfYear) {
   const flowDegree = years.length >= 5 ? 2 : years.length >= 4 ? 1 : 0;
   return {
     id: 'flow-repeat',
-    statement: '从 ' + from + ' 到 ' + asOfYear + ' 的流年里，'
-      + top[0] + '类（' + names + '）反复出现 ' + years.length + ' 次（' + years.join('、') + '）。'
-      + '同一类十神反复出现，通常对应同一类事被反复推到台面上。'
-      + '请回想这几年里是否真有一件同类型的事一再发生；'
-      + '若同类年份你的感受完全相反，通常要先怀疑出生时辰。',
+    statement: '从 ' + from + ' 到 ' + asOfYear + '，'
+      + top[0] + '这一类反复出现 ' + years.length + ' 次，年份是 ' + years.join('、') + '（对应 ' + names + '）。'
+      + '请逐个年份回想「' + categoryTopic(top[0]) + '」：是不是同一类事在这些年份里又被推到你面前。'
+      + '如果这些年份你想起的完全是另一类事，先回去核对出生时辰。',
     basis: {
       palace: null,
       tenGod: names,
