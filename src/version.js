@@ -6,7 +6,7 @@
  * 让每个规则集能声明「我是为哪个引擎版本写的」，并在审计时被强制执行。
  */
 
-export const ENGINE_VERSION = '0.6.3';
+export const ENGINE_VERSION = '0.6.4';
 export const EPHEMERIS_MODEL = 'VSOP87D+IAU1980+Meeus49';
 export const SCHEMA_VERSION = '1.0.0';
 

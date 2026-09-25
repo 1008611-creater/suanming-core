@@ -2421,7 +2421,7 @@ function hashFacts(graph) {
 }
 
 // src/version.js
-var ENGINE_VERSION = "0.6.3";
+var ENGINE_VERSION = "0.6.4";
 var EPHEMERIS_MODEL = "VSOP87D+IAU1980+Meeus49";
 var SCHEMA_VERSION = "1.0.0";
 function parseVersion(value) {
@@ -3450,8 +3450,7 @@ function hitRuleId(relations, hits, ruleSet) {
   return entry && entry.ruleId ? entry.ruleId : tieringRuleId(ruleSet);
 }
 function uncertaintyFor(ruleSet, extra) {
-  const base = "\u672C\u6761\u53EA\u5224\u65AD\u65B9\u5411\u4E0E\u7A0B\u5EA6\u533A\u95F4\uFF0C\u4E0D\u6307\u8BA4\u5177\u4F53\u4E8B\u4EF6\u3001\u4E0D\u6307\u8BA4\u53D1\u751F\u65F6\u95F4\uFF1B\u82E5\u4E0E\u4F60\u7684\u5B9E\u9645\u7ECF\u5386\u4E0D\u7B26\uFF0C\u4F18\u5148\u590D\u6838\u51FA\u751F\u65F6\u8FB0\uFF08\u5C24\u5176\u9760\u8FD1\u65F6\u8FB0\u4EA4\u754C\uFF09\u4E0E\u51FA\u751F\u5730\u7ECF\u5EA6\u3002";
-  return extra ? base + extra : base;
+  return extra;
 }
 function tenGodCategory(name) {
   if (name === "\u6B63\u8D22" || name === "\u504F\u8D22") return "\u8D22";
@@ -3662,13 +3661,15 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
 function luckStartItem(chart, ruleSet) {
   const luck = chart.luck;
   if (!luck) return null;
-  const startAge = luck.startAgeYears;
-  const startYear = Number(chart.input.year) + Math.floor(startAge);
+  const age = luck.startAgeYears;
+  const wholeAge = Math.floor(age);
+  const startYear = Number(chart.input.year) + wholeAge;
   const first = luck.pillars[0];
   const direction = luck.direction === 1 ? "\u987A\u884C" : "\u9006\u884C";
+  const ask = wholeAge <= 6 ? "\u5BB6\u91CC\u6709\u6CA1\u6709\u642C\u5BB6\uFF0C\u6216\u6362\u8FC7\u7167\u770B\u4F60\u7684\u4EBA" : wholeAge <= 12 ? "\u6709\u6CA1\u6709\u8F6C\u5B66\u3001\u642C\u5BB6\uFF0C\u6216\u5BB6\u91CC\u8C01\u5F00\u59CB\u957F\u5E74\u4E0D\u5728\u8EAB\u8FB9" : wholeAge <= 18 ? "\u6709\u6CA1\u6709\u8F6C\u5B66\u3001\u4F4F\u6821\u3001\u79BB\u5BB6\uFF0C\u6216\u5BB6\u91CC\u7684\u751F\u6D3B\u8282\u594F\u6574\u4E2A\u6362\u8FC7" : "\u6709\u6CA1\u6709\u5347\u5B66\u3001\u79BB\u5BB6\u3001\u6362\u57CE\u5E02\u6216\u6362\u4E00\u4EFD\u7EF4\u6301\u751F\u6D3B\u7684\u4E8B";
   return {
     id: "luck-start",
-    statement: "\u5927\u8FD0" + direction + "\uFF0C\u8D77\u8FD0 " + startAge.toFixed(2) + " \u5C81\uFF0C\u7EA6\u5728 " + startYear + " \u5E74\u524D\u540E\u4EA4\u5165\u7B2C\u4E00\u6B65\u5927\u8FD0 " + first + "\u3002\u4F20\u7EDF\u4E0A\u4EA4\u8FD0\u524D\u540E\u4E00\u4E24\u5E74\u5E38\u6709\u73AF\u5883\u53D8\u52A8\uFF08\u5347\u5B66\u3001\u79BB\u5BB6\u3001\u6362\u57CE\u5E02\u3001\u6362\u884C\u4E1A\uFF09\u3002\u8BF7\u56DE\u60F3 " + startYear + " \u5E74\u524D\u540E\u4E00\u4E24\u5E74\uFF1A\u6709\u6CA1\u6709\u4E00\u6B21\u5347\u5B66\u3001\u79BB\u5BB6\u3001\u6362\u57CE\u5E02\u6216\u6362\u884C\u4E1A\uFF0C\u751F\u6D3B\u8282\u594F\u6574\u4E2A\u6362\u8FC7\u4E00\u8F68\u3002",
+    statement: "\u5927\u8FD0" + direction + "\uFF0C\u8D77\u8FD0 " + age.toFixed(2) + " \u5C81\uFF0C\u7EA6\u5728 " + startYear + " \u5E74\u524D\u540E\u4EA4\u5165\u7B2C\u4E00\u6B65\u5927\u8FD0 " + first + "\u3002\u90A3\u4E00\u5E74\u4F60\u5927\u7EA6 " + wholeAge + " \u5C81\u3002\u8BF7\u56DE\u60F3\u524D\u540E\u4E00\u4E24\u5E74\uFF1A" + ask + "\u3002",
     basis: {
       palace: null,
       tenGod: null,
@@ -4938,5 +4939,5 @@ export {
   zoneOffsetMinutes
 };
 
-export const WEB_ENGINE_SOURCE_HASH = "41d9a0ae8fad8688";
+export const WEB_ENGINE_SOURCE_HASH = "1017c93cfd42598c";
 export const WEB_ENGINE_SOURCE_FILES = 40;

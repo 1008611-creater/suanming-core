@@ -209,9 +209,7 @@ function hitRuleId(relations, hits, ruleSet) {
 }
 
 function uncertaintyFor(ruleSet, extra) {
-  const base = '本条只判断方向与程度区间，不指认具体事件、不指认发生时间；'
-    + '若与你的实际经历不符，优先复核出生时辰（尤其靠近时辰交界）与出生地经度。';
-  return extra ? base + extra : base;
+  return extra;
 }
 
 /** 十神 → 财官印食四类；比劫与食伤分列，未归类返回 null。 */
@@ -482,16 +480,23 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
 function luckStartItem(chart, ruleSet) {
   const luck = chart.luck;
   if (!luck) return null;
-  const startAge = luck.startAgeYears;
-  const startYear = Number(chart.input.year) + Math.floor(startAge);
+  const age = luck.startAgeYears;
+  const wholeAge = Math.floor(age);
+  const startYear = Number(chart.input.year) + wholeAge;
   const first = luck.pillars[0];
   const direction = luck.direction === 1 ? '顺行' : '逆行';
+  const ask = wholeAge <= 6
+    ? '家里有没有搬家，或换过照看你的人'
+    : wholeAge <= 12
+      ? '有没有转学、搬家，或家里谁开始长年不在身边'
+      : wholeAge <= 18
+        ? '有没有转学、住校、离家，或家里的生活节奏整个换过'
+        : '有没有升学、离家、换城市或换一份维持生活的事';
   return {
     id: 'luck-start',
-    statement: '大运' + direction + '，起运 ' + startAge.toFixed(2) + ' 岁，'
+    statement: '大运' + direction + '，起运 ' + age.toFixed(2) + ' 岁，'
       + '约在 ' + startYear + ' 年前后交入第一步大运 ' + first + '。'
-      + '传统上交运前后一两年常有环境变动（升学、离家、换城市、换行业）。'
-      + '请回想 ' + startYear + ' 年前后一两年：有没有一次升学、离家、换城市或换行业，生活节奏整个换过一轨。',
+      + '那一年你大约 ' + wholeAge + ' 岁。请回想前后一两年：' + ask + '。',
     basis: {
       palace: null,
       tenGod: null,
