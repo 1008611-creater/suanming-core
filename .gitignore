@@ -31,3 +31,7 @@ report-output/
 # 公开的业务文档（模板、文案、SOP）放在 docs/business/，不受此条影响。
 business/private/
 docs/business/private/
+
+# 临时补丁文件（2026-10-06 归档）
+*.tmp
+_patch.tmp

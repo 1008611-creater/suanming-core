@@ -153,19 +153,27 @@ const rel = deriveRelations(chart.pillars, getRuleSet());
 import { pastEvents, PAST_EVENT_BOUNDS } from 'suanming-core';
 
 const items = pastEvents(chart, { ruleSet, asOfYear: 2026 });
-// items: [{ id, statement, basis: { palace, tenGod, relation, ruleId }, tier, uncertainty }]
+// items: [{ id, statement, question, counts, doesNotCount,
+//           basis: { palace, tenGod, relation, ruleId }, tier, uncertainty }]
 // items.skipped  — 因规则集缺条目而整体跳过的清单项（非枚举）
 // items.ruleSet  — 本次使用的规则集 id（非枚举）
+// items.omitted  — 本次未出现的固定问题及原因（非枚举）
 ```
 
-- 输出 5–8 条（`PAST_EVENT_BOUNDS` 为 `{ min: 5, max: 8 }`），只读 `castBazi` 的输出，
+- 条数是固定合同：不给 `asOfYear` 出 6 问，给了出 7 问
+  （`PAST_EVENT_BOUNDS` 为 `{ min: 6, max: 7 }`）。多出的一问是「重复年份」，
+  其余 6 问逐字一致，用户两次核对才有可比性。只读 `castBazi` 的输出，
   不碰历法、不排盘、不读当前时间。
+- 每一问自带三段文案：`question`（问题）、`counts`（什么算像）、
+  `doesNotCount`（什么不算）。页面只负责渲染与打标，不再自己编判据。
+- 第 7 问未出现时（没给 `asOfYear`，或给的年份早于出生年、不到反复门槛），
+  `items.omitted` 里写明省略的是哪一问及原因。
 - `tier` 只有「轻 / 中 / 重」三档。宫位条目按项目修正规则 R-01 分档
   （空亡再逢刑冲记重，见刑／冲／害／空亡任一记中，无冲击记轻）；
   其余条目按结构偏离中性的程度分档：月令克日主记重、日主克月令记中，
   十神某一类占七处落点的 4 处及以上记重、3 处记中，
   流年同一类反复 5 次及以上记重、4 次记中。只描述结构，不判吉凶。
-- `asOfYear` 必须由调用方显式传入；缺省时省略流年类条目 —— 不用「现在」当默认值，
+- `asOfYear` 必须由调用方显式传入；缺省时省略「重复年份」那一问 —— 不用「现在」当默认值，
   否则同一份盘在不同日子会得出不同清单。
 - 每条 `basis.ruleId` 都能在传入的规则集里解析出来；解析不到的条目不输出，记入 `skipped`。
 - `basis.relation` 只出现中文关系名（`子午冲`、`丑午害` …），英文枚举不上展示层。

@@ -30,13 +30,19 @@ import { API } from './engine-adapter.js';
     if (raw === '') return { error: '请填写出生地经度（东经度数）。' };
     if (!isFinite(lng)) return { error: '经度需为数字，当前填的是「' + raw + '」。' };
     if (lng < 0 || lng > 180) return { error: '经度需在 0–180 之间（中国境内约 73–135），当前填的是 ' + lng + '。' };
-    return {
+    var result = {
       name: '自检', gender: $('gender').value,
       year: +dp[0], month: +dp[1], day: +dp[2],
       hour: +tp[0], minute: +tp[1], lng: lng,
-      useTrueSolar: $('ts').value === '1',
-      asOfYear: new Date().getFullYear()
+      useTrueSolar: $('ts').value === '1'
     };
+    var yearRaw = $('asof') ? String($('asof').value).trim() : '';
+    if (yearRaw !== '') {
+      var asOfYear = Number(yearRaw);
+      if (!Number.isInteger(asOfYear)) return { error: '核对年份需为整数，例如 2020。留空则不做重复年份这一问。' };
+      result.asOfYear = asOfYear;
+    }
+    return result;
   }
 
   /* ---------- 自检条目：只用确定性结构，不含任何吉凶判断 ---------- */
@@ -182,16 +188,20 @@ import { API } from './engine-adapter.js';
     var c2b = el('div', 'card');
     c2b.appendChild(el('h2', null, '前事验证（先对已经发生的事）'));
     c2b.appendChild(el('div', 'hint',
-      '下面是这份盘结构上指得出来的几条前事方向，每条都写明推导依据与程度档（轻 / 中 / 重）。' +
-      '请按你的真实经历逐条点一下：像、不像、或不确定。判断权在你手里，页面只统计条数。' +
-      '每条只给方向，不指认具体的人和日子。对不上时，先回头核对出生时辰和出生地，尤其是时辰靠近交界的。'));
+      '下面是固定问题。每条先看问题，再看什么算像、什么不算。程度仍是轻 / 中 / 重，不换算成分数。' +
+      '请按你的真实经历点：像、不像、或不确定。页面只统计条数。' +
+      '依据默认收起。对不上时，先回头核对出生时辰和出生地。'));
     var pe = p.pastEvents || [];
+    var omitted = pe.omitted || [];
     if (!pe.length) {
       c2b.appendChild(el('div', 'note', '当前规则集未登记前事解释层条目，本区块不出清单。'));
     } else {
+      if (omitted.length) {
+        c2b.appendChild(el('div', 'note', esc(omitted.map(function (item) { return item.notice; }).join(' '))));
+      }
       var pelist = el('div', 'cklist');
       var peMarks = {};
-      pe.forEach(function (item, i) {
+      pe.forEach(function (item) {
         var row = el('div', 'ckrow');
         row.setAttribute('data-pe', item.id);
         var basis = [];
@@ -200,9 +210,12 @@ import { API } from './engine-adapter.js';
         if (item.basis.relation) basis.push('关系 ' + item.basis.relation);
         basis.push('依据 ' + item.basis.ruleId);
         row.innerHTML =
-          '<div class=q>' + esc(item.statement) + '</div>' +
-          '<div class=a>程度档 <b>' + esc(item.tier) + '</b>　' + esc(basis.join('　·　')) + '</div>' +
-          '<div class=a>' + esc(item.uncertainty) + '</div>' +
+          '<div class=q>' + esc(item.question || item.statement) + '</div>' +
+          '<div class=a>像：' + esc(String(item.counts || '').replace(/^像：/, '')) + '</div>' +
+          '<div class=a>不像：' + esc(String(item.doesNotCount || '').replace(/^不像：/, '')) + '</div>' +
+          '<div class=a>程度 <b>' + esc(item.tier) + '</b></div>' +
+          '<details><summary>依据</summary><div class=a>' + esc(basis.join('　·　')) +
+            '。' + esc(item.uncertainty) + '</div></details>' +
           '<div class=pick>' +
             '<button data-pe-mark=像>像</button>' +
             '<button data-pe-mark=不像>不像</button>' +

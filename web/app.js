@@ -115,8 +115,9 @@ import { API } from './engine-adapter.js';
   }
 
   function calc(opt) {
-    // 当前年份只属于页面展示层，显式传入适配层；核心 API 本身保持可复现。
-    var p = B.paipan(Object.assign({}, opt, { asOfYear: new Date().getFullYear() }));
+    // 当前年份只决定排盘页的流年窗口，显式传入 displayYear；
+    // 不能用 asOfYear，否则前事清单会凭空多出「重复年份」那一问。
+    var p = B.paipan(Object.assign({}, opt, { displayYear: new Date().getFullYear() }));
     p.ws = A.wangShuai(p);
     // 命卦按立春换年，与年柱同口径；用公历年会让 1 月初出生者算错。
     p.gua = A.mingGua(p.guaYear, opt.gender);

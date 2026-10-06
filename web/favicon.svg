@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <rect width="32" height="32" rx="7" fill="#0b0d12"/>
-  <circle cx="16" cy="16" r="9" fill="none" stroke="#c8a45c" stroke-width="1.4"/>
-  <text x="16" y="21" font-size="15" font-family="serif" text-anchor="middle" fill="#c8a45c">命</text>
+  <rect width="32" height="32" rx="6" fill="#f6f1e6"/>
+  <rect x="1" y="1" width="30" height="30" rx="5" fill="none" stroke="#8a5a1e" stroke-width="1"/>
+  <text x="16" y="21.5" font-size="15" font-family="serif" text-anchor="middle" fill="#5c3a12">准</text>
 </svg>

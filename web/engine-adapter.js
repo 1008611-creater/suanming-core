@@ -54,7 +54,14 @@ function pillarToIndex(pillar) {
  * @returns {object} 视图模型；数值一律为引擎原值，不做二次四舍五入之外的加工
  */
 export function paipan(opt) {
-  const displayYear = Number.isInteger(Number(opt.asOfYear)) ? Number(opt.asOfYear) : Number(opt.year);
+  // 展示年份与「核对年份」是两件事：
+  //   displayYear —— 只决定流年窗口，排盘页用它把当前年份摆到窗口里；
+  //   asOfYear    —— 前事清单的核对年份，只有它才允许触发「重复年份」那一问。
+  // 两者都接受，displayYear 优先；都没有时退回出生年，输出与系统时钟无关。
+  const hasDisplayYear = Number.isInteger(Number(opt.displayYear)) || Number.isInteger(Number(opt.asOfYear));
+  const displayYear = Number.isInteger(Number(opt.displayYear))
+    ? Number(opt.displayYear)
+    : Number.isInteger(Number(opt.asOfYear)) ? Number(opt.asOfYear) : Number(opt.year);
   const gender = opt.gender === '女' ? '女' : '男';
   const lng = Number.isFinite(Number(opt.lng)) && opt.lng !== '' && opt.lng !== null
     ? Number(opt.lng) : 120;
@@ -135,8 +142,10 @@ export function paipan(opt) {
   }) === chart.pillars.year ? input.year : input.year - 1;
 
   /* ---------- 前事清单：由解释层产出，适配层只透传 ----------
-   * 年份必须显式：调用方给了 asOfYear 才带上「流年反复」类条目，
-   * 没给就省略那一条 —— 页面不替用户假定「现在是哪一年」。 */
+   * 年份必须显式：只有调用方给了 asOfYear 才带上「重复年份」那一问，
+   * 没给就省略 —— 页面不替用户假定「现在是哪一年」。
+   * 注意这里刻意不读 displayYear：排盘页会传当前年份用于流年窗口，
+   * 若拿它当核对年份，用户什么都没填也会凭空多出一问。 */
   const asOfYear = Number.isInteger(Number(opt.asOfYear)) ? Number(opt.asOfYear) : undefined;
   const pastEventItems = Engine.pastEvents(chart, { ruleSet, asOfYear });
 
@@ -175,7 +184,7 @@ export function paipan(opt) {
     relations: chart.relations,
     pastEvents: pastEventItems,
     displayYear,
-    displayYearSource: Number.isInteger(Number(opt.asOfYear)) ? 'explicit' : 'birth-year-default',
+    displayYearSource: hasDisplayYear ? 'explicit' : 'birth-year-default',
     chart,
     engine: ENGINE_INFO
   };

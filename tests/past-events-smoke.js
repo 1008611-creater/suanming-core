@@ -5,11 +5,13 @@
  *
  *   1. 只读不重算：同一份盘两次调用必须逐字一致；不传 asOfYear 时不得出现
  *      任何依赖「现在」的条目 —— 否则同一份盘在不同日子给出不同清单。
- *   2. 条数落在公开区间内（PAST_EVENT_BOUNDS）：少于 5 条用户没法比对，
- *      多于 8 条没人愿意逐条打标。
+ *   2. 条数是固定合同（PAST_EVENT_BOUNDS = { min: 6, max: 7 }）：
+ *      不给核对年份出 6 问，给了出 7 问（多一条重复年份）。固定问题
+ *      而不是「有几条算几条」，用户两次核对才有可比性。
  *   3. 每条都能指回规则：basis.ruleId 必须能在同一套规则集里解析出来，
  *      且程度档只能是 轻／中／重 三档之一。
  *   4. 表述纪律（R-02）：清单文本里不得出现百分比与「准确率」字样。
+ *   5. 每问都自带「什么算像 / 什么不算」两段判据，页面不再自己编文案。
  *
  * 另断言规则集缺条目时整组跳过（skipped 有记录），而不是回退默认值。
  */
@@ -33,6 +35,12 @@ function check(items, label) {
     ids.add(item.id);
     assert.equal(typeof item.statement, 'string', label + '：' + item.id + ' 缺少判词');
     assert.ok(item.statement.length > 10, label + '：' + item.id + ' 判词过短');
+    assert.equal(typeof item.question, 'string', label + '：' + item.id + ' 缺少问题');
+    assert.ok(item.question.length > 6, label + '：' + item.id + ' 问题过短');
+    assert.equal(typeof item.counts, 'string', label + '：' + item.id + ' 缺少「什么算像」');
+    assert.equal(typeof item.doesNotCount, 'string', label + '：' + item.id + ' 缺少「什么不算」');
+    assert.ok(item.counts.length > 6 && item.doesNotCount.length > 6,
+      label + '：' + item.id + ' 的判据过短');
     assert.ok(TIERS.indexOf(item.tier) >= 0, label + '：' + item.id + ' 程度档非法：' + item.tier);
     assert.ok(item.uncertainty && item.uncertainty.length > 10, label + '：' + item.id + ' 缺少不确定性说明');
     assert.ok(item.basis && typeof item.basis === 'object', label + '：' + item.id + ' 缺少依据');
@@ -47,6 +55,8 @@ function check(items, label) {
 /* ---------- 1. 条数、可追溯、程度档 ---------- */
 {
   const items = check(pastEvents(chart, { ruleSet, asOfYear: 2026 }), '固定年份');
+  assert.equal(items.length, PAST_EVENT_BOUNDS.max, '给定核对年份时应是 7 问');
+  assert.deepEqual(items.omitted, [], '七问齐全时不应有省略说明');
   assert.ok(items.some(function (i) { return i.id === 'month-palace'; }), '缺少父母宫条目');
   assert.ok(items.some(function (i) { return i.id === 'spouse-palace'; }), '缺少夫妻宫条目');
   assert.ok(items.some(function (i) { return i.id === 'flow-repeat'; }), '给定 asOfYear 后应有流年反复条目');
@@ -66,10 +76,21 @@ function check(items, label) {
 /* ---------- 3. 不读时钟：缺 asOfYear 时省略流年类条目 ---------- */
 {
   const items = check(pastEvents(chart, { ruleSet }), '缺省年份');
+  assert.equal(items.length, PAST_EVENT_BOUNDS.min, '不给核对年份时应是 6 问');
+  assert.equal(items.omitted.length, 1, '缺年份时应带出省略说明');
+  assert.equal(items.omitted[0].id, 'flow-repeat', '省略说明应指向重复年份那一问');
+  assert.ok(/重复年份/.test(items.omitted[0].notice), '省略说明应点明省略了重复年份那一问');
   assert.equal(items.some(function (i) { return i.id === 'flow-repeat'; }), false,
     '未给 asOfYear 时不得产出流年反复条目');
+  // 6 问与 7 问之间只差「重复年份」一条，其余逐字一致 —— 否则用户两次核对不可比。
+  const seven = pastEvents(chart, { ruleSet, asOfYear: 2026 });
+  assert.deepEqual(
+    seven.filter(function (i) { return i.id !== 'flow-repeat'; }).map(function (i) { return i.id + '|' + i.question + '|' + i.statement; }),
+    items.map(function (i) { return i.id + '|' + i.question + '|' + i.statement; }),
+    '多出的一问之外，6 问与 7 问的内容必须逐字一致');
   // 换一个 asOfYear 不得改变与流年无关的条目。
   const other = pastEvents(chart, { ruleSet, asOfYear: 2000 });
+  assert.equal(other.omitted.length, 1, '核对年份早于出生年时，重复年份这一问同样省略');
   const structural = function (list) {
     return list.filter(function (i) { return i.id !== 'flow-repeat'; }).map(function (i) { return i.id + '|' + i.statement; });
   };

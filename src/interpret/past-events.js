@@ -122,9 +122,13 @@ const TIER_LIGHT = '轻';
 const TIER_MEDIUM = '中';
 const TIER_HEAVY = '重';
 
-/** 清单条数上下限：少于 5 条不足以让用户比对，多于 8 条会让人放弃逐条打标。 */
-const MIN_ITEMS = 5;
-const MAX_ITEMS = 8;
+/**
+ * 公开条数：传入核对年份时正好 7 问，不传时正好 6 问。
+ * 上限 7 用来拦住把省略说明也塞进清单。
+ */
+const MIN_ITEMS = 6;
+const MAX_ITEMS = 7;
+const OMITTED_REPEAT_NOTICE = '未提供核对年份，重复年份这一问省略';
 
 /**
  * 流年回看的年数：只看已经发生的年份，且年份由 asOfYear 显式给定。
@@ -237,15 +241,47 @@ function dayMasterMonthRelation(dayElement, monthElement) {
 }
 
 /** 某柱位的结构性冲击条目（父母宫／夫妻宫／祖上宫／子女宫共用）。 */
+/**
+ * 一条前事对外四行里的三句人话。statement 仍保留旧说明，报告页迁移前继续读它。
+ * 依据不写进这三句，页面默认收起后再展开。
+ */
+function questionFields(question, counts, doesNotCount) {
+  return { question: question, counts: counts, doesNotCount: doesNotCount };
+}
+
 function palaceItem(position, relations, ruleSet, wording) {
   const hits = structuralHits(relations, position);
   const tier = tierOf(hits);
   const split = splitByOwnership(hits, position);
   const detail = describePalaceHits(split);
   const tail = palaceTail(position, tier, split);
+  const prompt = position === 'month'
+    ? {
+        question: '童年的家：有没有一次说得出年份的搬家、分开，或照看的人换了？',
+        counts: tier === TIER_LIGHT
+          ? '像：从小到大，家和照看你的人没有一次被整个换掉。'
+          : '像：有一次说得出年份的搬家、父母或照看的人分开，或照看的人换了。',
+        doesNotCount: '不像：只是拌嘴、短住几天，或过一阵就回到原来的安排。'
+      }
+    : position === 'hour'
+      ? {
+          question: '子女、晚辈或你投出去的事：有没有一次说得出年份的分开、换人接手，或整件事停掉？',
+          counts: tier === TIER_LIGHT
+            ? '像：子女、晚辈、下属，或你做出的成果，大体按原来的方式延续，没有一次被整个换掉。'
+            : '像：有一次说得出年份的分开、换人接手、职责整个换掉，或投出去的钱与成果停掉。',
+          doesNotCount: '不像：一时拌嘴、计划改个说法，或过几天就恢复的小事。'
+        }
+      : {
+          question: '这一宫对应的人与事：有没有一次说得出年份的变动？',
+          counts: '像：有一次说得出年份、并且把原来的安排整个换掉。',
+          doesNotCount: '不像：一时拌嘴，或过几天就恢复原样。'
+        };
   return {
     id: position + '-palace',
     statement: wording + '：' + detail + '。' + tail,
+    question: prompt.question,
+    counts: prompt.counts,
+    doesNotCount: prompt.doesNotCount,
     basis: {
       palace: PALACE_NAMES[position],
       tenGod: null,
@@ -316,9 +352,21 @@ function spousePalaceItem(relations, ruleSet) {
       + (bondSplit.shared.length ? '，与别宫共见 ' + describeHits(bondSplit.shared) : ''));
   }
   const tail = spouseTail(tier, split, bonds);
+  const spousePrompt = tier === TIER_LIGHT
+    ? {
+        counts: '像：婚姻、长期伴侣，或一起担责任的合作，大体按原来的方式延续，没有一次被拆开。',
+        doesNotCount: '不像：偶尔冷淡几天、吵完就和好，或还没开始的想象。没有冲击，也不等于这段关系顺利。'
+      }
+    : {
+        counts: '像：有一次说得出时间的分开、名分变化、换人，或合作被整个拆掉；冷淡长到说得出起止，也算。',
+        doesNotCount: '不像：拌嘴后很快和好、出差分开几天，或还没有实质关系时的单相思。'
+      };
   return {
     id: 'spouse-palace',
     statement: '夫妻宫（日支 ' + relations.dayPillar[1] + '）：' + parts.join('；') + '。' + tail,
+    question: '婚姻或长期合作：有没有一次说得出时间的分开、换人，或长期冷淡？',
+    counts: spousePrompt.counts,
+    doesNotCount: spousePrompt.doesNotCount,
     basis: {
       palace: PALACE_NAMES.day,
       tenGod: null,
@@ -371,12 +419,16 @@ function monthTenGodItem(pillars, ruleSet) {
   const dayStem = pillars.day[0];
   const name = tenGod(dayStem, pillars.month[0], ruleSet);
   const category = tenGodCategory(name);
+  const topic = categoryTopic(category);
   return {
     id: 'month-ten-god',
     statement: '父母宫（月柱 ' + pillars.month + '）天干是 ' + name + '，落在' + (category ?? '十神') + '这一类。'
-      + '请回想父母和长辈，是不是更多从「' + categoryTopic(category) + '」这件事上影响你：'
+      + '请回想父母和长辈，是不是更多从「' + topic + '」这件事上影响你：'
       + '帮你、压你，或让你不得不跟着做。这一条只看方向，不判断这段关系好不好；'
       + '地支那一条看的是有没有一次被换掉，两条合在一起读。',
+    question: '父母和长辈对你的影响，主要是不是落在「' + topic + '」上？',
+    counts: '像：回想父母和长辈，他们帮你、压你，或让你跟着做的事，主要就是「' + topic + '」。这一问只看方向，不问关系好不好。',
+    doesNotCount: '不像：他们的影响明显落在别的事上；一次争吵、一句重话，不算这一问。',
     basis: {
       palace: PALACE_NAMES.month,
       tenGod: name,
@@ -409,12 +461,50 @@ function monthQiItem(pillars, ruleSet) {
           : relation === '同气比助'
             ? '请回想：身边是不是常有和你站在同一边的人，事情靠互相帮衬往前走。'
             : '这一条的生克方向未能判定，请不要用它核对具体经历。';
+  const qiPrompt = relation === '月令克日主'
+    ? {
+        question: '成长环境是不是常常先压住你，得扛过一段，事情才按你的方式走？',
+        counts: '像：从小到工作这些年，环境常常先压住你，你扛过一段后事情才松动。',
+        doesNotCount: '不像：环境大体在托你，或只是偶尔忙一阵就过去。这一问不判断你强还是弱。'
+      }
+    : relation === '日主克月令'
+      ? {
+          question: '是不是常常得你自己先动手把局面撑开，环境不会自动让出位置？',
+          counts: '像：多数要紧的事，都是你先付出动作，位置才腾出来。',
+          doesNotCount: '不像：事情多半有人先替你铺好；一次自己动手，不算这一问。'
+        }
+      : relation === '月令生日主'
+        ? {
+            question: '成长环境是不是常有现成的条件或人在托你，你不用从零开始争？',
+            counts: '像：学习、生活或起步阶段，常有现成的条件或人在托你。',
+            doesNotCount: '不像：多数时候得自己从零开始；别人偶尔帮一次，不算这一问。'
+          }
+        : relation === '日主生月令'
+          ? {
+              question: '是不是常常得你先交出时间、钱或精力，事情才转得动？',
+              counts: '像：要紧的事往往要你先把时间、钱或精力交出去，才开始转。',
+              doesNotCount: '不像：你很少先付出，事情也会自己往前；一次帮忙不算这一问。'
+            }
+          : relation === '同气比助'
+            ? {
+                question: '身边是不是常有和你站在同一边的人，事情靠互相帮衬往前走？',
+                counts: '像：学习或做事时，常有同辈和你站在一边，互相帮衬。',
+                doesNotCount: '不像：多数时候独自推进；偶尔一次结伴，不算这一问。'
+              }
+            : {
+                question: '成长环境这一问，这次没能判定生克方向。请先不要回答。',
+                counts: '像：这一问未能判定，不要把它标成像。',
+                doesNotCount: '不像：这一问未能判定，标「不确定」，不要拿它核对具体经历。'
+              };
   return {
     id: 'month-qi',
     statement: '日主 ' + pillars.day[0] + '（' + (dayElement ?? '—') + '）生于 ' + pillars.month[1]
       + ' 月（' + (monthElement ?? '—') + '），月令与日主为「' + (relation ?? '未判定') + '」。'
       + qiTail
       + '这一条只说明你和成长环境谁在推、谁在压，不判断你强还是弱。',
+    question: qiPrompt.question,
+    counts: qiPrompt.counts,
+    doesNotCount: qiPrompt.doesNotCount,
     basis: {
       palace: PALACE_NAMES.month,
       tenGod: null,
@@ -458,6 +548,7 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
   const focus = leaders.length
     ? '核对时先看最密的一类：' + leaders.map(function (k) { return k + '（' + categoryTopic(k) + '）'; }).join('、') + '。'
     : '五类都没有落点，这一条先不要用来核对具体经历。';
+  const leaderText = leaders.map(function (k) { return k + '（' + categoryTopic(k) + '）'; }).join('、');
   return {
     id: 'ten-god-structure',
     statement: '十神分布（按四柱天干与地支本气计）：' + tally + '。'
@@ -465,6 +556,15 @@ function tenGodStructureItem(pillars, relations, ruleSet) {
       + (absent.length
         ? '盘面上没直接落到' + absent.join('、') + '，核对时别拿缺的这一类当主线；不是说你人生里没有这些事。'
         : '五类都有落点。'),
+    question: leaders.length
+      ? '到目前为止，反复占你时间和精力的，是不是「' + leaderText + '」？'
+      : '人生主线这一问这次没有落点。请先不要用它核对。',
+    counts: leaders.length
+      ? '像：钱、位置、学习证件、你做出来的东西，或同辈之间分资源，里面最常占住你的就是这一类。只看最密的一类。'
+      : '像：没有可核对的主线，不要标像。',
+    doesNotCount: leaders.length
+      ? '不像：你的时间和精力明显更多花在别的一类上。某一类在盘上没出现，不代表人生里没有那件事。'
+      : '不像：没有可核对的主线，请标不确定。',
     basis: {
       palace: null,
       tenGod: present.join('、') || null,
@@ -492,11 +592,20 @@ function luckStartItem(chart, ruleSet) {
       : wholeAge <= 18
         ? '有没有转学、住校、离家，或家里的生活节奏整个换过'
         : '有没有升学、离家、换城市或换一份维持生活的事';
+  const luckQuestion = wholeAge <= 12
+    ? '大约 ' + wholeAge + ' 岁前后一两年：有没有转学、搬家，或照看你的人换了？'
+    : '大约 ' + wholeAge + ' 岁前后一两年：有没有升学、离家、换城市，或换一份维持生活的事？';
+  const luckCounts = wholeAge <= 12
+    ? '像：在 ' + startYear + ' 年前后一两年，有转学、搬家，或照看你的人换了。'
+    : '像：在 ' + startYear + ' 年前后一两年，有升学、离家、换城市，或换了一份维持生活的事。';
   return {
     id: 'luck-start',
     statement: '大运' + direction + '，起运 ' + age.toFixed(2) + ' 岁，'
       + '约在 ' + startYear + ' 年前后交入第一步大运 ' + first + '。'
       + '那一年你大约 ' + wholeAge + ' 岁。请回想前后一两年：' + ask + '。',
+    question: luckQuestion,
+    counts: luckCounts,
+    doesNotCount: '不像：只是换一门课、出门几天，或心情变了，但生活安排没有换。前后差出两年以上的，先标不确定。',
     basis: {
       palace: null,
       tenGod: null,
@@ -544,12 +653,17 @@ function flowRepeatItem(chart, ruleSet, asOfYear) {
   // 门槛是 3 次（刚算「反复」），记轻；4 次记中；5 次及以上记重。
   // 只统计出现密度，不判断这些年份的好坏。
   const flowDegree = years.length >= 5 ? 2 : years.length >= 4 ? 1 : 0;
+  const yearList = years.join('、');
+  const flowTopic = categoryTopic(top[0]);
   return {
     id: 'flow-repeat',
     statement: '从 ' + from + ' 到 ' + asOfYear + '，'
-      + top[0] + '这一类反复出现 ' + years.length + ' 次，年份是 ' + years.join('、') + '（对应 ' + names + '）。'
-      + '请逐个年份回想「' + categoryTopic(top[0]) + '」：是不是同一类事在这些年份里又被推到你面前。'
+      + top[0] + '这一类反复出现 ' + years.length + ' 次，年份是 ' + yearList + '（对应 ' + names + '）。'
+      + '请逐个年份回想「' + flowTopic + '」：是不是同一类事在这些年份里又被推到你面前。'
       + '如果这些年份你想起的完全是另一类事，先回去核对出生时辰。',
+    question: '在 ' + yearList + ' 这些年里，「' + flowTopic + '」是不是反复出现？',
+    counts: '像：这些年份里，至少有 ' + years.length + ' 个年份再次出现同一类事。只看这一类，不判断这些年好不好。',
+    doesNotCount: '不像：这些年份你想起的是完全另一类事。若年份对不上，先标不确定，并回头核对出生时辰。',
     basis: {
       palace: null,
       tenGod: names,
@@ -569,7 +683,10 @@ function flowRepeatItem(chart, ruleSet, asOfYear) {
  *   ruleSet  —— 规则集对象；缺省按 chart.manifest.ruleSetId 取
  *   asOfYear —— 显式给定的「现在」年份（整数）。缺省时省略流年类条目。
  * @returns {ReadonlyArray} 冻结数组，元素形如：
- *   { id, statement, basis:{palace,tenGod,relation,ruleId}, tier, uncertainty }
+ *   { id, statement, question, counts, doesNotCount,
+ *     basis:{palace,tenGod,relation,ruleId}, tier, uncertainty }
+ *   数组上另挂 omitted：未出现的固定问题及原因。没给 asOfYear，
+ *   或给了年份但没有达到反复门槛时，都写明重复年份这一问省略。
  *   数组上另挂 skipped：因规则集缺条目而被整体跳过的清单项，便于审计。
  */
 export function pastEvents(chart, options = {}) {
@@ -593,15 +710,12 @@ export function pastEvents(chart, options = {}) {
     function () { return spousePalaceItem(relations, ruleSet); },
     function () { return tenGodStructureItem(pillars, relations, ruleSet); },
     function () { return luckStartItem(chart, ruleSet); },
-    function () { return flowRepeatItem(chart, ruleSet, asOfYear); },
-    function () { return palaceItem('hour', relations, ruleSet,
-      '子女宫（时柱 ' + pillars.hour + '）地支 ' + pillars.hour[1] + ' 的结构'); }
+    function () { return flowRepeatItem(chart, ruleSet, asOfYear); }
   ];
 
   const items = [];
   const seen = new Set();
   for (const build of builders) {
-    if (items.length >= MAX_ITEMS) break;
     let item;
     try {
       item = build();
@@ -611,15 +725,26 @@ export function pastEvents(chart, options = {}) {
     }
     if (!item) continue;
     if (seen.has(item.id)) continue;
+    if (!item.question || !item.counts || !item.doesNotCount) {
+      skipped.push({ id: item.id, reason: 'missing question copy' });
+      continue;
+    }
     const rule = resolveRule(item.basis.ruleId, ruleSet);
     if (!rule) {
       skipped.push({ id: item.id, reason: 'unregistered ruleId: ' + item.basis.ruleId });
       continue;
     }
     seen.add(item.id);
+    if (items.length >= MAX_ITEMS) {
+      skipped.push({ id: item.id, reason: 'past-event list is capped at ' + MAX_ITEMS });
+      continue;
+    }
     items.push(Object.freeze({
       id: item.id,
       statement: item.statement,
+      question: item.question,
+      counts: item.counts,
+      doesNotCount: item.doesNotCount,
       basis: Object.freeze({ ...item.basis }),
       tier: item.tier,
       uncertainty: item.uncertainty
@@ -628,8 +753,13 @@ export function pastEvents(chart, options = {}) {
 
   // 数组先挂审计用的非枚举字段再冻结：冻结之后无法再添加属性，
   // 而审计信息（跳过了哪些项、用的哪套规则集）必须随结果一起交出去。
+  const omittedRepeat = asOfYear === null || !items.some(function (item) { return item.id === 'flow-repeat'; });
   Object.defineProperty(items, 'skipped', { value: Object.freeze(skipped), enumerable: false });
   Object.defineProperty(items, 'ruleSet', { value: ruleSet.id, enumerable: false });
+  Object.defineProperty(items, 'omitted', {
+    value: Object.freeze(omittedRepeat ? [{ id: 'flow-repeat', notice: OMITTED_REPEAT_NOTICE }] : []),
+    enumerable: false
+  });
   return Object.freeze(items);
 }
 

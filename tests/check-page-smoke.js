@@ -7,6 +7,8 @@
  * 4. 经度非法必须显式报错，不能静默按 120 度算。
  * 5. 城市表不得出现两个城市共用同一经度的可疑重复。
  * 6. 前事清单区块必须完整：可打标、只汇总条数、文本里不得出现百分比或「准确率」。
+ * 7. 核对年份必须是用户自己填的：页面要有 #asof 输入框，且不得把当前年份
+ *    偷偷塞进去 —— 否则用户什么都没填也会多出一问。
  */
 import { readFileSync } from 'node:fs';
 
@@ -62,6 +64,14 @@ for (const [name, lng] of entries) {
 assert(read('index.html').includes('check.html'), '首页缺少自检入口');
 assert(paipan.includes('check.html'), '排盘页缺少自检入口');
 assert(html.includes('lng') && html.includes('go'), '自检页缺少必要表单字段');
+// 核对年份必须是显式输入：有输入框，且说明留空时不拿当前年份代替。
+assert(/id="asof"/.test(html), '自检页缺少核对年份输入框 #asof');
+assert(/留空/.test(html), '自检页未说明核对年份留空的行为');
+assert(js.includes("$('asof')"), '自检页未读取核对年份输入');
+assert(!/asOfYear:\s*new Date\(\)/.test(js), '自检页把当前年份偷偷当成核对年份');
+// 排盘页只传 displayYear，不得再用 asOfYear 触发前事清单的重复年份那一问。
+assert(/displayYear:\s*new Date\(\)\.getFullYear\(\)/.test(app), '排盘页未用 displayYear 传当前年份');
+assert(!/asOfYear:\s*new Date\(\)/.test(app), '排盘页仍把当前年份当核对年份传给前事清单');
 
 /* --- 7. 自检页只呈现结构，不下吉凶断语 --- */
 assert(!/大吉|大凶|必发|必定/.test(js), '自检页出现吉凶断语');

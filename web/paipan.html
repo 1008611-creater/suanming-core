@@ -1,18 +1,27 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>在线排盘 · 命理排盘工具</title>
+<title>排盘 · 算得准</title>
 <meta name="description" content="四柱八字与紫微斗数在线排盘：真太阳时、大运流年、十二宫星曜，每个结果都标明计算口径与来源。">
 <link rel=icon href=favicon.svg type=image/svg+xml>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="wrap">
+  <header class="mast">
+    <a class="brand" href="index.html"><b>算得准</b><span>权威工作台</span></a>
+    <nav class="nav">
+      <a href="index.html">工作台</a>
+      <a href="check.html">前事验证</a>
+      <a class="on" href="paipan.html">排盘</a>
+    </nav>
+  </header>
   <div class="hero">
-    <h1>命理排盘</h1>
-    <div class="sub">八字 · 真太阳时 · 大运流年 · 八宅命卦 · 姓名五格</div>
+    <div class="kicker">结构摊开，口径写明</div>
+    <h1>排盘</h1>
+    <div class="sub">四柱、真太阳时、大运、紫微、八宅与五格。同一份计算。</div>
     <div class="rule"></div>
   </div>
 
@@ -32,7 +41,7 @@
         <button class="btn-ghost" id="reset">重置</button>
       </div>
     </div>
-    <div class="hint" style="margin-top:14px">出生地只影响「真太阳时」的经度修正，一般差异在 10–30 分钟内，跨时辰时才会改变时柱。</div>
+    <div class="hint" style="margin-top:14px">出生地只影响真太阳时的经度修正，一般差异在十几到几十分钟，跨时辰时才会改变时柱。</div>
     <div class="hint" id="lngTip" style="display:none;margin-top:8px;color:var(--gold2)"></div>
   </div>
 
@@ -46,7 +55,7 @@
       <div class="f wide"><label for="p_lng">出生地经度</label><input id="p_lng" value="118.18"></div>
       <div class="f"><label for="p_ts">时制</label><select id="p_ts"><option value="1">真太阳时</option><option value="0">钟表时间</option></select></div>
     </div>
-    <div class="hint" style="margin-top:14px">填好后点「开始排盘」，页面底部会多出一块合婚分析。</div>
+    <div class="hint" style="margin-top:14px">填好后点开始排盘，页面底部会多出一块合婚分析。</div>
   </div>
 
   <div id="result"></div>
@@ -54,13 +63,13 @@
   <div class="footer">
     本页为传统命理文化推演工具，结果仅供文化参考与自我反思<br>
     不构成医疗、法律、投资建议；健康问题请以执业医师意见为准<br>
-    <a href="check.html" style="color:var(--gold2)">排完盘 → 用已经发生的事自检一遍</a>
+    <a href="check.html">排完盘，用已经发生的事再核一遍</a>
   </div>
 </div>
-<!-- 算法源只有一份：engine.js（由 src/ + rules/ 打包）+ engine-adapter.js（视图模型）。
-     app.js 为 module，import adapter，因此这里不再加载任何手写算法脚本。 -->
 <script src="bihua-data.js"></script>
 <script src="analysis.js"></script>
 <script type="module" src="app.js"></script>
 </body>
 </html>
+
+

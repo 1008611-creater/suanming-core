@@ -134,7 +134,7 @@
 | A11 | 性能预算 | `npm run test:performance` | 网页资源总量与核心脚本均未超过预算 |
 | A12 | 地支关系派生 | `tests/relations-smoke.js` | 六类关系黄金样本 + 半合缺旺支／同柱自刑／跨旬空亡三类反例全过，同输入同结果 |
 | A13 | 缺表整组跳过 | `tests/relations-missing-table-smoke.js` | 规则集缺表时不回退默认值，`skipped` 有记录 |
-| A14 | 前事清单 | `tests/past-events-smoke.js` | 条数 5–8、每条 `ruleId` 可解析、程度档合法、缺 `asOfYear` 时无流年条目、文本无百分比与「准确率」 |
+| A14 | 前事清单 | `tests/past-events-smoke.js` | 条数 6–7（缺 `asOfYear` 固定 6 问）、每条 `ruleId` 可解析、程度档合法、每问自带像/不像判据、缺 `asOfYear` 时无重复年份条目、文本无百分比与「准确率」 |
 | A15 | 四柱交叉验证 | `tests/bazi-cross-reference-smoke.js` | 随机抽 10 份盘与独立实现比对，四柱一致率 100% |
 | A16 | 前事页合规 | `tests/check-page-smoke.js` | 前事区块可打标、汇总只写条数、页面展示文本无百分比与「准确率」 |
 | A17 | 业务文案合规 | `tests/business-copy-compliance-smoke.js` | `docs/business/` 全部文档无百分比、无「准确率」「命中率」；两篇样稿标「合成示例（非真实客户）」；无真实客户姓名与真实案例引用 |

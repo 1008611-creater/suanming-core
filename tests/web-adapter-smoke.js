@@ -28,7 +28,8 @@ function eq(actual, expected, label) {
 }
 
 const nowYear = new Date().getFullYear();
-const base = { name: '测试', gender: '男', year: 1990, month: 1, day: 1, hour: 12, minute: 0, lng: 118.18, asOfYear: nowYear };
+// 排盘页的口径：只传 displayYear（当前年份），不传 asOfYear。
+const base = { name: '测试', gender: '男', year: 1990, month: 1, day: 1, hour: 12, minute: 0, lng: 118.18, displayYear: nowYear };
 const p = paipan(base);
 
 /* --- 1. 四柱与基本信息 --- */
@@ -44,8 +45,17 @@ eq(p.monthTerm, '大雪', '月令节气');
 eq(p.shiShen.day, '日主', '日柱十神');
 eq(p.displayYear, nowYear, '展示年份显式传入');
 eq(p.displayYearSource, 'explicit', '展示年份来源');
+// 排盘页的当前年份只决定流年窗口，不得凭空生成「重复年份」那一问。
+assert(!p.pastEvents.some((i) => i.id === 'flow-repeat'),
+  '排盘页只传 displayYear 时，前事清单不得出现重复年份条目');
 
-const deterministic = paipan({ ...base, asOfYear: 2000 });
+// 核对年份（前事页专用）走 asOfYear，同时决定展示窗口与第七问。
+const withAsOf = paipan({ ...base, displayYear: undefined, asOfYear: 2026 });
+eq(withAsOf.displayYear, 2026, '核对年份同时作为展示年份');
+eq(withAsOf.displayYearSource, 'explicit', '核对年份的展示年份来源');
+assert(withAsOf.pastEvents.some((i) => i.id === 'flow-repeat'), '给了核对年份后应有重复年份条目');
+
+const deterministic = paipan({ ...base, displayYear: 2000 });
 eq(deterministic.displayYear, 2000, '固定展示年份');
 eq(deterministic.liuNian[0].year, 1990, '固定展示年份下流年起点');
 
@@ -189,9 +199,17 @@ for (const item of p.pastEvents) {
 const peText = JSON.stringify(p.pastEvents);
 assert(peText.indexOf('%') < 0 && peText.indexOf('准确率') < 0, '前事清单出现百分比或「准确率」');
 
-// 未显式给 asOfYear 时，展示年份退回出生年，清单里也不得出现流年反复条目。
-const noYear = paipan({ ...base, asOfYear: undefined });
-eq(noYear.displayYearSource, 'birth-year-default', '缺 asOfYear 时的展示年份来源');
-assert(!noYear.pastEvents.some((i) => i.id === 'flow-repeat'), '缺 asOfYear 时不应有流年反复条目');
+// 两个年份都不给时，展示年份退回出生年，清单里也不得出现重复年份条目。
+const noYear = paipan({ ...base, displayYear: undefined, asOfYear: undefined });
+eq(noYear.displayYearSource, 'birth-year-default', '缺年份时的展示年份来源');
+eq(noYear.displayYear, 1990, '缺年份时展示年份退回出生年');
+assert(!noYear.pastEvents.some((i) => i.id === 'flow-repeat'), '缺 asOfYear 时不应有重复年份条目');
+// 缺 asOfYear 时固定 6 问，给了才 7 问；省略说明随清单一起交给页面。
+eq(noYear.pastEvents.length, 6, '缺 asOfYear 时固定 6 问');
+eq(noYear.pastEvents.omitted.length, 1, '缺 asOfYear 时应有省略说明');
+assert(/重复年份/.test(noYear.pastEvents.omitted[0].notice), '省略说明应点明省略的是重复年份那一问');
+eq(p.pastEvents.length, 6, '排盘页口径同样是 6 问');
+eq(withAsOf.pastEvents.length, 7, '给了核对年份后固定 7 问');
+eq(withAsOf.pastEvents.omitted.length, 0, '七问齐全时不应有省略说明');
 
 console.log('[web-adapter] ok  四柱=' + p.gz.join(' ') + '  大运=' + p.daYun.list[0].gz + '  紫微=' + z.fiveElements.name + '  命卦年=' + p.guaYear);
