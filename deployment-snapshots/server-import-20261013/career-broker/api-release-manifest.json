@@ -1,0 +1,32 @@
+{
+  "buildId": "career-68c02531d41ae74f",
+  "model": "deepseek-v4.1-flash",
+  "publicOrigin": "https://suanming.cauai.fun",
+  "files": [
+    {
+      "path": "package.json",
+      "bytes": 88,
+      "sha256": "ae7776dd4dce520e973204fde184bfa428469e1847810d25b192dbe355c0db8a"
+    },
+    {
+      "path": "scripts/career/server.mjs",
+      "bytes": 1876,
+      "sha256": "0a2400cb794cecff45ff8c6785ee154294f176d0d757d3ab431df28add850c06"
+    },
+    {
+      "path": "scripts/career/service.mjs",
+      "bytes": 6420,
+      "sha256": "78e6c79327bd84c5fbc10aa4caa6da0fadc49a1853304f80ed53c13979e4bdc1"
+    },
+    {
+      "path": "scripts/career/transport.mjs",
+      "bytes": 3228,
+      "sha256": "77e9ba2ac8c0a1217fa7e918cc7cc37e99d08a8fe3bb0db7b751244d5e2b05ed"
+    },
+    {
+      "path": "tools/workbench/career-contract.js",
+      "bytes": 6795,
+      "sha256": "34f560bce891349acb33e453e639ad50d9980e7f5e8cb5c87e384a18c69640a6"
+    }
+  ]
+}
